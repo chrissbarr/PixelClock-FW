@@ -1,45 +1,8 @@
 #include <Adafruit_NeoPixel.h>
+#include "characters.h"
 
 #define LED_PIN  6
-
-#define COLOR_ORDER GRB
-#define CHIPSET     WS2812
-
 #define BRIGHTNESS 255
-
-typedef byte charMapType[5];
-
-const int charCount = 4;
-const charMapType characterFontArray[] = {
-  {   // A
-    B010,
-    B101,
-    B111,
-    B101,
-    B101
-  },
-  {   // B
-    B110,
-    B101,
-    B110,
-    B101,
-    B110
-  },
-  {   // C
-    B011,
-    B100,
-    B100,
-    B100,
-    B011
-  },
-  {   // D
-    B110,
-    B101,
-    B101,
-    B101,
-    B110
-  },
-};
 
 // Helper functions for an two-dimensional XY matrix of pixels.
 // Simple 2-D demo code is included as well.
