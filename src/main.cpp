@@ -1,4 +1,4 @@
-#include <FastLED.h>
+#include <Adafruit_NeoPixel.h>
 
 #define LED_PIN  6
 
@@ -59,12 +59,12 @@ const charMapType characterFontArray[] = {
 
 
 // Params for width and height
-const uint8_t kMatrixWidth = 3;
+const uint8_t kMatrixWidth = 17;
 const uint8_t kMatrixHeight = 5;
 
 // Param for different pixel layouts
-const bool    kMatrixSerpentineLayout = true;
-const bool    kMatrixVertical = true;
+const bool    kMatrixSerpentineLayout = false;
+const bool    kMatrixVertical = false;
 
 // Set 'kMatrixSerpentineLayout' to false if your pixels are 
 // laid out all running the same way, like this:
@@ -197,8 +197,7 @@ uint16_t XY( uint8_t x, uint8_t y)
 // were supplied.
 
 #define NUM_LEDS (kMatrixWidth * kMatrixHeight)
-CRGB leds_plus_safety_pixel[ NUM_LEDS + 1];
-CRGB* const leds( leds_plus_safety_pixel + 1);
+Adafruit_NeoPixel pixels(NUM_LEDS, LED_PIN, NEO_GRBW + NEO_KHZ800);
 
 uint16_t XYsafe( uint8_t x, uint8_t y)
 {
@@ -207,18 +206,6 @@ uint16_t XYsafe( uint8_t x, uint8_t y)
   return XY(x,y);
 }
 
-void DrawOneFrame( uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8)
-{
-  uint8_t lineStartHue = startHue8;
-  for( uint8_t y = 0; y < kMatrixHeight; y++) {
-    lineStartHue += yHueDelta8;
-    uint8_t pixelHue = lineStartHue;      
-    for( uint8_t x = 0; x < kMatrixWidth; x++) {
-      pixelHue += xHueDelta8;
-      leds[ XY(x, y)]  = CHSV( pixelHue, 255, 255);
-    }
-  }
-}
 
 // Demo that USES "XY" follows code below
 
@@ -228,14 +215,25 @@ unsigned long timeBetweenChanges = 1000;
 int currentChar = 0;
 
 void setup() {
-  FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);
-  FastLED.setBrightness( BRIGHTNESS );
+  pixels.begin();
+  pixels.show();
+  //pixels.setBrightness(0);
+
+  
+  
+
+  for (int i = 0; i < NUM_LEDS; i++) {
+    pixels.fill(0, 0, NUM_LEDS);
+    pixels.setPixelColor(i, pixels.Color(0, 255, 0));
+    pixels.show();
+    delay(100);
+  }
 }
 
 
 void loop()
 {
-  FastLED.setBrightness(BRIGHTNESS);
+  //FastLED.setBrightness(BRIGHTNESS);
   
   if (millis() - lastChangeTime > timeBetweenChanges) {
     currentChar++;
@@ -245,17 +243,21 @@ void loop()
     lastChangeTime = millis();
   }
 
-  fill_solid( &(leds[0]), NUM_LEDS, CRGB::Black );
+  pixels.fill(0, 0, NUM_LEDS);
   for (int x = 0; x < 3; x++) {
     for (int y = 0; y < 5; y++) {
       if (bitRead(characterFontArray[currentChar][y], 2-x) == 1) {
-          leds[XY(x, y)] = CRGB::Red;//CHSV(hue, 255, 255);
+          //leds[XY(x, y)] = CRGB::Red;//CHSV(hue, 255, 255);
+        pixels.setPixelColor(XY(x, y), pixels.Color(100, 0, 0));
       }
     }
   }
 
-  FastLED.show();
-  FastLED.delay(1);
+  pixels.show();
+  delay(100);
+
+  //FastLED.show();
+  //FastLED.delay(1);
 
   hue++;
   
