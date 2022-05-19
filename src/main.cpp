@@ -20,6 +20,42 @@ unsigned long lastChangeTime = 0;
 unsigned long timeBetweenChanges = 1000;
 int currentChar = 0;
 
+enum class Direction {
+  up,
+  down,
+  left,
+  right
+};
+
+void gravityFill(Direction fallDir, int rate, bool empty)
+{
+  uint8_t chance = random(rate);
+  if (chance == 0) {
+    uint8_t x = random(0, display.getWidth());
+    uint8_t y = 0;//random(0, display.getWidth());
+    if (display.getXY(x, y) == uint32_t(0)) {
+      display.setXY(x, y, pixels.ColorHSV(random(0, 655236)));
+    }
+  }
+  for (int y = display.getHeight() - 1; y >= 0; y--) {
+    for (uint8_t x = 0; x < display.getWidth(); x++) {
+      if (display.getXY(x, y) != uint32_t(0)) {
+        // if this is the last row
+        if (y == display.getHeight() - 1) {
+          if (empty) {
+            display.setXY(x, y, 0);
+          }
+          continue;
+        }
+        if (display.getXY(x, y + 1) == uint32_t(0)) {
+          display.setXY(x, y + 1, display.getXY(x, y));
+          display.setXY(x, y, 0);
+        }
+      }
+    }
+  }
+}
+
 void setup() {
   pixels.begin();
   pixels.setBrightness(255);
@@ -27,6 +63,33 @@ void setup() {
   display.update();
 
   delay(500);
+
+  for (int i = 0; i < 10; i++) {
+    while (!display.filled()) {
+      gravityFill(Direction::down, 1, false);
+      delay(50);
+      display.update();
+    }
+    delay(1000);
+    
+    uint32_t colour = 0;//pixels.Color(0, 0, 0, 255);
+    display.showCharacter('1', colour, 0);
+    display.showCharacter('2', colour, 4);
+    display.showCharacter(':', colour, 7);
+    display.showCharacter('3', colour, 10);
+    display.showCharacter('4', colour, 14);
+
+    display.update();
+    delay(1000);
+
+    while(!display.empty()) {
+      gravityFill(Direction::down, 100000, true);
+      delay(500);
+      display.update();
+    }
+    delay(500);
+  }
+  
 
 
 
@@ -49,31 +112,7 @@ void setup() {
   // }
 
 
-  for (int i = 0; i < 10; i++) {
-    while(!display.filled()) {
-      uint8_t chance = random(1);
-      if (chance == 0) {
-        uint8_t x = random(0, display.getWidth());
-        uint8_t y = 0;//random(0, display.getWidth());
-        if (display.getXY(x, y) == uint32_t(0)) {
-          display.setXY(x, y, pixels.ColorHSV(random(0, 655236)));
-        }
-      }
-      for (int y = display.getHeight() - 2; y >= 0; y--) {
-        for (uint8_t x = 0; x < display.getWidth(); x++) {
-          if (display.getXY(x, y) != uint32_t(0)) {
-            if (display.getXY(x, y + 1) == uint32_t(0)) {
-              display.setXY(x, y + 1, display.getXY(x, y));
-              display.setXY(x, y, 0);
-            }
-          }
-        }
-      }
-      display.update();
-      delay(100);
-    }
-    display.fill(0);
-  }
+
 
   display.fill(Adafruit_NeoPixel::Color(100, 0, 0));
   display.update();

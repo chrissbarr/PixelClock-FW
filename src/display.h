@@ -22,6 +22,7 @@ public:
     uint32_t getSize() const { return size; }
 
     bool filled() const;
+    bool empty() const;
 
 
 private:

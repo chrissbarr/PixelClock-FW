@@ -103,3 +103,12 @@ bool PixelDisplay::filled() const
   }
   return filled;
 }
+
+bool PixelDisplay::empty() const
+{
+  bool empty = true;
+  for (uint32_t i = 0; i < getSize(); i++) {
+    if (pixels.getPixelColor(i) != 0) { empty = false; }
+  }
+  return empty;
+}
