@@ -3,25 +3,25 @@
 
 #include "characters.h"
 
-PixelDisplay::PixelDisplay(Adafruit_NeoPixel& pixels, uint32_t width, uint32_t height, bool serpentine, bool vertical) :
-    pixels(pixels), width(width), height(height), size(width * height), serpentine(serpentine), vertical(vertical)
+PixelDisplay::PixelDisplay(Adafruit_NeoPixel& pixels, uint32_t width, uint32_t height, bool serpentine, bool vertical, uint32_t pixelOffset) :
+    pixels(pixels), width(width), height(height), size(width * height), serpentine(serpentine), vertical(vertical), pixelOffset(pixelOffset)
 {
 
 }
 
 void PixelDisplay::setXY(uint8_t x, uint8_t y, uint32_t colour)
 {
-    pixels.setPixelColor(XYToIndex(x, y), colour);
+    pixels.setPixelColor(XYToIndex(x, y) + pixelOffset, colour);
 }
 
 uint32_t PixelDisplay::getXY(uint8_t x, uint8_t y) const
 {
-    return pixels.getPixelColor(XYToIndex(x, y));
+    return pixels.getPixelColor(XYToIndex(x, y) + pixelOffset);
 }
 
 void PixelDisplay::fill(uint32_t colour)
 {
-    pixels.fill(colour, 0, getSize());
+    pixels.fill(colour, pixelOffset, getSize());
 }
 
 void PixelDisplay::update() 
@@ -99,7 +99,7 @@ bool PixelDisplay::filled() const
 {
   bool filled = true;
   for (uint32_t i = 0; i < getSize(); i++) {
-    if (pixels.getPixelColor(i) == 0) { filled = false; }
+    if (pixels.getPixelColor(i + pixelOffset) == 0) { filled = false; }
   }
   return filled;
 }
@@ -108,7 +108,7 @@ bool PixelDisplay::empty() const
 {
   bool empty = true;
   for (uint32_t i = 0; i < getSize(); i++) {
-    if (pixels.getPixelColor(i) != 0) { empty = false; }
+    if (pixels.getPixelColor(i + pixelOffset) != 0) { empty = false; }
   }
   return empty;
 }

@@ -6,7 +6,7 @@
 
 class PixelDisplay {
 public:
-    PixelDisplay(Adafruit_NeoPixel& pixels, uint32_t width, uint32_t height, bool serpentine, bool vertical);
+    PixelDisplay(Adafruit_NeoPixel& pixels, uint32_t width, uint32_t height, bool serpentine, bool vertical, uint32_t pixelOffset = 0);
 
     void setXY(uint8_t x, uint8_t y, uint32_t colour);
     uint32_t getXY(uint8_t x, uint8_t y) const;
@@ -32,6 +32,7 @@ private:
     const uint32_t size;
     const bool serpentine;
     const bool vertical;
+    const uint32_t pixelOffset;
     
 
     uint32_t XYToIndex(uint8_t x, uint8_t y) const;
