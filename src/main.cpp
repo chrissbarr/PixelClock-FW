@@ -27,19 +27,24 @@ enum class Direction {
   right
 };
 
-void gravityFill(Direction fallDir, int rate, bool empty)
+uint32_t colourGenerator_randomHSV() { return Adafruit_NeoPixel::ColorHSV(random(0, 65536)); }
+uint32_t colourGenerator_black() { return 0; }
+
+void gravityFill(Direction fallDir, int rate, bool empty, uint32_t(*colourGenerator)() = colourGenerator_black)
 {
   uint8_t chance = random(rate);
   if (chance == 0) {
     uint8_t x = random(0, display.getWidth());
     uint8_t y = 0;//random(0, display.getWidth());
     if (display.getXY(x, y) == uint32_t(0)) {
-      display.setXY(x, y, pixels.ColorHSV(random(0, 655236)));
+      display.setXY(x, y, colourGenerator());
     }
   }
+  
   for (int y = display.getHeight() - 1; y >= 0; y--) {
     for (uint8_t x = 0; x < display.getWidth(); x++) {
-      if (display.getXY(x, y) != uint32_t(0)) {
+      uint32_t cellColour = display.getXY(x, y);
+      if (cellColour != 0) {
         // if this is the last row
         if (y == display.getHeight() - 1) {
           if (empty) {
@@ -48,7 +53,7 @@ void gravityFill(Direction fallDir, int rate, bool empty)
           continue;
         }
         if (display.getXY(x, y + 1) == uint32_t(0)) {
-          display.setXY(x, y + 1, display.getXY(x, y));
+          display.setXY(x, y + 1, cellColour);
           display.setXY(x, y, 0);
         }
       }
@@ -64,9 +69,105 @@ void setup() {
 
   delay(500);
 
+  while (true) {
+    while (!display.filled()) {
+      gravityFill(Direction::down, 1, false, []() {
+        int r = random(6);
+        switch (r) {
+          case 0:
+            return Adafruit_NeoPixel::Color(255, 0, 0);
+            break;
+          case 1:
+            return Adafruit_NeoPixel::Color(0, 255, 0);
+            break;
+          case 2:
+            return Adafruit_NeoPixel::Color(0, 0, 255);
+            break;
+          case 3:
+            return Adafruit_NeoPixel::Color(127, 127, 0);
+            break;
+          case 4:
+            return Adafruit_NeoPixel::Color(0, 127, 127);
+            break;
+          case 5:
+            return Adafruit_NeoPixel::Color(127, 0, 127);
+            break;
+          default:
+            return Adafruit_NeoPixel::Color(255, 255, 255);
+            break;
+        }
+      });
+      delay(50);
+      display.update();
+
+      bool setFound = false;
+      uint8_t setSize = 3;
+      uint8_t setXCoords[3];
+      uint8_t setYCoords[3];
+
+      for (uint8_t y = 0; y < display.getHeight(); y++) {
+        for (uint8_t x = 1; x < display.getWidth() - 1; x++) {
+          if (display.getXY(x, y) != 0) {
+            if (display.getXY(x - 1, y) == display.getXY(x, y) && display.getXY(x, y) == display.getXY(x + 1, y)) {
+              setFound = true;
+              setXCoords[0] = x - 1;
+              setXCoords[1] = x;
+              setXCoords[2] = x + 1;
+              setYCoords[0] = y;
+              setYCoords[1] = y;
+              setYCoords[2] = y;
+            }
+          }
+        }
+      }
+
+      for (uint8_t x = 0; x < display.getWidth(); x++) {
+        for (uint8_t y = 1; y < display.getHeight() - 1; y++) {
+          if (display.getXY(x, y) != 0) {
+            if (display.getXY(x, y - 1) == display.getXY(x, y) && display.getXY(x, y) == display.getXY(x, y + 1)) {
+              setFound = true;
+              setXCoords[0] = x;
+              setXCoords[1] = x;
+              setXCoords[2] = x;
+              setYCoords[0] = y - 1;
+              setYCoords[1] = y;
+              setYCoords[2] = y + 1;
+            }
+          }
+        }
+      }
+
+      if (setFound) {
+        uint32_t original = display.getXY(setXCoords[0], setYCoords[0]);
+        for (int i = 0; i < 3; i++) {
+          for (int j = 0; j < setSize; j++) {
+            display.setXY(setXCoords[j], setYCoords[j], original);
+          }
+          display.update();
+          delay(250);
+          for (int j = 0; j < setSize; j++) {
+            display.setXY(setXCoords[j], setYCoords[j], 0);
+          }
+          display.update();
+          delay(250);
+        }
+      }
+    }
+    delay(1000);
+
+    while(!display.empty()) {
+      gravityFill(Direction::down, 0, true);
+      delay(250);
+      display.update();
+    }
+    
+    display.fill(0);
+    display.update();
+  }
+
   for (int i = 0; i < 10; i++) {
     while (!display.filled()) {
-      gravityFill(Direction::down, 1, false);
+      gravityFill(Direction::down, 1, false, colourGenerator_randomHSV);
       delay(50);
       display.update();
     }
