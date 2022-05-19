@@ -11,7 +11,7 @@ public:
     void setXY(uint8_t x, uint8_t y, uint32_t colour);
     void fill(uint32_t colour);
 
-    void showCharacters(String string, uint32_t colour, int xOffset, uint8_t spacing = 0);
+    void showCharacters(const String& string, uint32_t colour, int xOffset, uint8_t spacing = 0);
     void showCharacter(char character, uint32_t colour, int xOffset);
 
     void update();

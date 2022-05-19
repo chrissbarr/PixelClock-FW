@@ -22,6 +22,7 @@ int currentChar = 0;
 
 void setup() {
   pixels.begin();
+  pixels.setBrightness(10);
   display.fill(0);
   display.update();
 
@@ -56,14 +57,12 @@ void setup() {
   display.update();
   delay(250);
 
-
-
   for (uint8_t y = 0; y < display.getHeight(); y++) {
     for (uint8_t x = 0; x < display.getWidth(); x++) {
       display.fill(0);
       display.setXY(x, y, Adafruit_NeoPixel::Color(100, 0, 0));
       display.update();
-      delay(10);
+      delay(1);
     }
   }
 
@@ -79,11 +78,7 @@ void setup() {
     display.update();
     delay(100);
   }
-
-
-
 }
-
 
 void loop()
 {

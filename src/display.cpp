@@ -24,7 +24,7 @@ void PixelDisplay::update()
     pixels.show();
 }
 
-void PixelDisplay::showCharacters(String string, uint32_t colour, int xOffset, uint8_t spacing)
+void PixelDisplay::showCharacters(const String& string, uint32_t colour, int xOffset, uint8_t spacing)
 {
     int xOffsetLocal = 0;
     for (const auto& character : string) {
