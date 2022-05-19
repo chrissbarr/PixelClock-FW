@@ -4,7 +4,7 @@
 #include "characters.h"
 
 PixelDisplay::PixelDisplay(Adafruit_NeoPixel& pixels, uint32_t width, uint32_t height, bool serpentine, bool vertical) :
-    pixels(pixels), width(width), height(height), serpentine(serpentine), vertical(vertical)
+    pixels(pixels), width(width), height(height), serpentine(serpentine), vertical(vertical), size(width * height)
 {
 
 }
@@ -14,9 +14,14 @@ void PixelDisplay::setXY(uint8_t x, uint8_t y, uint32_t colour)
     pixels.setPixelColor(XYToIndex(x, y), colour);
 }
 
+uint32_t PixelDisplay::getXY(uint8_t x, uint8_t y) const
+{
+    return pixels.getPixelColor(XYToIndex(x, y));
+}
+
 void PixelDisplay::fill(uint32_t colour)
 {
-    pixels.fill(colour, 0, width * height);
+    pixels.fill(colour, 0, getSize());
 }
 
 void PixelDisplay::update() 
@@ -56,7 +61,7 @@ void PixelDisplay::showCharacter(char character, uint32_t colour, int xOffset)
     // }
 }
 
-uint32_t PixelDisplay::XYToIndex( uint8_t x, uint8_t y)
+uint32_t PixelDisplay::XYToIndex( uint8_t x, uint8_t y) const
 {
   uint16_t i;
   
@@ -88,4 +93,13 @@ uint32_t PixelDisplay::XYToIndex( uint8_t x, uint8_t y)
   }
   
   return i;
+}
+
+bool PixelDisplay::filled() const
+{
+  bool filled = true;
+  for (uint32_t i = 0; i < getSize(); i++) {
+    if (pixels.getPixelColor(i) == 0) { filled = false; }
+  }
+  return filled;
 }
