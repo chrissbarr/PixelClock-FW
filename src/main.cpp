@@ -22,7 +22,7 @@ int currentChar = 0;
 
 void setup() {
   pixels.begin();
-  pixels.setBrightness(10);
+  pixels.setBrightness(255);
   display.fill(0);
   display.update();
 
@@ -77,6 +77,18 @@ void setup() {
     display.showCharacter('D', Adafruit_NeoPixel::Color(0, 25, 0), i);
     display.update();
     delay(100);
+  }
+
+  for (uint32_t i = 0; i < 65536; i += 1) {
+    uint32_t colour = pixels.ColorHSV(i, 255, 255);
+    display.fill(0);
+    display.showCharacter('1', colour, 0);
+    display.showCharacter('2', colour, 4);
+    display.showCharacter(':', colour, 7);
+    display.showCharacter('3', colour, 10);
+    display.showCharacter('4', colour, 14);
+    display.update();
+    //delay(1);
   }
 }
 
