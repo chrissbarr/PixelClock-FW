@@ -26,12 +26,13 @@ public:
 
 
 private:
+    Adafruit_NeoPixel& pixels;
     const uint32_t width;
     const uint32_t height;
     const uint32_t size;
     const bool serpentine;
     const bool vertical;
-    Adafruit_NeoPixel& pixels;
+    
 
     uint32_t XYToIndex(uint8_t x, uint8_t y) const;
 };
