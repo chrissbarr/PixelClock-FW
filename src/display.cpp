@@ -3,7 +3,7 @@
 
 #include "characters.h"
 
-PixelDisplay::PixelDisplay(Adafruit_NeoPixel& pixels, uint32_t width, uint32_t height, bool serpentine, bool vertical, uint32_t pixelOffset) :
+PixelDisplay::PixelDisplay(Adafruit_NeoPixel& pixels, uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset) :
     pixels(pixels), width(width), height(height), size(width * height), serpentine(serpentine), vertical(vertical), pixelOffset(pixelOffset)
 {
 
@@ -61,7 +61,7 @@ void PixelDisplay::showCharacter(char character, uint32_t colour, int xOffset)
     // }
 }
 
-uint32_t PixelDisplay::XYToIndex( uint8_t x, uint8_t y) const
+uint32_t PixelDisplay::XYToIndex(uint8_t x, uint8_t y) const
 {
   uint16_t i;
   
@@ -95,11 +95,11 @@ uint32_t PixelDisplay::XYToIndex( uint8_t x, uint8_t y) const
   return i;
 }
 
-bool PixelDisplay::filled() const
+bool PixelDisplay::filled(uint32_t colour) const
 {
   bool filled = true;
   for (uint32_t i = 0; i < getSize(); i++) {
-    if (pixels.getPixelColor(i + pixelOffset) == 0) { filled = false; }
+    if (pixels.getPixelColor(i + pixelOffset) == colour) { filled = false; }
   }
   return filled;
 }
