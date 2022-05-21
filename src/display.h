@@ -17,6 +17,7 @@ public:
 
     void setXY(uint8_t x, uint8_t y, uint32_t colour);
     uint32_t getXY(uint8_t x, uint8_t y) const;
+    void fill(uint32_t colour, const DisplayRegion& region);
     void fill(uint32_t colour);
 
     void showCharacters(const String& string, uint32_t colour, int xOffset, uint8_t spacing = 0);

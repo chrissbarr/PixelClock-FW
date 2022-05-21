@@ -31,17 +31,13 @@ bool fillRandomly(PixelDisplay& display, uint32_t fillInterval, uint32_t(*colour
   static uint32_t lastSpawnTime = 0;
   uint32_t timeNow = millis();
 
-  Serial.println("fillRandomly");
-
   if (timeNow - lastSpawnTime >= fillInterval) {
-    Serial.println("timeNow");
     if (!display.filled(0, spawnRegion)) {
-      Serial.println("NotFilled!");
       bool filledPixel = false;
       while (!filledPixel) {
         uint8_t x = random(spawnRegion.xMin, spawnRegion.xMax + 1);
         uint8_t y = random(spawnRegion.yMin, spawnRegion.yMax + 1);
-        Serial.print("X: "); Serial.print(x); Serial.print(" Y: "); Serial.println(y);
+        //Serial.print("X: "); Serial.print(x); Serial.print(" Y: "); Serial.println(y);
         if (display.getXY(x, y) == uint32_t(0)) {
           display.setXY(x, y, colourGenerator());
           filledPixel = true;
@@ -60,18 +56,17 @@ bool fillRandomly(PixelDisplay& display, uint32_t fillInterval, uint32_t(*colour
   return fillRandomly(display, fillInterval, colourGenerator, display.getFullDisplayRegion());
 }
 
-bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)() = colourGenerator_black)
+bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)(), DisplayRegion displayRegion)
 {
   static uint32_t lastMoveTime = 0;
   uint32_t timeNow = millis();
 
   DisplayRegion spawnZone;
-  spawnZone.xMin = 0;
-  spawnZone.xMax = display.getWidth() - 1;
-  spawnZone.yMin = 0;
-  spawnZone.yMax = 0;
+  spawnZone.xMin = displayRegion.xMin;
+  spawnZone.xMax = displayRegion.xMax;
+  spawnZone.yMin = displayRegion.yMin;
+  spawnZone.yMax = displayRegion.yMin;
 
-  Serial.println("gravityFill");
   if (fillInterval != 0) {
     fillRandomly(display, fillInterval, colourGenerator, spawnZone);
   }
@@ -79,12 +74,12 @@ bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInte
   if (moveInterval != 0) {
     // Move all pixels down
     if (timeNow - lastMoveTime > moveInterval) {
-      for (int y = display.getHeight() - 1; y >= 0; y--) {
-        for (uint8_t x = 0; x < display.getWidth(); x++) {
+      for (int y = displayRegion.yMax; y >= displayRegion.yMin; y--) {
+        for (uint8_t x = displayRegion.xMin; x <= displayRegion.xMax; x++) {
           uint32_t cellColour = display.getXY(x, y);
           if (cellColour != 0) {
             // if this is the last row
-            if (y == display.getHeight() - 1) {
+            if (y == displayRegion.yMax) {
               if (empty) {
                 display.setXY(x, y, 0);
               }
@@ -100,8 +95,134 @@ bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInte
       lastMoveTime = timeNow;
     }  
   }
+  return !display.filled(0, displayRegion);
+}
 
-  return !display.filled(0);
+bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)())
+{
+  return gravityFill(display, fillInterval, moveInterval, empty, colourGenerator, display.getFullDisplayRegion());
+}
+
+void tetris(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval)
+{
+  gravityFill(display, fillInterval, moveInterval, false, [](){
+    return uint32_t(16056320);
+      // int r = random(1);
+      // switch (r) {
+      //   case 0:
+      //     return uint32_t(16056320);
+      //     break;
+      //   case 1:
+      //     return Adafruit_NeoPixel::Color(0, 255, 0);
+      //     break;
+      //   case 2:
+      //     return Adafruit_NeoPixel::Color(0, 0, 255);
+      //     break;
+      //   case 3:
+      //     return Adafruit_NeoPixel::Color(127, 127, 0);
+      //     break;
+      //   case 4:
+      //     return Adafruit_NeoPixel::Color(0, 127, 127);
+      //     break;
+      //   case 5:
+      //     return Adafruit_NeoPixel::Color(127, 0, 127);
+      //     break;
+      //   default:
+      //     return Adafruit_NeoPixel::Color(255, 255, 255);
+      //     break;
+      // }
+  });
+
+  bool setFound = false;
+  uint8_t setSize = 3;
+  uint8_t setXCoords[3];
+  uint8_t setYCoords[3];
+
+  // for (uint8_t y = 0; y < display.getHeight(); y++) {
+  //   for (uint8_t x = 1; x < display.getWidth() - 1; x++) {
+  //     uint32_t cellColour = display.getXY(x, y);
+  //     if (cellColour != 0) {
+  //       if (cellColour == display.getXY(x - 1, y) 
+  //       && cellColour == display.getXY(x + 1, y)) {
+  //         //Serial.println("XMatch");
+  //         setFound = true;
+  //         setXCoords[0] = x - 1;
+  //         setXCoords[1] = x;
+  //         setXCoords[2] = x + 1;
+  //         setYCoords[0] = y;
+  //         setYCoords[1] = y;
+  //         setYCoords[2] = y;
+  //       }
+  //     }
+  //   }
+  // }
+
+  // for (uint8_t x = 0; x < display.getWidth(); x++) {
+  //   for (uint8_t y = 1; y < display.getHeight() - 1; y++) {
+  //     Serial.println("---");
+  //     Serial.print(x); Serial.print("\t"); Serial.println(y);
+  //     uint32_t cellColour = display.getXY(x, y);
+  //     uint32_t prevCell = display.getXY(x, y - 1);
+  //     uint32_t nextCell = display.getXY(x, y + 1);
+      
+  //     Serial.println(prevCell);
+  //     Serial.println(cellColour);
+  //     Serial.println(nextCell);
+  //     if (cellColour != 0) {
+  //       if (cellColour == prevCell
+  //       && cellColour == nextCell) {
+  //         setFound = true;
+  //         setXCoords[0] = x;
+  //         setXCoords[1] = x;
+  //         setXCoords[2] = x;
+  //         setYCoords[0] = y - 1;
+  //         setYCoords[1] = y;
+  //         setYCoords[2] = y + 1;
+  //       }
+  //     }
+  //   }
+  // }
+
+  auto checkMatch = [&](uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t x3, uint8_t y3) {
+    uint32_t val1 = display.getXY(x1, y1);
+    if (val1 == 0) { return; }
+    uint32_t val2 = display.getXY(x2, y2);
+    uint32_t val3 = display.getXY(x3, y3);
+
+    Serial.println("---");
+    Serial.print("x="); Serial.print(x1); Serial.print("\ty="); Serial.print(y1); Serial.print("\t"); Serial.println(val1);
+    Serial.print("x="); Serial.print(x2); Serial.print("\ty="); Serial.print(y2); Serial.print("\t"); Serial.println(val2);
+    Serial.print("x="); Serial.print(x3); Serial.print("\ty="); Serial.print(y3); Serial.print("\t"); Serial.println(val3);
+
+    if (val1 == val2 && val2 == val3) { 
+      setFound = true;
+      setXCoords[0] = x1;
+      setXCoords[1] = x2;
+      setXCoords[2] = x3;
+      setYCoords[0] = y1;
+      setYCoords[1] = y2;
+      setYCoords[2] = y3;
+    }
+  };
+
+  for (uint8_t x = 0; x < display.getWidth(); x++) {
+    for (uint8_t y = 0; y < display.getHeight(); y++) {
+
+
+      if (x > 0 && x < display.getWidth() - 1) {
+        checkMatch(x - 1, y, x, y, x + 1, y);
+      }
+      if (y > 0 && y < display.getHeight() - 1) {
+        checkMatch(x, y - 1, x, y, x, y + 1);
+      }
+    }
+  }
+
+  if (setFound) {
+    for (int j = 0; j < setSize; j++) {
+      display.setXY(setXCoords[j], setYCoords[j], 0);
+    }
+  }
 }
 
 void displayDiagnostic(PixelDisplay& display)
@@ -177,7 +298,7 @@ void setup() {
   Serial.begin(250000);
   Serial.println("Serial begin!");
   pixels.begin();
-  pixels.setBrightness(50);
+  pixels.setBrightness(100);
 
   display.fill(0);
   display.update();
@@ -191,45 +312,53 @@ void setup() {
 void loop()
 {
 
+  // DisplayRegion randRegion;
+  // randRegion.xMin = 10;
+  // randRegion.xMax = 16;
+  // randRegion.yMin = 0;
+  // randRegion.yMax = 4;
+
   // switch (effectIndex) {
   //   case 0:
-  //     if (fillRandomly(display, 100, colourGenerator_randomHSV)) {
+  //     if (fillRandomly(display, 100, colourGenerator_randomHSV, randRegion)) {
   //       effectIndex++;
-  //       display.fill(0);
+  //       display.fill(0, randRegion);
   //     }
   //     break;
   //   case 1:
-  //     if (fillRandomly(display, 10, colourGenerator_randomHSV)) {
+  //     if (fillRandomly(display, 10, colourGenerator_randomHSV, randRegion)) {
   //       effectIndex++;
-  //       display.fill(0);
+  //       display.fill(0, randRegion);
   //     }
   //     break;
   //   case 2:
-  //     if (fillRandomly(display, 10, colourGenerator_randomHSV)) {
+  //     if (fillRandomly(display, 10, colourGenerator_randomHSV, randRegion)) {
   //       effectIndex++;
-  //       display.fill(0);
+  //       display.fill(0, randRegion);
   //     }
   //   break;
   //   default:
   //     effectIndex = 0;
   // }
 
-  static int state = 0;
+  // static int state = 0;
+  // switch(state) {
+  //   case 0:
+  //     gravityFill(display, 100, 100, false, colourGenerator_randomHSV);
+  //     if (display.filled(0)) {
+  //       state = 1;
+  //     }
+  //     break;
+  //   case 1:
+  //     gravityFill(display, 0, 100, true, colourGenerator_randomHSV);
+  //     if (display.empty()) {
+  //       state = 0;
+  //     }
+  //     break;
+  // }
 
-  switch(state) {
-    case 0:
-      gravityFill(display, 100, 100, false, colourGenerator_randomHSV);
-      if (display.filled()) {
-        state = 1;
-      }
-      break;
-    case 1:
-      gravityFill(display, 0, 100, true, colourGenerator_randomHSV);
-      if (display.empty()) {
-        state = 0;
-      }
-      break;
-  }
+  tetris(display, 100, 100);
+  if (display.filled()) { display.fill(0); }
 
 
   
@@ -241,7 +370,7 @@ void loop()
 
   // Manage loop timing
   unsigned long loopTime = millis() - lastLoopTime;
-  Serial.print("Loop time:" ); Serial.println(loopTime);
+  //Serial.print("Loop time:" ); Serial.println(loopTime);
   while (millis() - lastLoopTime < loopTime) {}
   lastLoopTime = millis();
 }

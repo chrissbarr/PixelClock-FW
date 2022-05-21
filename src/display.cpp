@@ -22,9 +22,19 @@ uint32_t PixelDisplay::getXY(uint8_t x, uint8_t y) const
     return pixels.getPixelColor(XYToIndex(x, y) + pixelOffset);
 }
 
+void PixelDisplay::fill(uint32_t colour, const DisplayRegion& region)
+{
+  for (uint8_t x = region.xMin; x < region.xMax; x++) {
+    for (uint8_t y = region.yMin; y < region.yMax; y++) {
+      setXY(x, y, colour);
+    }
+  }
+    pixels.fill(colour, pixelOffset, getSize());
+}
+
 void PixelDisplay::fill(uint32_t colour)
 {
-    pixels.fill(colour, pixelOffset, getSize());
+  pixels.fill(colour, pixelOffset, getSize());
 }
 
 void PixelDisplay::update() 
@@ -125,8 +135,8 @@ bool PixelDisplay::filled(uint32_t colour) const
 bool PixelDisplay::empty(const DisplayRegion& region) const
 {
   bool empty = true;
-  for (uint8_t x = region.xMin; x < region.xMax; x++) {
-    for (uint8_t y = region.yMin; y < region.yMax; y++) {
+  for (uint8_t x = region.xMin; x <= region.xMax; x++) {
+    for (uint8_t y = region.yMin; y <= region.yMax; y++) {
       if (getXY(x, y) != 0) { empty = false; }
     }
   }
