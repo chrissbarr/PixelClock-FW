@@ -41,6 +41,12 @@ void PixelDisplay::showCharacters(const String& string, uint32_t colour, int xOf
 void PixelDisplay::showCharacter(char character, uint32_t colour, int xOffset)
 {
     uint8_t index = 0;
+
+    // Lowercase to uppercase
+    if (character >= 'a' && character <= 'z') {
+        character -= 32;
+    }
+
     if (character >= ' ' && character <= 'Z') {
         index = character - ' ';
     }
@@ -56,9 +62,7 @@ void PixelDisplay::showCharacter(char character, uint32_t colour, int xOffset)
         }
     }
 
-    // if (character >= 'a' && character <= 'z') {
-    //     index = character - '';
-    // }
+
 }
 
 uint32_t PixelDisplay::XYToIndex(uint8_t x, uint8_t y) const
@@ -112,3 +116,50 @@ bool PixelDisplay::empty() const
   }
   return empty;
 }
+
+TextScroller::TextScroller(
+  PixelDisplay& display, 
+  const String& textString, 
+  uint16_t timeToHoldAtEnd, 
+  bool reverseOnFinish, 
+  uint8_t characterSpacing) :
+  display(display),
+  text(textString),
+  timeToHoldAtEnd(timeToHoldAtEnd),
+  reverseOnFinish(reverseOnFinish),
+  charSpacing(characterSpacing)
+  {
+    lastUpdateTime = millis();
+    currentOffset = 0;
+    targetOffset = textString.length() * (3 + characterSpacing) - display.getWidth();
+  }
+
+  bool TextScroller::update(uint32_t colour, uint32_t stepDelay)
+  {
+    if (currentOffset == targetOffset) {
+      if (arrivedAtEndTime == 0) {
+        arrivedAtEndTime = millis();
+      } else {
+        if (millis() - arrivedAtEndTime > timeToHoldAtEnd) {
+          if (reverseOnFinish && currentOffset != 0) {
+            targetOffset = 0;
+            arrivedAtEndTime = 0;
+          } else {
+            finished = true;
+          }
+        }
+      }
+    } else {
+      if (millis() - lastUpdateTime >= stepDelay) {
+        if (targetOffset > currentOffset) {
+          currentOffset += 1;
+        } else {
+          currentOffset -= 1;
+        }
+        lastUpdateTime = millis();
+      }
+    }
+
+    display.showCharacters(text, colour, -currentOffset, charSpacing);
+    return finished;
+  }
