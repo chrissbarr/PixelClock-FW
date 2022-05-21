@@ -2,17 +2,15 @@
 #include "characters.h"
 #include "display.h"
 
-#define LED_PIN  26
-#define BRIGHTNESS 255
+// LED Panel Configuration
+constexpr int16_t matrixLEDPin = 26;
+constexpr uint8_t matrixWidth = 17;
+constexpr uint8_t matrixHeight = 5;
+constexpr uint8_t matrixSize = matrixWidth * matrixHeight;
 
-// Params for width and height
-const uint8_t kMatrixWidth = 17;
-const uint8_t kMatrixHeight = 5;
+Adafruit_NeoPixel pixels(matrixSize, matrixLEDPin, NEO_GRBW + NEO_KHZ800);
 
-#define NUM_LEDS (kMatrixWidth * kMatrixHeight)
-Adafruit_NeoPixel pixels(NUM_LEDS, LED_PIN, NEO_GRBW + NEO_KHZ800);
-
-PixelDisplay display(pixels, kMatrixWidth, kMatrixHeight, false, false);
+PixelDisplay display(pixels, matrixWidth, matrixHeight, false, false);
 
 unsigned long lastLoopTime = 0;
 constexpr unsigned long loopTime = 25;
@@ -25,27 +23,29 @@ enum class Direction {
 };
 
 uint32_t colourGenerator_randomHSV() { return Adafruit_NeoPixel::ColorHSV(random(0, 65536)); }
-uint32_t colorGenerator_cycleHSV() { 
-  return Adafruit_NeoPixel::ColorHSV(millis(), 255, 255);
-}
+uint32_t colorGenerator_cycleHSV() { return Adafruit_NeoPixel::ColorHSV(millis(), 255, 255); }
 uint32_t colourGenerator_black() { return 0; }
 
-bool fillRandomly(PixelDisplay& display, unsigned long fillInterval, uint32_t(*colourGenerator)() = colourGenerator_black)
+bool fillRandomly(PixelDisplay& display, uint32_t fillInterval, uint32_t(*colourGenerator)(), const DisplayRegion& spawnRegion)
 {
-  static unsigned long lastSpawnTime = 0;
-  unsigned long timeNow = millis();
+  static uint32_t lastSpawnTime = 0;
+  uint32_t timeNow = millis();
+
+  Serial.println("fillRandomly");
 
   if (timeNow - lastSpawnTime >= fillInterval) {
-    if (!display.filled()) {
+    Serial.println("timeNow");
+    if (!display.filled(0, spawnRegion)) {
+      Serial.println("NotFilled!");
       bool filledPixel = false;
       while (!filledPixel) {
-        uint8_t x = random(0, display.getWidth());
-        uint8_t y = random(0, display.getHeight());
+        uint8_t x = random(spawnRegion.xMin, spawnRegion.xMax + 1);
+        uint8_t y = random(spawnRegion.yMin, spawnRegion.yMax + 1);
+        Serial.print("X: "); Serial.print(x); Serial.print(" Y: "); Serial.println(y);
         if (display.getXY(x, y) == uint32_t(0)) {
           display.setXY(x, y, colourGenerator());
           filledPixel = true;
           lastSpawnTime = timeNow;
-          Serial.print("Spawn: "); Serial.println(millis());
         }
       }
     } else {
@@ -53,6 +53,55 @@ bool fillRandomly(PixelDisplay& display, unsigned long fillInterval, uint32_t(*c
     }
   }
   return false;
+}
+
+bool fillRandomly(PixelDisplay& display, uint32_t fillInterval, uint32_t(*colourGenerator)())
+{
+  return fillRandomly(display, fillInterval, colourGenerator, display.getFullDisplayRegion());
+}
+
+bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)() = colourGenerator_black)
+{
+  static uint32_t lastMoveTime = 0;
+  uint32_t timeNow = millis();
+
+  DisplayRegion spawnZone;
+  spawnZone.xMin = 0;
+  spawnZone.xMax = display.getWidth() - 1;
+  spawnZone.yMin = 0;
+  spawnZone.yMax = 0;
+
+  Serial.println("gravityFill");
+  if (fillInterval != 0) {
+    fillRandomly(display, fillInterval, colourGenerator, spawnZone);
+  }
+
+  if (moveInterval != 0) {
+    // Move all pixels down
+    if (timeNow - lastMoveTime > moveInterval) {
+      for (int y = display.getHeight() - 1; y >= 0; y--) {
+        for (uint8_t x = 0; x < display.getWidth(); x++) {
+          uint32_t cellColour = display.getXY(x, y);
+          if (cellColour != 0) {
+            // if this is the last row
+            if (y == display.getHeight() - 1) {
+              if (empty) {
+                display.setXY(x, y, 0);
+              }
+              continue;
+            }
+            if (display.getXY(x, y + 1) == uint32_t(0)) {
+              display.setXY(x, y + 1, cellColour);
+              display.setXY(x, y, 0);
+            }
+          }
+        }
+      }
+      lastMoveTime = timeNow;
+    }  
+  }
+
+  return !display.filled(0);
 }
 
 void displayDiagnostic(PixelDisplay& display)
@@ -134,7 +183,7 @@ void setup() {
   display.update();
   delay(500);
 
-  displayDiagnostic(display);
+  //displayDiagnostic(display);
 
 
 }
@@ -142,33 +191,53 @@ void setup() {
 void loop()
 {
 
-  switch (effectIndex) {
+  // switch (effectIndex) {
+  //   case 0:
+  //     if (fillRandomly(display, 100, colourGenerator_randomHSV)) {
+  //       effectIndex++;
+  //       display.fill(0);
+  //     }
+  //     break;
+  //   case 1:
+  //     if (fillRandomly(display, 10, colourGenerator_randomHSV)) {
+  //       effectIndex++;
+  //       display.fill(0);
+  //     }
+  //     break;
+  //   case 2:
+  //     if (fillRandomly(display, 10, colourGenerator_randomHSV)) {
+  //       effectIndex++;
+  //       display.fill(0);
+  //     }
+  //   break;
+  //   default:
+  //     effectIndex = 0;
+  // }
+
+  static int state = 0;
+
+  switch(state) {
     case 0:
-      if (fillRandomly(display, 100, colourGenerator_randomHSV)) {
-        effectIndex++;
-        display.fill(0);
+      gravityFill(display, 100, 100, false, colourGenerator_randomHSV);
+      if (display.filled()) {
+        state = 1;
       }
       break;
     case 1:
-      if (fillRandomly(display, 10, colourGenerator_randomHSV)) {
-        effectIndex++;
-        display.fill(0);
+      gravityFill(display, 0, 100, true, colourGenerator_randomHSV);
+      if (display.empty()) {
+        state = 0;
       }
       break;
-    case 2:
-      if (fillRandomly(display, 10, colourGenerator_randomHSV)) {
-        effectIndex++;
-        display.fill(0);
-      }
-    break;
-    default:
-      effectIndex = 0;
   }
+
+
+  
 
 
   display.update(); 
 
-  Serial.println(millis());
+  // Serial.println(millis());
 
   // Manage loop timing
   unsigned long loopTime = millis() - lastLoopTime;

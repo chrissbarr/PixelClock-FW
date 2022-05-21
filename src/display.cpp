@@ -6,7 +6,10 @@
 PixelDisplay::PixelDisplay(Adafruit_NeoPixel& pixels, uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset) :
     pixels(pixels), width(width), height(height), size(width * height), serpentine(serpentine), vertical(vertical), pixelOffset(pixelOffset)
 {
-
+  fullDisplay.xMin = 0;
+  fullDisplay.xMax = width - 1;
+  fullDisplay.yMin = 0;
+  fullDisplay.yMax = height - 1;
 }
 
 void PixelDisplay::setXY(uint8_t x, uint8_t y, uint32_t colour)
@@ -99,6 +102,17 @@ uint32_t PixelDisplay::XYToIndex(uint8_t x, uint8_t y) const
   return i;
 }
 
+bool PixelDisplay::filled(uint32_t colour, const DisplayRegion& region) const
+{
+  bool filled = true;
+  for (uint8_t x = region.xMin; x <= region.xMax; x++) {
+    for (uint8_t y = region.yMin; y <= region.yMax; y++) {
+      if (getXY(x, y) == colour) { filled = false; }
+    }
+  }
+  return filled;
+}
+
 bool PixelDisplay::filled(uint32_t colour) const
 {
   bool filled = true;
@@ -106,6 +120,17 @@ bool PixelDisplay::filled(uint32_t colour) const
     if (pixels.getPixelColor(i + pixelOffset) == colour) { filled = false; }
   }
   return filled;
+}
+
+bool PixelDisplay::empty(const DisplayRegion& region) const
+{
+  bool empty = true;
+  for (uint8_t x = region.xMin; x < region.xMax; x++) {
+    for (uint8_t y = region.yMin; y < region.yMax; y++) {
+      if (getXY(x, y) != 0) { empty = false; }
+    }
+  }
+  return empty;
 }
 
 bool PixelDisplay::empty() const

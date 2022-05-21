@@ -4,6 +4,12 @@
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 
+struct DisplayRegion {
+    uint8_t xMin;
+    uint8_t xMax;
+    uint8_t yMin;
+    uint8_t yMax;
+};
 
 class PixelDisplay {
 public:
@@ -22,8 +28,13 @@ public:
     uint8_t getHeight() const { return height; }
     uint32_t getSize() const { return size; }
 
+    bool filled(uint32_t colour, const DisplayRegion& region) const;
     bool filled(uint32_t colour = 0) const;
+    bool empty(const DisplayRegion& region) const;
     bool empty() const;
+
+    const DisplayRegion& getFullDisplayRegion() const { return fullDisplay; }
+
 
 
 private:
@@ -34,6 +45,8 @@ private:
     const bool serpentine;
     const bool vertical;
     const uint32_t pixelOffset;
+
+    DisplayRegion fullDisplay;
 
     uint32_t XYToIndex(uint8_t x, uint8_t y) const;
 };
