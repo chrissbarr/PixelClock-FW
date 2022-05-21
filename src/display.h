@@ -14,6 +14,7 @@ struct DisplayRegion {
 class PixelDisplay {
 public:
     PixelDisplay(Adafruit_NeoPixel& pixels, uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset = 0);
+    ~PixelDisplay();
 
     void setXY(uint8_t x, uint8_t y, uint32_t colour);
     uint32_t getXY(uint8_t x, uint8_t y) const;
@@ -46,6 +47,8 @@ private:
     const bool serpentine;
     const bool vertical;
     const uint32_t pixelOffset;
+
+    uint32_t *buffer;
 
     DisplayRegion fullDisplay;
 

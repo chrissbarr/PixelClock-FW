@@ -106,31 +106,12 @@ bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInte
 void tetris(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval)
 {
   gravityFill(display, fillInterval, moveInterval, false, [](){
-    return uint32_t(16056320);
-      // int r = random(1);
-      // switch (r) {
-      //   case 0:
-      //     return uint32_t(16056320);
-      //     break;
-      //   case 1:
-      //     return Adafruit_NeoPixel::Color(0, 255, 0);
-      //     break;
-      //   case 2:
-      //     return Adafruit_NeoPixel::Color(0, 0, 255);
-      //     break;
-      //   case 3:
-      //     return Adafruit_NeoPixel::Color(127, 127, 0);
-      //     break;
-      //   case 4:
-      //     return Adafruit_NeoPixel::Color(0, 127, 127);
-      //     break;
-      //   case 5:
-      //     return Adafruit_NeoPixel::Color(127, 0, 127);
-      //     break;
-      //   default:
-      //     return Adafruit_NeoPixel::Color(255, 255, 255);
-      //     break;
-      // }
+    const uint32_t choices[] = {
+      Adafruit_NeoPixel::Color(255, 0, 0),
+      Adafruit_NeoPixel::Color(0, 255, 0),
+      Adafruit_NeoPixel::Color(0, 0, 255),
+    };
+    return choices[random(sizeof(choices)/sizeof(choices[0]))];
   });
 
   bool setFound = false;
@@ -138,61 +119,11 @@ void tetris(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval)
   uint8_t setXCoords[3];
   uint8_t setYCoords[3];
 
-  // for (uint8_t y = 0; y < display.getHeight(); y++) {
-  //   for (uint8_t x = 1; x < display.getWidth() - 1; x++) {
-  //     uint32_t cellColour = display.getXY(x, y);
-  //     if (cellColour != 0) {
-  //       if (cellColour == display.getXY(x - 1, y) 
-  //       && cellColour == display.getXY(x + 1, y)) {
-  //         //Serial.println("XMatch");
-  //         setFound = true;
-  //         setXCoords[0] = x - 1;
-  //         setXCoords[1] = x;
-  //         setXCoords[2] = x + 1;
-  //         setYCoords[0] = y;
-  //         setYCoords[1] = y;
-  //         setYCoords[2] = y;
-  //       }
-  //     }
-  //   }
-  // }
-
-  // for (uint8_t x = 0; x < display.getWidth(); x++) {
-  //   for (uint8_t y = 1; y < display.getHeight() - 1; y++) {
-  //     Serial.println("---");
-  //     Serial.print(x); Serial.print("\t"); Serial.println(y);
-  //     uint32_t cellColour = display.getXY(x, y);
-  //     uint32_t prevCell = display.getXY(x, y - 1);
-  //     uint32_t nextCell = display.getXY(x, y + 1);
-      
-  //     Serial.println(prevCell);
-  //     Serial.println(cellColour);
-  //     Serial.println(nextCell);
-  //     if (cellColour != 0) {
-  //       if (cellColour == prevCell
-  //       && cellColour == nextCell) {
-  //         setFound = true;
-  //         setXCoords[0] = x;
-  //         setXCoords[1] = x;
-  //         setXCoords[2] = x;
-  //         setYCoords[0] = y - 1;
-  //         setYCoords[1] = y;
-  //         setYCoords[2] = y + 1;
-  //       }
-  //     }
-  //   }
-  // }
-
   auto checkMatch = [&](uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t x3, uint8_t y3) {
     uint32_t val1 = display.getXY(x1, y1);
     if (val1 == 0) { return; }
     uint32_t val2 = display.getXY(x2, y2);
     uint32_t val3 = display.getXY(x3, y3);
-
-    Serial.println("---");
-    Serial.print("x="); Serial.print(x1); Serial.print("\ty="); Serial.print(y1); Serial.print("\t"); Serial.println(val1);
-    Serial.print("x="); Serial.print(x2); Serial.print("\ty="); Serial.print(y2); Serial.print("\t"); Serial.println(val2);
-    Serial.print("x="); Serial.print(x3); Serial.print("\ty="); Serial.print(y3); Serial.print("\t"); Serial.println(val3);
 
     if (val1 == val2 && val2 == val3) { 
       setFound = true;
@@ -207,8 +138,6 @@ void tetris(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval)
 
   for (uint8_t x = 0; x < display.getWidth(); x++) {
     for (uint8_t y = 0; y < display.getHeight(); y++) {
-
-
       if (x > 0 && x < display.getWidth() - 1) {
         checkMatch(x - 1, y, x, y, x + 1, y);
       }

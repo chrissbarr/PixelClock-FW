@@ -10,16 +10,23 @@ PixelDisplay::PixelDisplay(Adafruit_NeoPixel& pixels, uint8_t width, uint8_t hei
   fullDisplay.xMax = width - 1;
   fullDisplay.yMin = 0;
   fullDisplay.yMax = height - 1;
+
+  buffer = new uint32_t[size] {0};
+}
+
+PixelDisplay::~PixelDisplay()
+{
+  delete [] buffer;
 }
 
 void PixelDisplay::setXY(uint8_t x, uint8_t y, uint32_t colour)
 {
-    pixels.setPixelColor(XYToIndex(x, y) + pixelOffset, colour);
+    buffer[XYToIndex(x, y)] = colour;
 }
 
 uint32_t PixelDisplay::getXY(uint8_t x, uint8_t y) const
 {
-    return pixels.getPixelColor(XYToIndex(x, y) + pixelOffset);
+    return buffer[XYToIndex(x, y)];
 }
 
 void PixelDisplay::fill(uint32_t colour, const DisplayRegion& region)
@@ -29,17 +36,21 @@ void PixelDisplay::fill(uint32_t colour, const DisplayRegion& region)
       setXY(x, y, colour);
     }
   }
-    pixels.fill(colour, pixelOffset, getSize());
 }
 
 void PixelDisplay::fill(uint32_t colour)
 {
-  pixels.fill(colour, pixelOffset, getSize());
+  for (uint32_t i = 0; i < size; i++) {
+    buffer[i] = colour;
+  }
 }
 
 void PixelDisplay::update() 
 {
-    pixels.show();
+  for (uint32_t i = 0; i < size; i++) {
+    pixels.setPixelColor(i + pixelOffset, buffer[i]);
+  }
+  pixels.show();
 }
 
 void PixelDisplay::showCharacters(const String& string, uint32_t colour, int xOffset, uint8_t spacing)
@@ -127,7 +138,7 @@ bool PixelDisplay::filled(uint32_t colour) const
 {
   bool filled = true;
   for (uint32_t i = 0; i < getSize(); i++) {
-    if (pixels.getPixelColor(i + pixelOffset) == colour) { filled = false; }
+    if (buffer[i] == colour) { filled = false; }
   }
   return filled;
 }
@@ -147,7 +158,7 @@ bool PixelDisplay::empty() const
 {
   bool empty = true;
   for (uint32_t i = 0; i < getSize(); i++) {
-    if (pixels.getPixelColor(i + pixelOffset) != 0) { empty = false; }
+    if (buffer[i] != 0) { empty = false; }
   }
   return empty;
 }
