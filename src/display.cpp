@@ -59,6 +59,7 @@ void PixelDisplay::showCharacters(const String& string, uint32_t colour, int xOf
         FontGlyph g = characterFontArray[charToIndex(character)];
         showCharacter(g, colour, xOffset + xOffsetLocal);
         xOffsetLocal += g.width + spacing;
+        if (xOffset + xOffsetLocal > getWidth()) { break; }
     }
 }
 

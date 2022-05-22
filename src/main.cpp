@@ -1,11 +1,13 @@
+#include <SPI.h>
 #include <Adafruit_NeoPixel.h>
 #include <TimeLib.h>
+#include <RTClib.h>
 
 #include "characters.h"
 #include "display.h"
 
 // LED Panel Configuration
-constexpr int16_t matrixLEDPin = 26;
+constexpr int16_t matrixLEDPin = 14;
 constexpr uint8_t matrixWidth = 17;
 constexpr uint8_t matrixHeight = 5;
 constexpr uint8_t matrixSize = matrixWidth * matrixHeight;
@@ -16,6 +18,8 @@ PixelDisplay display(pixels, matrixWidth, matrixHeight, false, false);
 
 unsigned long lastLoopTime = 0;
 constexpr unsigned long loopTime = 25;
+
+RTC_DS3231 rtc;
 
 enum class Direction {
   up,
@@ -239,11 +243,76 @@ void displayDiagnostic(PixelDisplay& display)
 
 int effectIndex = 0;
 
+constexpr char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+
+// Provide the RTC time to the Time library.
+time_t time_provider() {
+    return rtc.now().unixtime();
+}
+
+bool initialiseRTC()
+{
+  Serial.print("Initialising RTC: ");
+
+  if (! rtc.begin()) {
+    Serial.println("Error!");
+    return false;
+  } else {
+    Serial.println("Success!");
+
+    if (rtc.lostPower()) {
+      Serial.println("RTC has lost power and time needs to be set!");
+    } else {
+      Serial.println("RTC reports it has not lost power.");
+    }
+
+    DateTime now = rtc.now();
+    Serial.println("RTC has time: ");
+    Serial.print(now.year(), DEC);
+    Serial.print('/');
+    Serial.print(now.month(), DEC);
+    Serial.print('/');
+    Serial.print(now.day(), DEC);
+    Serial.print(" (");
+    Serial.print(daysOfTheWeek[now.dayOfTheWeek()]);
+    Serial.print(") ");
+    Serial.print(now.hour(), DEC);
+    Serial.print(':');
+    Serial.print(now.minute(), DEC);
+    Serial.print(':');
+    Serial.print(now.second(), DEC);
+    Serial.println();
+    Serial.print(" since midnight 1/1/1970 = ");
+    Serial.print(now.unixtime());
+    Serial.print("s = ");
+    Serial.print(now.unixtime() / 86400L);
+    Serial.println("d");
+    return true;
+  }
+}
+
 void setup() {
+  delay(1000);
   Serial.begin(250000);
   Serial.println("Serial begin!");
   pixels.begin();
   pixels.setBrightness(100);
+
+  if (initialiseRTC()) {
+    // Set Time to sync from RTC
+    setSyncProvider(time_provider);
+    setSyncInterval(60);
+
+    if(timeStatus() != timeSet) {
+     Serial.println("Unable to sync with the RTC.");
+    } else {
+     Serial.println("RTC has set the system time"); 
+    }
+  } else {
+    Serial.println("Setting time to placeholder value.");
+    setTime(11,55,50,1,1,2022);
+  }
+
 
   display.fill(0);
   display.update();
@@ -253,9 +322,9 @@ void setup() {
   //display.update();
   //while(true) {}
 
-  setTime(11,55,0,1,1,2022);
+  
 
-  displayDiagnostic(display);
+  //displayDiagnostic(display);
 
 
 }
@@ -308,12 +377,42 @@ void loop()
   //     break;
   // }
 
+  static int state = 0;
+  static int minPrev;
+  static uint32_t startedWaitingTime = 0;
+  switch(state) {
+    case 0:
+      display.fill(0);
+      showTime(display);
+      minPrev = minute();
+      state = 1;
+      break;
+    case 1:
+      if (minPrev != minute()) {
+        state = 2;
+        break;
+      }
+      display.fill(0);
+      showTime(display);
+      break;
+    case 2:
+      // text fall off screen
+      gravityFill(display, 0, 100, true, colourGenerator_randomHSV);
+      if (startedWaitingTime == 0 && display.empty()) {
+        startedWaitingTime = millis();
+      }
+      if (startedWaitingTime != 0 && millis() - startedWaitingTime > 1000) {
+        state = 0;
+        startedWaitingTime = 0;
+      }
+      break;
+  }
+
   //tetris(display, 100, 100);
   //if (display.filled()) { display.fill(0); }
 
 
-  display.fill(0);
-  showTime(display);
+  
   display.update(); 
 
   // Serial.println(millis());
