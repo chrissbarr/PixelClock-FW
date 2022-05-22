@@ -1,4 +1,6 @@
 #include <Adafruit_NeoPixel.h>
+#include <TimeLib.h>
+
 #include "characters.h"
 #include "display.h"
 
@@ -154,6 +156,27 @@ void tetris(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval)
   }
 }
 
+void showTime(PixelDisplay& display)
+{
+  uint32_t colour = colorGenerator_cycleHSV();
+  time_t t = now();
+  constexpr uint8_t bufSize = 3;
+  char c_buf[bufSize];
+
+  // hour
+  int hr = hourFormat12(t);
+  snprintf(c_buf, bufSize, "%2d", hr);
+  display.showCharacters(String(c_buf), colour, 0, 1);
+
+  // colon
+  display.showCharacter(':', colour, 7);
+
+  // minute
+  int min = minute(t);
+  snprintf(c_buf, bufSize, "%02d", min);
+  display.showCharacters(c_buf, colour, 10, 1);
+}
+
 void displayDiagnostic(PixelDisplay& display)
 {
   // Clear display
@@ -233,6 +256,8 @@ void setup() {
   display.update();
   delay(500);
 
+  setTime(12,30,0,1,1,2022);
+
   //displayDiagnostic(display);
 
 
@@ -286,13 +311,12 @@ void loop()
   //     break;
   // }
 
-  tetris(display, 100, 100);
-  if (display.filled()) { display.fill(0); }
+  //tetris(display, 100, 100);
+  //if (display.filled()) { display.fill(0); }
 
 
-  
-
-
+  display.fill(0);
+  showTime(display);
   display.update(); 
 
   // Serial.println(millis());
