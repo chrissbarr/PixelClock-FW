@@ -168,7 +168,7 @@ void loop()
     case Mode::Demo:
     {
       display.fill(0);
-      settingsMenuTextScroller_settime.update(colourGenerator_cycleHSV(), 100);
+      settingsMenuTextScroller_settime.run();
       //tetris(display, 100, 100);
       //if (display.filled()) { display.fill(0); }
     }

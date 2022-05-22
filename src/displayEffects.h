@@ -10,6 +10,51 @@ inline uint32_t colourGenerator_randomHSV() { return Adafruit_NeoPixel::gamma32(
 inline uint32_t colourGenerator_cycleHSV() { return Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(millis(), 255, 255)); }
 inline uint32_t colourGenerator_black() { return 0; }
 
+/**
+ * @brief Abstract Base Class for classes that implement an Effect (e.g., a pattern, demo, game, etc. that takes place over time)
+ * 
+ * Effects are expected to manage their own state and timing.
+ * Effects may run for some period of time. 
+ * When an effect has completed one 'cycle' (the definition of which will vary per effect) it will indicate that it is 'finished'.
+ * However, the effect should still continue to run (loop, restart, etc.) even if it is 'finished'.
+ * The 'finished' flag is intended to be a way to indicate to the caller that this is an appropriate time to move on to another effect.
+ */
+class DisplayEffect {
+public:
+    // Runs the effect. Returns true if the effect is considered finished.
+    virtual bool run() = 0;
+    // Indicates if the effect is finished.
+    virtual bool finished() const = 0;
+    // Resets the effect to it's initial state
+    virtual void reset() = 0;
+};
+
+class TextScroller : public DisplayEffect {
+public:
+    TextScroller(PixelDisplay& display, const String& textString, uint32_t colour, uint16_t timeToHoldAtEnd = 1000, bool reverseOnFinish = false, uint8_t characterSpacing = 1);
+    bool run() override final;
+    bool finished() const override final { return _finished; }
+    void reset() override final { _finished = false; currentOffset = 0; setTargetOffsetToEnd(); }
+private:
+    PixelDisplay& display;
+    const String text;
+    uint32_t colour;
+    uint16_t timeToHoldAtEnd;
+    bool reverseOnFinish;
+    uint8_t charSpacing;
+
+    uint32_t targetOffset;
+    uint32_t currentOffset;
+    uint32_t lastUpdateTime;
+
+    uint32_t stepDelay = 100;
+    uint32_t arrivedAtEndTime = 0;
+
+    bool _finished = false;
+
+    void setTargetOffsetToEnd();
+};
+
 bool fillRandomly(PixelDisplay& display, uint32_t fillInterval, uint32_t(*colourGenerator)(), const DisplayRegion& spawnRegion);
 inline bool fillRandomly(PixelDisplay& display, uint32_t fillInterval, uint32_t(*colourGenerator)())
 {

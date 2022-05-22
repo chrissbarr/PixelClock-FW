@@ -1,6 +1,66 @@
 #include "displayEffects.h"
 #include "display.h"
 
+TextScroller::TextScroller(
+  PixelDisplay& display,
+  const String& textString,
+  uint32_t colour,
+  uint16_t timeToHoldAtEnd, 
+  bool reverseOnFinish, 
+  uint8_t characterSpacing) :
+  display(display),
+  text(textString),
+  colour(colour),
+  timeToHoldAtEnd(timeToHoldAtEnd),
+  reverseOnFinish(reverseOnFinish),
+  charSpacing(characterSpacing)
+  {
+    lastUpdateTime = millis();
+    currentOffset = 0;
+    setTargetOffsetToEnd();
+  }
+
+  bool TextScroller::run()
+  {
+    if (currentOffset == targetOffset) {
+      if (arrivedAtEndTime == 0) {
+        arrivedAtEndTime = millis();
+      } else {
+        if (millis() - arrivedAtEndTime > timeToHoldAtEnd) {
+          if (reverseOnFinish && currentOffset != 0) {
+            targetOffset = 0;
+            arrivedAtEndTime = 0;
+          } else {
+            _finished = true;
+            setTargetOffsetToEnd();
+            arrivedAtEndTime = 0;
+          }
+        }
+      }
+    } else {
+      if (millis() - lastUpdateTime >= stepDelay) {
+        if (targetOffset > currentOffset) {
+          currentOffset += 1;
+        } else {
+          currentOffset -= 1;
+        }
+        lastUpdateTime = millis();
+      }
+    }
+
+    display.showCharacters(text, colour, -currentOffset, charSpacing);
+    return _finished;
+  }
+
+  void TextScroller::setTargetOffsetToEnd()
+  {
+    int end = 0;
+    for (char character : text) {
+      end += characterFontArray[charToIndex(character)].width + charSpacing;
+    }
+    targetOffset = end - charSpacing - display.getWidth();
+  }
+
 bool fillRandomly(PixelDisplay& display, uint32_t fillInterval, uint32_t(*colourGenerator)(), const DisplayRegion& spawnRegion)
 {
   static uint32_t lastSpawnTime = 0;
@@ -166,11 +226,12 @@ void displayDiagnostic(PixelDisplay& display)
   auto textScrollTest1 = TextScroller(
     display,
     "Hello - Testing!",
+    Adafruit_NeoPixel::Color(0, 0, 255),
     500,
     true,
     1
   );
-  while(!textScrollTest1.update(colourGenerator_cycleHSV(), 50)) {
+  while(!textScrollTest1.run()) {
     display.update();
     display.fill(0);
   }
@@ -181,11 +242,12 @@ void displayDiagnostic(PixelDisplay& display)
   auto textScrollTest = TextScroller(
     display,
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 !\"#$%&'()*+'-./:;<=>?@",
+    Adafruit_NeoPixel::Color(0, 255, 0),
     500,
     false,
     1
   );
-  while(!textScrollTest.update(Adafruit_NeoPixel::Color(0, 25, 0), 10)) {
+  while(!textScrollTest.run()) {
     display.update();
     display.fill(0);
   }
