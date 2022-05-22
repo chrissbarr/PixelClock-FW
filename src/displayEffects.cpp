@@ -170,7 +170,7 @@ void displayDiagnostic(PixelDisplay& display)
     true,
     1
   );
-  while(!textScrollTest1.update(colorGenerator_cycleHSV(), 50)) {
+  while(!textScrollTest1.update(colourGenerator_cycleHSV(), 50)) {
     display.update();
     display.fill(0);
   }

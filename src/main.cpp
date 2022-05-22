@@ -52,7 +52,7 @@ enum class Mode {
   SetTime,
   Demo
 };
-Mode currentMode = Mode::DisplayTime;
+Mode currentMode = Mode::Demo;
 
 
 int effectIndex = 0;
@@ -139,6 +139,8 @@ void setup() {
   //displayDiagnostic(display);
 }
 
+TextScroller settingsMenuTextScroller_settime(display, "Set Time", 1000, true, 1);
+
 void loop()
 {
 
@@ -152,21 +154,23 @@ void loop()
     case Mode::DisplayTime:
     {
       display.fill(0);
-      showTime(display, hourFormat12(currentTime), minute(currentTime), colorGenerator_cycleHSV());
+      showTime(display, hourFormat12(currentTime), minute(currentTime), colourGenerator_cycleHSV());
       break;
     }
     case Mode::SetTime:
     {
       display.fill(0);
       if (second(currentTime) % 1) {
-        showTime(display, hourFormat12(currentTime), minute(currentTime), colorGenerator_cycleHSV());
+        showTime(display, hourFormat12(currentTime), minute(currentTime), colourGenerator_cycleHSV());
       }
       break;
     }
     case Mode::Demo:
     {
-      tetris(display, 100, 100);
-      if (display.filled()) { display.fill(0); }
+      display.fill(0);
+      settingsMenuTextScroller_settime.update(colourGenerator_cycleHSV(), 100);
+      //tetris(display, 100, 100);
+      //if (display.filled()) { display.fill(0); }
     }
   }
 

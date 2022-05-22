@@ -170,7 +170,7 @@ TextScroller::TextScroller(
   {
     lastUpdateTime = millis();
     currentOffset = 0;
-    targetOffset = textString.length() * (3 + characterSpacing) - display.getWidth();
+    setTargetOffsetToEnd();
   }
 
   bool TextScroller::update(uint32_t colour, uint32_t stepDelay)
@@ -185,6 +185,8 @@ TextScroller::TextScroller(
             arrivedAtEndTime = 0;
           } else {
             finished = true;
+            setTargetOffsetToEnd();
+            arrivedAtEndTime = 0;
           }
         }
       }
@@ -201,4 +203,13 @@ TextScroller::TextScroller(
 
     display.showCharacters(text, colour, -currentOffset, charSpacing);
     return finished;
+  }
+
+  void TextScroller::setTargetOffsetToEnd()
+  {
+    int end = 0;
+    for (char character : text) {
+      end += characterFontArray[charToIndex(character)].width + charSpacing;
+    }
+    targetOffset = end - charSpacing - display.getWidth();
   }

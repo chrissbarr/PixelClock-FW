@@ -61,6 +61,7 @@ class TextScroller {
 public:
     TextScroller(PixelDisplay& display, const String& textString, uint16_t timeToHoldAtEnd = 1000, bool reverseOnFinish = false, uint8_t characterSpacing = 1);
     bool update(uint32_t colour, uint32_t stepDelay);
+    void resetScroll() { currentOffset = 0; setTargetOffsetToEnd(); }
 private:
     PixelDisplay& display;
     const String text;
@@ -75,6 +76,8 @@ private:
     uint32_t arrivedAtEndTime = 0;
 
     bool finished = false;
+
+    void setTargetOffsetToEnd();
 };
 
 #endif // display_h

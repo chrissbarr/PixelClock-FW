@@ -7,7 +7,7 @@
 
 // Colour generating functions
 inline uint32_t colourGenerator_randomHSV() { return Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(random(0, 65536))); }
-inline uint32_t colorGenerator_cycleHSV() { return Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(millis(), 255, 255)); }
+inline uint32_t colourGenerator_cycleHSV() { return Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(millis(), 255, 255)); }
 inline uint32_t colourGenerator_black() { return 0; }
 
 bool fillRandomly(PixelDisplay& display, uint32_t fillInterval, uint32_t(*colourGenerator)(), const DisplayRegion& spawnRegion);
