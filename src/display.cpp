@@ -30,8 +30,8 @@ uint32_t PixelDisplay::getXY(uint8_t x, uint8_t y) const
 
 void PixelDisplay::fill(uint32_t colour, const DisplayRegion& region)
 {
-  for (uint8_t x = region.xMin; x < region.xMax; x++) {
-    for (uint8_t y = region.yMin; y < region.yMax; y++) {
+  for (uint8_t x = region.xMin; x <= region.xMax; x++) {
+    for (uint8_t y = region.yMin; y <= region.yMax; y++) {
       setXY(x, y, colour);
     }
   }

@@ -12,6 +12,17 @@ struct DisplayRegion {
     uint8_t yMax;
 };
 
+constexpr bool operator==(const DisplayRegion& lhs, const DisplayRegion& rhs)
+{
+    return lhs.xMin == rhs.xMin
+    && lhs.xMax == rhs.xMax
+    && lhs.yMin == rhs.yMin
+    && lhs.yMax == rhs.yMax;
+}
+
+// Set DisplayRegion arguments to this value to indicate that the full display should be used
+constexpr DisplayRegion defaultFull = {0, 0, 0, 0};
+
 class PixelDisplay {
 public:
     PixelDisplay(Adafruit_NeoPixel& pixels, uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset = 0);

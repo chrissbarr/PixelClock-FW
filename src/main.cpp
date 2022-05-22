@@ -3,6 +3,8 @@
 #include <TimeLib.h>
 #include <RTClib.h>
 #include <Button2.h>
+#include <memory>
+#include <vector>
 
 
 #include "characters.h"
@@ -54,7 +56,7 @@ enum class Mode {
 };
 Mode currentMode = Mode::Demo;
 
-
+std::vector<std::unique_ptr<DisplayEffect>> displayEffects;
 int effectIndex = 0;
 
 constexpr char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
@@ -137,6 +139,11 @@ void setup() {
   delay(500); 
 
   //displayDiagnostic(display);
+
+  displayEffects.push_back(std::make_unique<TextScroller>(display, "Test Text Scroller", Adafruit_NeoPixel::Color(255, 0, 0), 1000, true, 1));
+  //displayEffects.push_back(std::make_unique<TextScroller>(display, "Another Test! 1234:5678", Adafruit_NeoPixel::Color(0, 0, 255), 1000, true, 1));
+  displayEffects.push_back(std::make_unique<RandomFill>(display, 100, colourGenerator_randomHSV));
+
 }
 
 TextScroller settingsMenuTextScroller_settime(display, "Set Time", 1000, true, 1);
@@ -149,30 +156,40 @@ void loop()
     button.loop();
   }
 
-  time_t currentTime = now();
-  switch (currentMode) {
-    case Mode::DisplayTime:
-    {
-      display.fill(0);
-      showTime(display, hourFormat12(currentTime), minute(currentTime), colourGenerator_cycleHSV());
-      break;
+  // time_t currentTime = now();
+  // switch (currentMode) {
+  //   case Mode::DisplayTime:
+  //   {
+  //     display.fill(0);
+  //     showTime(display, hourFormat12(currentTime), minute(currentTime), colourGenerator_cycleHSV());
+  //     break;
+  //   }
+  //   case Mode::SetTime:
+  //   {
+  //     display.fill(0);
+  //     if (second(currentTime) % 1) {
+  //       showTime(display, hourFormat12(currentTime), minute(currentTime), colourGenerator_cycleHSV());
+  //     }
+  //     break;
+  //   }
+  //   case Mode::Demo:
+  //   {
+  //     display.fill(0);
+  //     settingsMenuTextScroller_settime.run();
+  //     //tetris(display, 100, 100);
+  //     //if (display.filled()) { display.fill(0); }
+  //   }
+  // }
+
+  if (displayEffects[effectIndex]->finished()) {
+    Serial.println("Effect finished!");
+    effectIndex++;
+    if (effectIndex >= displayEffects.size()) {
+      effectIndex = 0;
     }
-    case Mode::SetTime:
-    {
-      display.fill(0);
-      if (second(currentTime) % 1) {
-        showTime(display, hourFormat12(currentTime), minute(currentTime), colourGenerator_cycleHSV());
-      }
-      break;
-    }
-    case Mode::Demo:
-    {
-      display.fill(0);
-      settingsMenuTextScroller_settime.run();
-      //tetris(display, 100, 100);
-      //if (display.filled()) { display.fill(0); }
-    }
+    displayEffects[effectIndex]->reset();
   }
+  displayEffects[effectIndex]->run();
 
   // update display
   display.update();
