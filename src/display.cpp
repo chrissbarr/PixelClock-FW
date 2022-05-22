@@ -70,7 +70,7 @@ void PixelDisplay::showCharacter(char character, uint32_t colour, int xOffset)
 
 void PixelDisplay::showCharacter(const FontGlyph& character, uint32_t colour, int xOffset)
 {
-    for (uint8_t x = 0; x < 3; x++) {
+    for (uint8_t x = 0; x < character.width; x++) {
         int xPos = xOffset + x;
         for (uint8_t y = 0; y < 5; y++) {
             if (bitRead(character.glyph[y], character.width-1-x) == 1) {

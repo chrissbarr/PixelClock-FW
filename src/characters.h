@@ -474,13 +474,13 @@ constexpr FontGlyph characterFontArray[] = {
   },
   {   // M
     {
-      B101,
-      B111,
-      B101,
-      B101,
-      B101
+      B10001,
+      B11011,
+      B10101,
+      B10001,
+      B10001
     },
-    3,
+    5,
   },
   {   // N
     {
