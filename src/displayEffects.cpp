@@ -126,3 +126,69 @@ void showTime(PixelDisplay& display, int hour, int minute, uint32_t colour)
   snprintf(c_buf, bufSize, "%2d:%02d", hour, minute);
   display.showCharacters(String(c_buf), colour, 0, 1);
 }
+
+void displayDiagnostic(PixelDisplay& display)
+{
+  // Clear display
+  display.fill(0);
+  display.update();
+  delay(250);
+
+  // Show Pixel 0
+  display.setXY(0, 0, Adafruit_NeoPixel::Color(255, 0, 0));
+  display.update();
+  delay(250);
+
+  // Solid Red, Green, Blue
+  display.fill(Adafruit_NeoPixel::Color(255, 0, 0));
+  display.update();
+  delay(250);
+  display.fill(Adafruit_NeoPixel::Color(0, 255, 0));
+  display.update();
+  delay(250);
+  display.fill(Adafruit_NeoPixel::Color(0, 0, 255));
+  display.update();
+  delay(250);
+
+  // Move through XY sequentially
+  for (uint8_t y = 0; y < display.getHeight(); y++) {
+    for (uint8_t x = 0; x < display.getWidth(); x++) {
+    display.fill(0);
+    display.setXY(x, y, Adafruit_NeoPixel::Color(100, 0, 0));
+    display.update();
+    delay(1);
+    }
+  }
+
+  // Scroll short test
+  display.fill(0);
+  display.update();
+  auto textScrollTest1 = TextScroller(
+    display,
+    "Hello - Testing!",
+    500,
+    true,
+    1
+  );
+  while(!textScrollTest1.update(colorGenerator_cycleHSV(), 50)) {
+    display.update();
+    display.fill(0);
+  }
+
+  // Scroll full character set
+  display.fill(0);
+  display.update();
+  auto textScrollTest = TextScroller(
+    display,
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 !\"#$%&'()*+'-./:;<=>?@",
+    500,
+    false,
+    1
+  );
+  while(!textScrollTest.update(Adafruit_NeoPixel::Color(0, 25, 0), 10)) {
+    display.update();
+    display.fill(0);
+  }
+  display.fill(0);
+  display.update();
+}

@@ -2,6 +2,8 @@
 #include <Adafruit_NeoPixel.h>
 #include <TimeLib.h>
 #include <RTClib.h>
+#include <Button2.h>
+
 
 #include "characters.h"
 #include "display.h"
@@ -12,82 +14,46 @@ constexpr int16_t matrixLEDPin = 14;
 constexpr uint8_t matrixWidth = 17;
 constexpr uint8_t matrixHeight = 5;
 constexpr uint8_t matrixSize = matrixWidth * matrixHeight;
-
 Adafruit_NeoPixel pixels(matrixSize, matrixLEDPin, NEO_GRBW + NEO_KHZ800);
-
 PixelDisplay display(pixels, matrixWidth, matrixHeight, false, false);
 
+// Buttons
+constexpr int16_t buttonPin1 = 13;
+constexpr int16_t buttonPin2 = 15;
+constexpr int16_t buttonPin3 = 0;
+constexpr int16_t buttonPin4 = 16;
+constexpr int16_t buttonPin5 = 2;
+Button2 buttons[] = {
+  Button2(buttonPin1),
+  Button2(buttonPin2),
+  Button2(buttonPin3),
+  Button2(buttonPin4),
+  Button2(buttonPin5)
+};
+
+void click(Button2& btn) {
+    if (btn == buttons[0]) {
+      Serial.println("A clicked");
+    } 
+    if (btn == buttons[1]) {
+      Serial.println("B clicked");
+    }
+}
+
+// Main loop timing
 unsigned long lastLoopTime = 0;
 constexpr unsigned long loopTime = 25;
 
+// Timekeeping
 RTC_DS3231 rtc;
 
-void displayDiagnostic(PixelDisplay& display)
-{
-  // Clear display
-  display.fill(0);
-  display.update();
-  delay(250);
+enum class Mode {
+  DisplayTime,
+  SetTime,
+  Demo
+};
+Mode currentMode = Mode::DisplayTime;
 
-  // Show Pixel 0
-  display.setXY(0, 0, Adafruit_NeoPixel::Color(255, 0, 0));
-  display.update();
-  delay(250);
-
-  // Solid Red, Green, Blue
-  display.fill(Adafruit_NeoPixel::Color(255, 0, 0));
-  display.update();
-  delay(250);
-  display.fill(Adafruit_NeoPixel::Color(0, 255, 0));
-  display.update();
-  delay(250);
-  display.fill(Adafruit_NeoPixel::Color(0, 0, 255));
-  display.update();
-  delay(250);
-
-  // Move through XY sequentially
-  for (uint8_t y = 0; y < display.getHeight(); y++) {
-    for (uint8_t x = 0; x < display.getWidth(); x++) {
-    display.fill(0);
-    display.setXY(x, y, Adafruit_NeoPixel::Color(100, 0, 0));
-    display.update();
-    delay(1);
-    }
-  }
-
-  // Scroll short test
-  display.fill(0);
-  display.update();
-  auto textScrollTest1 = TextScroller(
-    display,
-    "Hello - Testing!",
-    500,
-    true,
-    1
-  );
-  while(!textScrollTest1.update(colorGenerator_cycleHSV(), 50)) {
-    display.update();
-    display.fill(0);
-  }
-  
-
-  // Scroll full character set
-  display.fill(0);
-  display.update();
-  auto textScrollTest = TextScroller(
-    display,
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 !\"#$%&'()*+'-./:;<=>?@",
-    500,
-    false,
-    1
-  );
-  while(!textScrollTest.update(Adafruit_NeoPixel::Color(0, 25, 0), 10)) {
-    display.update();
-    display.fill(0);
-  }
-  display.fill(0);
-  display.update();
-}
 
 int effectIndex = 0;
 
@@ -144,7 +110,7 @@ void setup() {
   Serial.begin(250000);
   Serial.println("Serial begin!");
   pixels.begin();
-  pixels.setBrightness(100);
+  pixels.setBrightness(10);
 
   if (initialiseRTC()) {
     // Set Time to sync from RTC
@@ -161,6 +127,10 @@ void setup() {
     setTime(11,55,50,1,1,2022);
   }
 
+  for (Button2 button : buttons) {
+    //button.setClickHandler(click);
+  }
+
 
   display.fill(0);
   display.update();
@@ -172,91 +142,42 @@ void setup() {
 void loop()
 {
 
-  // DisplayRegion randRegion;
-  // randRegion.xMin = 10;
-  // randRegion.xMax = 16;
-  // randRegion.yMin = 0;
-  // randRegion.yMax = 4;
-
-  // switch (effectIndex) {
-  //   case 0:
-  //     if (fillRandomly(display, 100, colourGenerator_randomHSV, randRegion)) {
-  //       effectIndex++;
-  //       display.fill(0, randRegion);
-  //     }
-  //     break;
-  //   case 1:
-  //     if (fillRandomly(display, 10, colourGenerator_randomHSV, randRegion)) {
-  //       effectIndex++;
-  //       display.fill(0, randRegion);
-  //     }
-  //     break;
-  //   case 2:
-  //     if (fillRandomly(display, 10, colourGenerator_randomHSV, randRegion)) {
-  //       effectIndex++;
-  //       display.fill(0, randRegion);
-  //     }
-  //   break;
-  //   default:
-  //     effectIndex = 0;
-  // }
-
-  // static int state = 0;
-  // switch(state) {
-  //   case 0:
-  //     gravityFill(display, 100, 100, false, colourGenerator_randomHSV);
-  //     if (display.filled(0)) {
-  //       state = 1;
-  //     }
-  //     break;
-  //   case 1:
-  //     gravityFill(display, 0, 100, true, colourGenerator_randomHSV);
-  //     if (display.empty()) {
-  //       state = 0;
-  //     }
-  //     break;
-  // }
-
-  static int state = 0;
-  static int minPrev;
-  static uint32_t startedWaitingTime = 0;
-  time_t currentTime = now();
-  switch(state) {
-    case 0:
-      display.fill(0);
-      showTime(display, hourFormat12(currentTime), minute(currentTime), colorGenerator_cycleHSV());
-      minPrev = minute(currentTime);
-      state = 1;
-      break;
-    case 1:
-      if (minPrev != minute(currentTime)) {
-        state = 2;
-        break;
-      }
-      display.fill(0);
-      showTime(display, hourFormat12(currentTime), minute(currentTime), colorGenerator_cycleHSV());
-      break;
-    case 2:
-      // text fall off screen
-      gravityFill(display, 0, 100, true, colourGenerator_randomHSV);
-      if (startedWaitingTime == 0 && display.empty()) {
-        startedWaitingTime = millis();
-      }
-      if (startedWaitingTime != 0 && millis() - startedWaitingTime > 1000) {
-        state = 0;
-        startedWaitingTime = 0;
-      }
-      break;
+  // update buttons
+  for (Button2 button : buttons) {
+    button.loop();
   }
 
-  //tetris(display, 100, 100);
-  //if (display.filled()) { display.fill(0); }
+  time_t currentTime = now();
+  switch (currentMode) {
+    case Mode::DisplayTime:
+    {
+      display.fill(0);
+      showTime(display, hourFormat12(currentTime), minute(currentTime), colorGenerator_cycleHSV());
+      break;
+    }
+    case Mode::SetTime:
+    {
+      display.fill(0);
+      if (second(currentTime) % 1) {
+        showTime(display, hourFormat12(currentTime), minute(currentTime), colorGenerator_cycleHSV());
+      }
+      break;
+    }
+    case Mode::Demo:
+    {
+      tetris(display, 100, 100);
+      if (display.filled()) { display.fill(0); }
+    }
+  }
 
+  // update display
+  display.update();
+  //delay(1);
+  //delayMicroseconds(100);
+  pixels.fill(0);
+  pixels.show();
+  delay(2);
 
-  
-  display.update(); 
-
-  // Serial.println(millis());
 
   // Manage loop timing
   unsigned long loopTime = millis() - lastLoopTime;

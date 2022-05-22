@@ -26,4 +26,6 @@ void tetris(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval)
 
 void showTime(PixelDisplay& display, int hour, int minute, uint32_t colour);
 
+void displayDiagnostic(PixelDisplay& display);
+
 #endif //displayeffects_h
