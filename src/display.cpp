@@ -1,6 +1,5 @@
 #include <display.h>
 #include <Adafruit_NeoPixel.h>
-
 #include "characters.h"
 
 PixelDisplay::PixelDisplay(Adafruit_NeoPixel& pixels, uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset) :
@@ -57,36 +56,29 @@ void PixelDisplay::showCharacters(const String& string, uint32_t colour, int xOf
 {
     int xOffsetLocal = 0;
     for (const auto& character : string) {
-        showCharacter(character, colour, xOffset + xOffsetLocal);
-        xOffsetLocal += 3 + spacing;
+        FontGlyph g = characterFontArray[charToIndex(character)];
+        showCharacter(g, colour, xOffset + xOffsetLocal);
+        xOffsetLocal += g.width + spacing;
     }
 }
 
 void PixelDisplay::showCharacter(char character, uint32_t colour, int xOffset)
 {
-    uint8_t index = 0;
+    showCharacter(characterFontArray[charToIndex(character)], colour, xOffset);
+}
 
-    // Lowercase to uppercase
-    if (character >= 'a' && character <= 'z') {
-        character -= 32;
-    }
-
-    if (character >= ' ' && character <= 'Z') {
-        index = character - ' ';
-    }
-
+void PixelDisplay::showCharacter(const FontGlyph& character, uint32_t colour, int xOffset)
+{
     for (uint8_t x = 0; x < 3; x++) {
         int xPos = xOffset + x;
         for (uint8_t y = 0; y < 5; y++) {
-            if (bitRead(characterFontArray[index][y], 2-x) == 1) {
+            if (bitRead(character.glyph[y], character.width-1-x) == 1) {
                 if (uint32_t(xPos) >= getWidth()) { continue; }
                 if (xPos < 0) { continue; }
                 setXY(uint8_t(xPos), y, colour);
             }
         }
     }
-
-
 }
 
 uint32_t PixelDisplay::XYToIndex(uint8_t x, uint8_t y) const

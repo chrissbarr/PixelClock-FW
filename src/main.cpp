@@ -160,21 +160,14 @@ void showTime(PixelDisplay& display)
 {
   uint32_t colour = colorGenerator_cycleHSV();
   time_t t = now();
-  constexpr uint8_t bufSize = 3;
+  constexpr uint8_t bufSize = 6;
   char c_buf[bufSize];
 
   // hour
   int hr = hourFormat12(t);
-  snprintf(c_buf, bufSize, "%2d", hr);
-  display.showCharacters(String(c_buf), colour, 0, 1);
-
-  // colon
-  display.showCharacter(':', colour, 7);
-
-  // minute
   int min = minute(t);
-  snprintf(c_buf, bufSize, "%02d", min);
-  display.showCharacters(c_buf, colour, 10, 1);
+  snprintf(c_buf, bufSize, "%2d:%02d", hr, min);
+  display.showCharacters(String(c_buf), colour, 0, 1);
 }
 
 void displayDiagnostic(PixelDisplay& display)
@@ -215,7 +208,7 @@ void displayDiagnostic(PixelDisplay& display)
   display.update();
   auto textScrollTest1 = TextScroller(
     display,
-    "Hello - Testing",
+    "Hello - Testing!",
     500,
     true,
     1
@@ -256,9 +249,13 @@ void setup() {
   display.update();
   delay(500);
 
-  setTime(12,30,0,1,1,2022);
+  //display.showCharacters("AB:CD", colorGenerator_cycleHSV(), 0, 1);
+  //display.update();
+  //while(true) {}
 
-  //displayDiagnostic(display);
+  setTime(11,55,0,1,1,2022);
+
+  displayDiagnostic(display);
 
 
 }

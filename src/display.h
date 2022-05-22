@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
+#include "characters.h"
 
 struct DisplayRegion {
     uint8_t xMin;
@@ -23,6 +24,7 @@ public:
 
     void showCharacters(const String& string, uint32_t colour, int xOffset, uint8_t spacing = 0);
     void showCharacter(char character, uint32_t colour, int xOffset);
+    void showCharacter(const FontGlyph& character, uint32_t colour, int xOffset);
 
     void update();
 
