@@ -28,6 +28,8 @@ public:
     PixelDisplay(Adafruit_NeoPixel& pixels, uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset = 0);
     ~PixelDisplay();
 
+    void setIndex(uint32_t index, uint32_t colour);
+    uint32_t getIndex(uint32_t index) const;
     void setXY(uint8_t x, uint8_t y, uint32_t colour);
     uint32_t getXY(uint8_t x, uint8_t y) const;
     void fill(uint32_t colour, const DisplayRegion& region);
@@ -50,7 +52,7 @@ public:
 
     const DisplayRegion& getFullDisplayRegion() const { return fullDisplay; }
 
-
+    uint32_t XYToIndex(uint8_t x, uint8_t y) const;
 
 private:
     Adafruit_NeoPixel& pixels;
@@ -65,7 +67,7 @@ private:
 
     DisplayRegion fullDisplay;
 
-    uint32_t XYToIndex(uint8_t x, uint8_t y) const;
+    
 };
 
 #endif // display_h

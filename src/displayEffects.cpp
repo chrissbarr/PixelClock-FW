@@ -104,7 +104,7 @@ BouncingBall::BouncingBall(PixelDisplay& display, float moveSpeed, uint32_t(*col
   } else {
     _displayRegion = displayRegion;
   }
-  reset();
+  //reset();
 }
 
 void BouncingBall::reset()
@@ -149,6 +149,134 @@ bool BouncingBall::run()
   }
   return true;
 }
+
+GameOfLife::GameOfLife(PixelDisplay& display, uint32_t updateInterval, uint32_t(*colourGenerator)(), const DisplayRegion& displayRegion) :
+  _display(display), _updateInterval(updateInterval), _colourGenerator(colourGenerator)
+{
+  if (displayRegion == defaultFull) {
+    _displayRegion = display.getFullDisplayRegion();
+  } else {
+    _displayRegion = displayRegion;
+  }
+
+  int bufferSize = _display.getSize();
+  nextBuffer.reserve(bufferSize); // todo use region size
+  for (int i = 0; i < bufferSize; i++) {
+    nextBuffer.push_back(0);
+  }
+}
+
+void GameOfLife::reset()
+{
+  _lastLoopTime = 0;
+  _finished = false;
+  _noChangeForNSteps = 0;
+  seedDisplay();
+}
+
+void GameOfLife::seedDisplay()
+{
+  _display.fill(0);
+  for (uint8_t x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
+    for (uint8_t y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
+      int chance = random(10);
+      if (chance == 0) {
+        _display.setXY(x, y, _colourGenerator());
+      }
+    }
+  }
+  // _display.setXY(1, 1, _colourGenerator());
+  // _display.setXY(1, 2, _colourGenerator());
+  // _display.setXY(2, 1, _colourGenerator());
+  // _display.setXY(2, 2, _colourGenerator());
+
+  // _display.setXY(10, 2, _colourGenerator());
+  // _display.setXY(11, 2, _colourGenerator());
+  // _display.setXY(12, 2, _colourGenerator());
+
+
+
+}
+
+bool GameOfLife::run()
+{
+  if (millis() - _lastLoopTime > _updateInterval) {
+    auto neighbourCount = [](uint8_t xPos, uint8_t yPos, const PixelDisplay& _display, const DisplayRegion& _region )->uint8_t {
+      uint8_t alive = 0;
+      uint8_t testedCells = 0;
+      for (int x = xPos - 1; x <= xPos + 1; x++) {
+        if (x < _region.xMin) { continue; }
+        if (x > _region.xMax) { continue; }
+        for (int y = yPos - 1; y <= yPos + 1; y++) {
+          if (y < _region.yMin) { continue; }
+          if (y > _region.yMax) { continue; }
+          if (x == xPos && y == yPos) { continue; }
+          testedCells++;
+          if (_display.getXY(x, y) != 0) {
+            alive++;
+          }
+        }
+      }
+      return alive;
+    };
+
+    std::fill(nextBuffer.begin(), nextBuffer.end(), 0);
+
+    Serial.println("Neighbours");
+    for (uint8_t x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
+      for (uint8_t y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
+        uint8_t neighbours = neighbourCount(x, y, _display, _displayRegion);
+        Serial.println(neighbours);
+        uint32_t currentVal = _display.getXY(x, y);
+        bool currentlyAlive = (currentVal != 0);
+        if (currentlyAlive) {
+          if (neighbours == 2 || neighbours == 3) {
+            // keep on living
+            nextBuffer[_display.XYToIndex(x, y)] = currentVal;
+          } else {
+            // kill this cell
+            nextBuffer[_display.XYToIndex(x, y)] = 0;
+          }
+        } else {
+          if (neighbours == 3) {
+            // come to life!
+            nextBuffer[_display.XYToIndex(x, y)] = _colourGenerator();
+          }
+        }
+      }
+    }
+
+    // copy buffer into display and count living cells
+    uint32_t livingCells = 0;
+    bool anyDifference = false;
+    for (uint32_t i = 0; i < nextBuffer.size(); i++) {
+      if (_display.getIndex(i) != nextBuffer[i]) {
+        anyDifference = true;
+      }
+      _display.setIndex(i, nextBuffer[i]);
+      if (nextBuffer[i] != 0) {
+        livingCells++;
+      }
+    }
+
+    if (!anyDifference) {
+      _noChangeForNSteps++;
+    } else {
+      _noChangeForNSteps = 0;
+    }
+
+    Serial.print("Living cells this timestep: "); Serial.println(livingCells);
+
+    if (livingCells > 0 && _noChangeForNSteps < 10) {
+      _finished = false;
+    } else {
+      _finished = true;
+    }
+    _lastLoopTime = millis();
+  }
+  return _finished;
+}
+
 
 
 // bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)(), DisplayRegion displayRegion)

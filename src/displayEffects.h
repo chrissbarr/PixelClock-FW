@@ -93,6 +93,27 @@ private:
     float _moveSpeed = 0;
 };
 
+class GameOfLife : public DisplayEffect {
+public:
+    GameOfLife(PixelDisplay& display, uint32_t updateInterval, uint32_t(*colourGenerator)(), const DisplayRegion& displayRegion = defaultFull);
+    bool run() override final;
+    bool finished() const override final { return _finished; }
+    void reset() override final;
+
+    void seedDisplay();
+
+private:
+    PixelDisplay& _display;
+    uint32_t _lastLoopTime;
+    uint32_t (*_colourGenerator)();
+    DisplayRegion _displayRegion;
+    bool _finished;
+    uint32_t _updateInterval;
+    uint32_t _noChangeForNSteps;
+
+    std::vector<uint32_t> nextBuffer;
+};
+
 // bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)(), DisplayRegion displayRegion);
 // inline bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)())
 // {

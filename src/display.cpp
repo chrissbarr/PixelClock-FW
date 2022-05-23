@@ -18,6 +18,22 @@ PixelDisplay::~PixelDisplay()
   delete [] buffer;
 }
 
+void PixelDisplay::setIndex(uint32_t index, uint32_t colour)
+{
+  if (index < size) {
+    buffer[index] = colour;
+  }
+}
+
+uint32_t PixelDisplay::getIndex(uint32_t index) const
+{
+  if (index < size) {
+    return buffer[index];
+  } else {
+    return 0;
+  }
+}
+
 void PixelDisplay::setXY(uint8_t x, uint8_t y, uint32_t colour)
 {
     buffer[XYToIndex(x, y)] = colour;

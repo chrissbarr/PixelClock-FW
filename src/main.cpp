@@ -57,7 +57,7 @@ enum class Mode {
 Mode currentMode = Mode::Demo;
 
 std::vector<std::unique_ptr<DisplayEffect>> displayEffects;
-int effectIndex = 0;
+std::size_t effectIndex = 0;
 
 constexpr char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
@@ -112,7 +112,7 @@ void setup() {
   Serial.begin(250000);
   Serial.println("Serial begin!");
   pixels.begin();
-  pixels.setBrightness(10);
+  pixels.setBrightness(255);
 
   if (initialiseRTC()) {
     // Set Time to sync from RTC
@@ -140,10 +140,12 @@ void setup() {
 
   //displayDiagnostic(display);
 
-  displayEffects.push_back(std::make_unique<BouncingBall>(display, 0.1, colourGenerator_cycleHSV));
-  displayEffects.push_back(std::make_unique<TextScroller>(display, "Test Text Scroller", Adafruit_NeoPixel::Color(255, 0, 0), 1000, true, 1));
-  //displayEffects.push_back(std::make_unique<TextScroller>(display, "Another Test! 1234:5678", Adafruit_NeoPixel::Color(0, 0, 255), 1000, true, 1));
-  displayEffects.push_back(std::make_unique<RandomFill>(display, 100, colourGenerator_randomHSV));
+  displayEffects.push_back(std::make_unique<GameOfLife>(display, 500, colourGenerator_cycleHSV));
+  // displayEffects.push_back(std::make_unique<BouncingBall>(display, 0.1, colourGenerator_cycleHSV));
+  // displayEffects.push_back(std::make_unique<TextScroller>(display, "Test Text Scroller", Adafruit_NeoPixel::Color(255, 0, 0), 1000, true, 1));
+  // //displayEffects.push_back(std::make_unique<TextScroller>(display, "Another Test! 1234:5678", Adafruit_NeoPixel::Color(0, 0, 255), 1000, true, 1));
+  // displayEffects.push_back(std::make_unique<RandomFill>(display, 100, colourGenerator_randomHSV));
+  displayEffects.front()->reset();
 
 }
 
@@ -196,9 +198,9 @@ void loop()
   display.update();
   //delay(1);
   //delayMicroseconds(100);
-  pixels.fill(0);
-  pixels.show();
-  delay(2);
+  //pixels.fill(0);
+  //pixels.show();
+  //delay(2);
 
 
   // Manage loop timing
