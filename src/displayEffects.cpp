@@ -170,7 +170,7 @@ void GameOfLife::reset()
 {
   _lastLoopTime = 0;
   _finished = false;
-  _noChangeForNSteps = 0;
+  _notUniqueForNSteps = 0;
   seedDisplay();
 }
 
@@ -222,11 +222,11 @@ bool GameOfLife::run()
 
     std::fill(nextBuffer.begin(), nextBuffer.end(), 0);
 
-    Serial.println("Neighbours");
+    //Serial.println("Neighbours");
     for (uint8_t x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
       for (uint8_t y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
         uint8_t neighbours = neighbourCount(x, y, _display, _displayRegion);
-        Serial.println(neighbours);
+        //Serial.println(neighbours);
         uint32_t currentVal = _display.getXY(x, y);
         bool currentlyAlive = (currentVal != 0);
         if (currentlyAlive) {
@@ -248,26 +248,38 @@ bool GameOfLife::run()
 
     // copy buffer into display and count living cells
     uint32_t livingCells = 0;
-    bool anyDifference = false;
     for (uint32_t i = 0; i < nextBuffer.size(); i++) {
-      if (_display.getIndex(i) != nextBuffer[i]) {
-        anyDifference = true;
-      }
       _display.setIndex(i, nextBuffer[i]);
       if (nextBuffer[i] != 0) {
         livingCells++;
       }
     }
 
-    if (!anyDifference) {
-      _noChangeForNSteps++;
+    auto currentStateHash = hashBuffer(nextBuffer);
+
+    bool unique = true;
+    for (const auto& hash : bufferHashes) {
+      if (currentStateHash == hash) {
+        unique = false;
+      }
+    }
+
+    if (!unique) {
+      _notUniqueForNSteps++;
     } else {
-      _noChangeForNSteps = 0;
+      _notUniqueForNSteps = 0;
+    }
+
+    bufferHashes.push_back(currentStateHash);
+    if (bufferHashes.size() > 100) {
+      bufferHashes.pop_front();
     }
 
     Serial.print("Living cells this timestep: "); Serial.println(livingCells);
+    Serial.print("State is unique: "); Serial.println(unique);
+    Serial.print("State not unique for N steps: "); Serial.println(_notUniqueForNSteps);
 
-    if (livingCells > 0 && _noChangeForNSteps < 10) {
+    if (livingCells > 0 && _notUniqueForNSteps < 20) {
       _finished = false;
     } else {
       _finished = true;
@@ -275,6 +287,16 @@ bool GameOfLife::run()
     _lastLoopTime = millis();
   }
   return _finished;
+}
+
+std::size_t GameOfLife::hashBuffer(const std::vector<uint32_t>& vec) const
+{
+  std::size_t seed = vec.size();
+  for(uint32_t i : vec) {
+    if (i != 0) { i = 1; }
+    seed ^= i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+  }
+  return seed;
 }
 
 

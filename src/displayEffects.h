@@ -5,6 +5,8 @@
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
 
+#include <deque>
+
 // Colour generating functions
 inline uint32_t colourGenerator_randomHSV() { return Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(random(0, 65536))); }
 inline uint32_t colourGenerator_cycleHSV() { return Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(millis(), 255, 255)); }
@@ -109,9 +111,12 @@ private:
     DisplayRegion _displayRegion;
     bool _finished;
     uint32_t _updateInterval;
-    uint32_t _noChangeForNSteps;
+    uint32_t _notUniqueForNSteps;
 
     std::vector<uint32_t> nextBuffer;
+    std::deque<std::size_t> bufferHashes;
+
+    std::size_t hashBuffer(const std::vector<uint32_t>& vec) const; 
 };
 
 // bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)(), DisplayRegion displayRegion);

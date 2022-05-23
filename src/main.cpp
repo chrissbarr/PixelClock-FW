@@ -205,7 +205,7 @@ void loop()
 
   // Manage loop timing
   unsigned long loopTime = millis() - lastLoopTime;
-  //Serial.print("Loop time:" ); Serial.println(loopTime);
+  Serial.print("Loop time:" ); Serial.println(loopTime);
   while (millis() - lastLoopTime < loopTime) {}
   lastLoopTime = millis();
 }
