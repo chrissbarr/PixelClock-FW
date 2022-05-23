@@ -170,6 +170,7 @@ void GameOfLife::reset()
 {
   _lastLoopTime = 0;
   _finished = false;
+  _dead = false;
   _notUniqueForNSteps = 0;
   seedDisplay();
 }
@@ -200,103 +201,122 @@ void GameOfLife::seedDisplay()
 
 bool GameOfLife::run()
 {
-  if (millis() - _lastLoopTime > _updateInterval) {
-    auto neighbourCount = [](uint8_t xPos, uint8_t yPos, const PixelDisplay& _display, const DisplayRegion& _region )->uint8_t {
-      bool wrap = true;
-      uint8_t alive = 0;
-      uint8_t testedCells = 0;
-      for (int x = xPos - 1; x <= xPos + 1; x++) {
-        int testX = x;
-        if (testX < _region.xMin) { 
-          if (wrap) { testX = _region.xMax; } else { continue; }
-        }
-        if (testX > _region.xMax) { 
-          if (wrap) { testX = _region.xMin; } else { continue; }
-        }
-        for (int y = yPos - 1; y <= yPos + 1; y++) {
-          int testY = y;
-          if (testY < _region.yMin) { 
-            if (wrap) { testY = _region.yMax; } else { continue; }
-          }
-          if (testY > _region.yMax) { 
-            if (wrap) { testY = _region.yMin; } else { continue; }
-          }
-          if (testX == xPos && testY == yPos) { continue; }
-          testedCells++;
-          if (_display.getXY(testX, testY) != 0) {
-            alive++;
-          }
+  if (_dead) {
+    if (millis() - _lastLoopTime > 50) {
+      for (uint8_t x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
+        for (uint8_t y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
+          uint32_t currentVal = _display.getXY(x, y);
+          uint8_t r = uint8_t(currentVal >> 16) * 0.5;
+          uint8_t g = uint8_t(currentVal >> 8) * 0.5;
+          uint8_t b = uint8_t(currentVal) * 0.5;
+          _display.setXY(x, y, Adafruit_NeoPixel::Color(r, g, b));
         }
       }
-      return alive;
-    };
-
-    std::fill(nextBuffer.begin(), nextBuffer.end(), 0);
-
-    //Serial.println("Neighbours");
-    for (uint8_t x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
-      for (uint8_t y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
-        uint8_t neighbours = neighbourCount(x, y, _display, _displayRegion);
-        //Serial.println(neighbours);
-        uint32_t currentVal = _display.getXY(x, y);
-        bool currentlyAlive = (currentVal != 0);
-        if (currentlyAlive) {
-          if (neighbours == 2 || neighbours == 3) {
-            // keep on living
-            nextBuffer[_display.XYToIndex(x, y)] = currentVal;
-          } else {
-            // kill this cell
-            nextBuffer[_display.XYToIndex(x, y)] = 0;
-          }
-        } else {
-          if (neighbours == 3) {
-            // come to life!
-            nextBuffer[_display.XYToIndex(x, y)] = _colourGenerator();
-          }
-        }
-      }
+      _lastLoopTime = millis();
     }
 
-    // copy buffer into display and count living cells
-    uint32_t livingCells = 0;
-    for (uint32_t i = 0; i < nextBuffer.size(); i++) {
-      _display.setIndex(i, nextBuffer[i]);
-      if (nextBuffer[i] != 0) {
-        livingCells++;
-      }
-    }
-
-    auto currentStateHash = hashBuffer(nextBuffer);
-
-    bool unique = true;
-    for (const auto& hash : bufferHashes) {
-      if (currentStateHash == hash) {
-        unique = false;
-      }
-    }
-
-    if (!unique) {
-      _notUniqueForNSteps++;
-    } else {
-      _notUniqueForNSteps = 0;
-    }
-
-    bufferHashes.push_back(currentStateHash);
-    if (bufferHashes.size() > 100) {
-      bufferHashes.pop_front();
-    }
-
-    Serial.print("Living cells this timestep: "); Serial.println(livingCells);
-    Serial.print("State is unique: "); Serial.println(unique);
-    Serial.print("State not unique for N steps: "); Serial.println(_notUniqueForNSteps);
-
-    if (livingCells > 0 && _notUniqueForNSteps < 20) {
-      _finished = false;
-    } else {
+    if (_display.empty()) {
       _finished = true;
     }
-    _lastLoopTime = millis();
+    
+  } else {
+    if (millis() - _lastLoopTime > _updateInterval) {
+      auto neighbourCount = [](uint8_t xPos, uint8_t yPos, const PixelDisplay& _display, const DisplayRegion& _region )->uint8_t {
+        bool wrap = true;
+        uint8_t alive = 0;
+        uint8_t testedCells = 0;
+        for (int x = xPos - 1; x <= xPos + 1; x++) {
+          int testX = x;
+          if (testX < _region.xMin) { 
+            if (wrap) { testX = _region.xMax; } else { continue; }
+          }
+          if (testX > _region.xMax) { 
+            if (wrap) { testX = _region.xMin; } else { continue; }
+          }
+          for (int y = yPos - 1; y <= yPos + 1; y++) {
+            int testY = y;
+            if (testY < _region.yMin) { 
+              if (wrap) { testY = _region.yMax; } else { continue; }
+            }
+            if (testY > _region.yMax) { 
+              if (wrap) { testY = _region.yMin; } else { continue; }
+            }
+            if (testX == xPos && testY == yPos) { continue; }
+            testedCells++;
+            if (_display.getXY(testX, testY) != 0) {
+              alive++;
+            }
+          }
+        }
+        return alive;
+      };
+
+      std::fill(nextBuffer.begin(), nextBuffer.end(), 0);
+
+      //Serial.println("Neighbours");
+      for (uint8_t x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
+        for (uint8_t y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
+          uint8_t neighbours = neighbourCount(x, y, _display, _displayRegion);
+          //Serial.println(neighbours);
+          uint32_t currentVal = _display.getXY(x, y);
+          bool currentlyAlive = (currentVal != 0);
+          if (currentlyAlive) {
+            if (neighbours == 2 || neighbours == 3) {
+              // keep on living
+              nextBuffer[_display.XYToIndex(x, y)] = currentVal;
+            } else {
+              // kill this cell
+              nextBuffer[_display.XYToIndex(x, y)] = 0;
+            }
+          } else {
+            if (neighbours == 3) {
+              // come to life!
+              nextBuffer[_display.XYToIndex(x, y)] = _colourGenerator();
+            }
+          }
+        }
+      }
+
+      // copy buffer into display and count living cells
+      uint32_t livingCells = 0;
+      for (uint32_t i = 0; i < nextBuffer.size(); i++) {
+        _display.setIndex(i, nextBuffer[i]);
+        if (nextBuffer[i] != 0) {
+          livingCells++;
+        }
+      }
+
+      auto currentStateHash = hashBuffer(nextBuffer);
+
+      bool unique = true;
+      for (const auto& hash : bufferHashes) {
+        if (currentStateHash == hash) {
+          unique = false;
+        }
+      }
+
+      if (!unique) {
+        _notUniqueForNSteps++;
+      } else {
+        _notUniqueForNSteps = 0;
+      }
+
+      bufferHashes.push_back(currentStateHash);
+      if (bufferHashes.size() > 100) {
+        bufferHashes.pop_front();
+      }
+
+      Serial.print("Living cells this timestep: "); Serial.println(livingCells);
+      Serial.print("State is unique: "); Serial.println(unique);
+      Serial.print("State not unique for N steps: "); Serial.println(_notUniqueForNSteps);
+
+      if (livingCells == 0 || _notUniqueForNSteps >= 20) {
+        _dead = true;
+      } 
+      _lastLoopTime = millis();
+    }
   }
+
   return _finished;
 }
 

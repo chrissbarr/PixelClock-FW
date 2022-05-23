@@ -109,6 +109,7 @@ private:
     uint32_t _lastLoopTime;
     uint32_t (*_colourGenerator)();
     DisplayRegion _displayRegion;
+    bool _dead;
     bool _finished;
     uint32_t _updateInterval;
     uint32_t _notUniqueForNSteps;
