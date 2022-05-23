@@ -83,8 +83,8 @@ public:
 private:
     float ballx;
     float bally;
-    float xSpeed;
-    float ySpeed;
+    int xDir;
+    int yDir;
     PixelDisplay& _display;
     uint32_t _lastLoopTime;
     uint32_t (*_colourGenerator)();

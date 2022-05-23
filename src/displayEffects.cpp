@@ -109,12 +109,12 @@ BouncingBall::BouncingBall(PixelDisplay& display, float moveSpeed, uint32_t(*col
 
 void BouncingBall::reset()
 {
-  ballx = 3;//random(_displayRegion.xMin, _displayRegion.xMax + 1);
+  ballx = 4;//random(_displayRegion.xMin, _displayRegion.xMax + 1);
   bally = 3;//random(_displayRegion.yMin, _displayRegion.yMax + 1);
   //float ballDirection = 45;//random(0, 360);
   //const float degToRad = 0.0174533;
-  xSpeed = 0.2;//std::cos(ballDirection * degToRad);
-  ySpeed = 0.1;//std::sin(ballDirection * degToRad);
+  xDir = 1;// = 0.2;//std::cos(ballDirection * degToRad);
+  yDir = 1;// = 0.1;//std::sin(ballDirection * degToRad);
   _finished = false; 
   _lastLoopTime = 0;
   _display.fill(0, _displayRegion); 
@@ -129,30 +129,24 @@ bool BouncingBall::run()
   }
 
   uint32_t millisSinceLastRun = millis() - _lastLoopTime;
-  float timestep = (1.0 / float(millisSinceLastRun));
-  Serial.print("Timestep: "); Serial.println(timestep);
-  ballx += xSpeed * timestep;
-  bally += ySpeed * timestep;
-  Serial.print("X "); Serial.println(ballx);
-  Serial.print("Y "); Serial.println(bally);
+  if (millisSinceLastRun > 500) {
+    ballx += xDir;
+    bally += yDir;
+    Serial.print("X "); Serial.println(ballx);
+    Serial.print("Y "); Serial.println(bally);
 
-  if (ballx <= _displayRegion.xMin || ballx >= _displayRegion.xMax) { 
-    xSpeed = -xSpeed; 
-    ballx += xSpeed * timestep;
-    bally += ySpeed * timestep;
+    if (ballx <= _displayRegion.xMin || ballx >= _displayRegion.xMax) { 
+      xDir = -xDir; 
+    }
+    if (bally <= _displayRegion.yMin || bally >= _displayRegion.yMax) {
+      yDir = -yDir; 
+    }
+
+    _display.fill(0, _displayRegion);
+    _display.setXY(uint8_t(round(ballx)), uint8_t(round(bally)), _colourGenerator());
+
+    _lastLoopTime = millis();
   }
-  if (bally <= _displayRegion.yMin || bally >= _displayRegion.yMax) {
-    ySpeed = -ySpeed; 
-    ballx += xSpeed * timestep;
-    bally += ySpeed * timestep;
-  }
-
-  
-
-  _display.fill(0, _displayRegion);
-  _display.setXY(uint8_t(round(ballx)), uint8_t(round(bally)), _colourGenerator());
-
-  _lastLoopTime = millis();
   return true;
 }
 
