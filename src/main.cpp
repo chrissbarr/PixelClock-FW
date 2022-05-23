@@ -43,8 +43,9 @@ void click(Button2& btn) {
 }
 
 // Main loop timing
-unsigned long lastLoopTime = 0;
-constexpr unsigned long loopTime = 25;
+uint32_t lastLoopTime = 0;
+constexpr uint32_t loopTargetTime = 25;
+std::vector<uint16_t> loopTimes;
 
 // Timekeeping
 RTC_DS3231 rtc;
@@ -147,6 +148,8 @@ void setup() {
   // displayEffects.push_back(std::make_unique<RandomFill>(display, 100, colourGenerator_randomHSV));
   displayEffects.front()->reset();
 
+  // start time tracking for main loop
+  lastLoopTime = millis();
 }
 
 TextScroller settingsMenuTextScroller_settime(display, "Set Time", 1000, true, 1);
@@ -205,8 +208,30 @@ void loop()
 
   // Manage loop timing
   unsigned long loopTime = millis() - lastLoopTime;
-  //Serial.print("Loop time:" ); Serial.println(loopTime);
-  while (millis() - lastLoopTime < loopTime) {}
+  loopTimes.push_back(loopTime);
+  if(loopTimes.size() == 100) {
+    Serial.println("Loop Timing Statistics");
+
+    // Calculate timing stats
+    uint16_t maxTime = 0;
+    uint16_t minTime = 10000;
+    float avgTime = 0;
+    for (const auto& time : loopTimes) {
+      if (time > maxTime) { maxTime = time; }
+      if (time < minTime) { minTime = time; }
+      avgTime += time;
+    }
+    avgTime = avgTime / loopTimes.size();
+
+    Serial.print("Avg time:" ); Serial.println(avgTime);
+    Serial.print("Min time:" ); Serial.println(minTime);
+    Serial.print("Max time:" ); Serial.println(maxTime);
+    Serial.print("Samples:" ); Serial.println(loopTimes.size());
+
+    loopTimes.clear();
+  }
+
+  while (millis() - lastLoopTime < loopTargetTime) {}
   lastLoopTime = millis();
 }
 
