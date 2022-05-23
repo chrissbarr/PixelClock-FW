@@ -202,17 +202,28 @@ bool GameOfLife::run()
 {
   if (millis() - _lastLoopTime > _updateInterval) {
     auto neighbourCount = [](uint8_t xPos, uint8_t yPos, const PixelDisplay& _display, const DisplayRegion& _region )->uint8_t {
+      bool wrap = true;
       uint8_t alive = 0;
       uint8_t testedCells = 0;
       for (int x = xPos - 1; x <= xPos + 1; x++) {
-        if (x < _region.xMin) { continue; }
-        if (x > _region.xMax) { continue; }
+        int testX = x;
+        if (testX < _region.xMin) { 
+          if (wrap) { testX = _region.xMax; } else { continue; }
+        }
+        if (testX > _region.xMax) { 
+          if (wrap) { testX = _region.xMin; } else { continue; }
+        }
         for (int y = yPos - 1; y <= yPos + 1; y++) {
-          if (y < _region.yMin) { continue; }
-          if (y > _region.yMax) { continue; }
-          if (x == xPos && y == yPos) { continue; }
+          int testY = y;
+          if (testY < _region.yMin) { 
+            if (wrap) { testY = _region.yMax; } else { continue; }
+          }
+          if (testY > _region.yMax) { 
+            if (wrap) { testY = _region.yMin; } else { continue; }
+          }
+          if (testX == xPos && testY == yPos) { continue; }
           testedCells++;
-          if (_display.getXY(x, y) != 0) {
+          if (_display.getXY(testX, testY) != 0) {
             alive++;
           }
         }
