@@ -73,6 +73,26 @@ private:
     uint32_t _lastSpawnTime = 0;
 };
 
+class BouncingBall : public DisplayEffect {
+public:
+    BouncingBall(PixelDisplay& display, float moveSpeed, uint32_t(*colourGenerator)(), const DisplayRegion& displayRegion = defaultFull);
+    bool run() override final;
+    bool finished() const override final { return _finished; }
+    void reset() override final;
+
+private:
+    float ballx;
+    float bally;
+    float xSpeed;
+    float ySpeed;
+    PixelDisplay& _display;
+    uint32_t _lastLoopTime;
+    uint32_t (*_colourGenerator)();
+    DisplayRegion _displayRegion;
+    bool _finished;
+    float _moveSpeed = 0;
+};
+
 // bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)(), DisplayRegion displayRegion);
 // inline bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)())
 // {

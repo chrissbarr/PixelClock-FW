@@ -140,6 +140,7 @@ void setup() {
 
   //displayDiagnostic(display);
 
+  displayEffects.push_back(std::make_unique<BouncingBall>(display, 0.1, colourGenerator_cycleHSV));
   displayEffects.push_back(std::make_unique<TextScroller>(display, "Test Text Scroller", Adafruit_NeoPixel::Color(255, 0, 0), 1000, true, 1));
   //displayEffects.push_back(std::make_unique<TextScroller>(display, "Another Test! 1234:5678", Adafruit_NeoPixel::Color(0, 0, 255), 1000, true, 1));
   displayEffects.push_back(std::make_unique<RandomFill>(display, 100, colourGenerator_randomHSV));
