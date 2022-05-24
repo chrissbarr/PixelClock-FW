@@ -5,6 +5,8 @@
 #include <Adafruit_NeoPixel.h>
 #include "characters.h"
 
+#include <vector>
+
 struct DisplayRegion {
     uint8_t xMin;
     uint8_t xMax;
@@ -54,6 +56,9 @@ public:
 
     uint32_t XYToIndex(uint8_t x, uint8_t y) const;
 
+    void preFilter();
+    std::vector<uint32_t>& getFilterBuffer() { return filterBuffer; }
+
 private:
     Adafruit_NeoPixel& pixels;
     const uint8_t width;
@@ -63,7 +68,9 @@ private:
     const bool vertical;
     const uint32_t pixelOffset;
 
-    uint32_t *buffer;
+    std::vector<uint32_t> buffer;
+    std::vector<uint32_t> filterBuffer;
+    bool filterApplied = false;
 
     DisplayRegion fullDisplay;
 

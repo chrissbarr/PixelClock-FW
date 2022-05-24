@@ -500,3 +500,30 @@ void displayDiagnostic(PixelDisplay& display)
   display.fill(0);
   display.update();
 }
+
+void filterSolidColour(PixelDisplay& display, uint32_t colour)
+{
+  auto& buffer = display.getFilterBuffer();
+  for (std::size_t i = 0; i < buffer.size(); i++) {
+    if (buffer[i] == 0) { continue; }
+    buffer[i] = colour;
+  }
+}
+
+void filterRainbowWave(PixelDisplay& display, int speed, int width)
+{
+  static uint16_t wheelPos = 0;
+  wheelPos += speed;
+  if (width == 0) { width = display.getWidth(); }
+  auto& buffer = display.getFilterBuffer();
+
+  for (uint8_t x = 0; x < display.getWidth(); x++) {
+    uint16_t hue = wheelPos + (x * 65536L / width);
+    uint32_t colour = Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(hue));
+    for (uint8_t y = 0; y < display.getHeight(); y++) {
+      auto index = display.XYToIndex(x, y);
+      if (buffer[index] == 0) { continue; }
+      buffer[index] = colour;
+    }
+  }
+}

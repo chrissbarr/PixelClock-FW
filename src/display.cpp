@@ -10,12 +10,13 @@ PixelDisplay::PixelDisplay(Adafruit_NeoPixel& pixels, uint8_t width, uint8_t hei
   fullDisplay.yMin = 0;
   fullDisplay.yMax = height - 1;
 
-  buffer = new uint32_t[size] {0};
+  buffer = std::vector<uint32_t>(size, 0);
+  filterBuffer.reserve(size);
 }
 
 PixelDisplay::~PixelDisplay()
 {
-  delete [] buffer;
+  
 }
 
 void PixelDisplay::setIndex(uint32_t index, uint32_t colour)
@@ -62,9 +63,11 @@ void PixelDisplay::fill(uint32_t colour)
 
 void PixelDisplay::update() 
 {
-  for (uint32_t i = 0; i < size; i++) {
-    pixels.setPixelColor(i + pixelOffset, buffer[i]);
+  const std::vector<uint32_t>& buf = filterApplied ? filterBuffer : buffer;
+  for (uint32_t i = 0; i < buf.size(); i++) {
+    pixels.setPixelColor(i + pixelOffset, buf[i]);
   }
+  filterApplied = false;
   pixels.show();
 }
 
@@ -110,7 +113,7 @@ uint32_t PixelDisplay::XYToIndex(uint8_t x, uint8_t y) const
     }
   }
 
-  if( serpentine == true) {
+  if (serpentine == true) {
     if (vertical == false) {
       if( y & 0x01) {
         // Odd rows run backwards
@@ -170,4 +173,11 @@ bool PixelDisplay::empty() const
     if (buffer[i] != 0) { empty = false; }
   }
   return empty;
+}
+
+void PixelDisplay::preFilter()
+{
+  // copy current buffer into filter buffer
+  filterBuffer = buffer;
+  filterApplied = true;
 }

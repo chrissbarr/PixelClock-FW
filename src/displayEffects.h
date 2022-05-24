@@ -132,4 +132,7 @@ void showTime(PixelDisplay& display, int hour, int minute, uint32_t colour);
 
 void displayDiagnostic(PixelDisplay& display);
 
+void filterSolidColour(PixelDisplay& display, uint32_t colour);
+void filterRainbowWave(PixelDisplay& display, int speed, int width = 0);
+
 #endif //displayeffects_h

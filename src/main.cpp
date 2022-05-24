@@ -146,7 +146,7 @@ void setup() {
   // displayEffects.push_back(std::make_unique<TextScroller>(display, "Test Text Scroller", Adafruit_NeoPixel::Color(255, 0, 0), 1000, true, 1));
   // //displayEffects.push_back(std::make_unique<TextScroller>(display, "Another Test! 1234:5678", Adafruit_NeoPixel::Color(0, 0, 255), 1000, true, 1));
   // displayEffects.push_back(std::make_unique<RandomFill>(display, 100, colourGenerator_randomHSV));
-  displayEffects.front()->reset();
+  //displayEffects.front()->reset();
 
   // start time tracking for main loop
   lastLoopTime = millis();
@@ -193,11 +193,16 @@ void loop()
     if (effectIndex >= displayEffects.size()) {
       effectIndex = 0;
     }
-    displayEffects[effectIndex]->reset();
+    //displayEffects[effectIndex]->reset();
   }
-  displayEffects[effectIndex]->run();
+  //displayEffects[effectIndex]->run();
 
   // update display
+  showTime(display, 12, 30, 1);
+  display.preFilter();
+  //filterSolidColour(display, colourGenerator_cycleHSV());
+  int speed = 5000 * sin(double(millis()) / 5000);
+  filterRainbowWave(display, speed, 100);
   display.update();
   //delay(1);
   //delayMicroseconds(100);
