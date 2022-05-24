@@ -2,7 +2,7 @@
 #define display_h
 
 #include <Arduino.h>
-#include <Adafruit_NeoPixel.h>
+#include <fastled_rgbw.h>
 #include "characters.h"
 
 #include <vector>
@@ -27,7 +27,7 @@ constexpr DisplayRegion defaultFull = {0, 0, 0, 0};
 
 class PixelDisplay {
 public:
-    PixelDisplay(Adafruit_NeoPixel& pixels, uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset = 0);
+    PixelDisplay(CRGBW *leds, uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset = 0);
     ~PixelDisplay();
 
     void setIndex(uint32_t index, uint32_t colour);
@@ -60,7 +60,7 @@ public:
     std::vector<uint32_t>& getFilterBuffer() { return filterBuffer; }
 
 private:
-    Adafruit_NeoPixel& pixels;
+    CRGBW* leds;
     const uint8_t width;
     const uint8_t height;
     const uint32_t size;

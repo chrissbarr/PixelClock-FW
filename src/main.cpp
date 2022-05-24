@@ -1,5 +1,7 @@
 #include <SPI.h>
-#include <Adafruit_NeoPixel.h>
+#include <FastLED.h>
+#include <fastled_rgbw.h>
+
 #include <TimeLib.h>
 #include <RTClib.h>
 #include <Button2.h>
@@ -16,8 +18,11 @@ constexpr int16_t matrixLEDPin = 14;
 constexpr uint8_t matrixWidth = 17;
 constexpr uint8_t matrixHeight = 5;
 constexpr uint8_t matrixSize = matrixWidth * matrixHeight;
-Adafruit_NeoPixel pixels(matrixSize, matrixLEDPin, NEO_GRBW + NEO_KHZ800);
-PixelDisplay display(pixels, matrixWidth, matrixHeight, false, false);
+
+CRGBW leds[matrixSize];
+CRGB *ledsRGB = (CRGB *) &leds[0];
+PixelDisplay display(leds, matrixWidth, matrixHeight, false, false);
+
 
 // Buttons
 constexpr int16_t buttonPin1 = 13;
@@ -44,7 +49,7 @@ void click(Button2& btn) {
 
 // Main loop timing
 uint32_t lastLoopTime = 0;
-constexpr uint32_t loopTargetTime = 25;
+constexpr uint32_t loopTargetTime = 10;
 std::vector<uint16_t> loopTimes;
 
 // Timekeeping
@@ -112,8 +117,11 @@ void setup() {
   delay(1000);
   Serial.begin(250000);
   Serial.println("Serial begin!");
-  pixels.begin();
-  pixels.setBrightness(255);
+
+  FastLED.addLeds<SK6812, matrixLEDPin, RGB>(ledsRGB, getRGBWsize(matrixSize));  // GRB ordering is typical
+
+  //pixels.begin();
+  //pixels.setBrightness(255);
 
   if (initialiseRTC()) {
     // Set Time to sync from RTC
@@ -142,10 +150,10 @@ void setup() {
   //displayDiagnostic(display);
 
   displayEffects.push_back(std::make_unique<GameOfLife>(display, 100, colourGenerator_cycleHSV, display.getFullDisplayRegion(), false));
-  // displayEffects.push_back(std::make_unique<BouncingBall>(display, 0.1, colourGenerator_cycleHSV));
-  // displayEffects.push_back(std::make_unique<TextScroller>(display, "Test Text Scroller", Adafruit_NeoPixel::Color(255, 0, 0), 1000, true, 1));
+  displayEffects.push_back(std::make_unique<BouncingBall>(display, 0.1, colourGenerator_cycleHSV));
+  displayEffects.push_back(std::make_unique<TextScroller>(display, "Test Text Scroller", Adafruit_NeoPixel::Color(255, 0, 0), 1000, true, 1));
   // //displayEffects.push_back(std::make_unique<TextScroller>(display, "Another Test! 1234:5678", Adafruit_NeoPixel::Color(0, 0, 255), 1000, true, 1));
-  // displayEffects.push_back(std::make_unique<RandomFill>(display, 100, colourGenerator_randomHSV));
+  displayEffects.push_back(std::make_unique<RandomFill>(display, 100, colourGenerator_randomHSV));
   //displayEffects.front()->reset();
 
   // start time tracking for main loop
@@ -198,12 +206,15 @@ void loop()
   displayEffects[effectIndex]->run();
 
   // update display
-  //showTime(display, 12, 30, 1);
+  display.fill(0);
+  showTime(display, 12, 30, 1);
   display.preFilter();
   //filterSolidColour(display, colourGenerator_cycleHSV());
   //int speed = 5000 * sin(double(millis()) / 5000);
   filterRainbowWave(display, 1000, 100);
+  FastLED.setBrightness(1);
   display.update();
+  FastLED.show();
   //delay(1);
   //delayMicroseconds(100);
   //pixels.fill(0);

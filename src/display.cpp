@@ -1,9 +1,8 @@
 #include <display.h>
-#include <Adafruit_NeoPixel.h>
 #include "characters.h"
 
-PixelDisplay::PixelDisplay(Adafruit_NeoPixel& pixels, uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset) :
-    pixels(pixels), width(width), height(height), size(width * height), serpentine(serpentine), vertical(vertical), pixelOffset(pixelOffset)
+PixelDisplay::PixelDisplay(CRGBW *leds, uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset) :
+    leds(leds), width(width), height(height), size(width * height), serpentine(serpentine), vertical(vertical), pixelOffset(pixelOffset)
 {
   fullDisplay.xMin = 0;
   fullDisplay.xMax = width - 1;
@@ -65,10 +64,9 @@ void PixelDisplay::update()
 {
   const std::vector<uint32_t>& buf = filterApplied ? filterBuffer : buffer;
   for (uint32_t i = 0; i < buf.size(); i++) {
-    pixels.setPixelColor(i + pixelOffset, buf[i]);
+    leds[i + pixelOffset] = buf[i];
   }
   filterApplied = false;
-  pixels.show();
 }
 
 void PixelDisplay::showCharacters(const String& string, uint32_t colour, int xOffset, uint8_t spacing)
