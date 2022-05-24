@@ -141,7 +141,7 @@ void setup() {
 
   //displayDiagnostic(display);
 
-  displayEffects.push_back(std::make_unique<GameOfLife>(display, 100, colourGenerator_cycleHSV));
+  displayEffects.push_back(std::make_unique<GameOfLife>(display, 100, colourGenerator_cycleHSV, display.getFullDisplayRegion(), false));
   // displayEffects.push_back(std::make_unique<BouncingBall>(display, 0.1, colourGenerator_cycleHSV));
   // displayEffects.push_back(std::make_unique<TextScroller>(display, "Test Text Scroller", Adafruit_NeoPixel::Color(255, 0, 0), 1000, true, 1));
   // //displayEffects.push_back(std::make_unique<TextScroller>(display, "Another Test! 1234:5678", Adafruit_NeoPixel::Color(0, 0, 255), 1000, true, 1));
@@ -193,16 +193,16 @@ void loop()
     if (effectIndex >= displayEffects.size()) {
       effectIndex = 0;
     }
-    //displayEffects[effectIndex]->reset();
+    displayEffects[effectIndex]->reset();
   }
-  //displayEffects[effectIndex]->run();
+  displayEffects[effectIndex]->run();
 
   // update display
-  showTime(display, 12, 30, 1);
+  //showTime(display, 12, 30, 1);
   display.preFilter();
   //filterSolidColour(display, colourGenerator_cycleHSV());
-  int speed = 5000 * sin(double(millis()) / 5000);
-  filterRainbowWave(display, speed, 100);
+  //int speed = 5000 * sin(double(millis()) / 5000);
+  filterRainbowWave(display, 1000, 100);
   display.update();
   //delay(1);
   //delayMicroseconds(100);

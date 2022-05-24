@@ -150,8 +150,8 @@ bool BouncingBall::run()
   return true;
 }
 
-GameOfLife::GameOfLife(PixelDisplay& display, uint32_t updateInterval, uint32_t(*colourGenerator)(), const DisplayRegion& displayRegion) :
-  _display(display), _updateInterval(updateInterval), _colourGenerator(colourGenerator)
+GameOfLife::GameOfLife(PixelDisplay& display, uint32_t updateInterval, uint32_t(*colourGenerator)(), const DisplayRegion& displayRegion, bool wrap) :
+  _display(display), _updateInterval(updateInterval), _colourGenerator(colourGenerator), _wrap(wrap)
 {
   if (displayRegion == defaultFull) {
     _displayRegion = display.getFullDisplayRegion();
@@ -186,17 +186,6 @@ void GameOfLife::seedDisplay()
       }
     }
   }
-  // _display.setXY(1, 1, _colourGenerator());
-  // _display.setXY(1, 2, _colourGenerator());
-  // _display.setXY(2, 1, _colourGenerator());
-  // _display.setXY(2, 2, _colourGenerator());
-
-  // _display.setXY(10, 2, _colourGenerator());
-  // _display.setXY(11, 2, _colourGenerator());
-  // _display.setXY(12, 2, _colourGenerator());
-
-
-
 }
 
 bool GameOfLife::run()
@@ -221,8 +210,7 @@ bool GameOfLife::run()
     
   } else {
     if (millis() - _lastLoopTime > _updateInterval) {
-      auto neighbourCount = [](uint8_t xPos, uint8_t yPos, const PixelDisplay& _display, const DisplayRegion& _region )->uint8_t {
-        bool wrap = true;
+      auto neighbourCount = [](uint8_t xPos, uint8_t yPos, const PixelDisplay& _display, const DisplayRegion& _region, bool wrap)->uint8_t {
         uint8_t alive = 0;
         uint8_t testedCells = 0;
         for (int x = xPos - 1; x <= xPos + 1; x++) {
@@ -256,7 +244,7 @@ bool GameOfLife::run()
       //Serial.println("Neighbours");
       for (uint8_t x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
         for (uint8_t y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
-          uint8_t neighbours = neighbourCount(x, y, _display, _displayRegion);
+          uint8_t neighbours = neighbourCount(x, y, _display, _displayRegion, _wrap);
           //Serial.println(neighbours);
           uint32_t currentVal = _display.getXY(x, y);
           bool currentlyAlive = (currentVal != 0);

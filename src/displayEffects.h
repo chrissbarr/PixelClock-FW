@@ -97,7 +97,7 @@ private:
 
 class GameOfLife : public DisplayEffect {
 public:
-    GameOfLife(PixelDisplay& display, uint32_t updateInterval, uint32_t(*colourGenerator)(), const DisplayRegion& displayRegion = defaultFull);
+    GameOfLife(PixelDisplay& display, uint32_t updateInterval, uint32_t(*colourGenerator)(), const DisplayRegion& displayRegion = defaultFull, bool wrap = true);
     bool run() override final;
     bool finished() const override final { return _finished; }
     void reset() override final;
@@ -111,6 +111,7 @@ private:
     DisplayRegion _displayRegion;
     bool _dead;
     bool _finished;
+    bool _wrap;
     uint32_t _updateInterval;
     uint32_t _notUniqueForNSteps;
 
