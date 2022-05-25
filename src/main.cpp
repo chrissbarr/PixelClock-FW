@@ -49,7 +49,19 @@ void click(Button2& btn) {
 // Main loop timing
 uint32_t lastLoopTime = 0;
 constexpr uint32_t loopTargetTime = 5;
-std::vector<uint16_t> loopTimes;
+uint32_t lastReportTime = 0;
+constexpr uint32_t reportInterval = 5000;
+
+float avgTime = 0;
+uint16_t minTime = std::numeric_limits<uint16_t>::max();
+uint16_t maxTime = 0;
+
+constexpr float approxRollingAverage(float avg, float newSample, int N) 
+{
+  avg -= avg / N;
+  avg += newSample / N;
+  return avg;
+}
 
 // Timekeeping
 RTC_DS3231 rtc;
@@ -219,33 +231,23 @@ void loop()
   }
 
   display.update();
-
-
   FastLED.show();
 
   // Manage loop timing
   unsigned long loopTime = millis() - lastLoopTime;
-  loopTimes.push_back(loopTime);
-  if(loopTimes.size() == 100) {
+
+  avgTime = approxRollingAverage(avgTime, float(loopTime), 1000);
+  if (loopTime > maxTime) { maxTime = loopTime; }
+  if (loopTime < minTime) { minTime = loopTime; }
+
+  if (millis() - lastReportTime > reportInterval) {
     Serial.println("Loop Timing Statistics");
-
-    // Calculate timing stats
-    uint16_t maxTime = 0;
-    uint16_t minTime = 10000;
-    float avgTime = 0;
-    for (const auto& time : loopTimes) {
-      if (time > maxTime) { maxTime = time; }
-      if (time < minTime) { minTime = time; }
-      avgTime += time;
-    }
-    avgTime = avgTime / loopTimes.size();
-
     Serial.print("Avg time:" ); Serial.println(avgTime);
     Serial.print("Min time:" ); Serial.println(minTime);
     Serial.print("Max time:" ); Serial.println(maxTime);
-    Serial.print("Samples:" ); Serial.println(loopTimes.size());
-
-    loopTimes.clear();
+    lastReportTime = millis();
+    minTime = std::numeric_limits<uint16_t>::max();
+    maxTime = 0;
   }
 
   while (millis() - lastLoopTime < loopTargetTime) {}
