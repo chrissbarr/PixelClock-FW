@@ -4,13 +4,14 @@
 #include "display.h"
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
+#include <FastLED.h>
 
 #include <deque>
 
 // Colour generating functions
-inline uint32_t colourGenerator_randomHSV() { return Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(random(0, 65536))); }
-inline uint32_t colourGenerator_cycleHSV() { return Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(millis(), 255, 255)); }
-inline uint32_t colourGenerator_black() { return 0; }
+inline CRGB colourGenerator_randomHSV() { return CHSV(random(0, 256), 255, 255); }
+inline CRGB colourGenerator_cycleHSV() { return CHSV((millis() / 10), 255, 255); }
+inline CRGB colourGenerator_black() { return 0; }
 
 template <uint32_t C> uint32_t colourGenerator_fixed() { return C; }
 
@@ -35,14 +36,14 @@ public:
 
 class TextScroller : public DisplayEffect {
 public:
-    TextScroller(PixelDisplay& display, const String& textString, uint32_t colour, uint16_t timeToHoldAtEnd = 1000, bool reverseOnFinish = false, uint8_t characterSpacing = 1);
+    TextScroller(PixelDisplay& display, const String& textString, CRGB colour, uint16_t timeToHoldAtEnd = 1000, bool reverseOnFinish = false, uint8_t characterSpacing = 1);
     bool run() override final;
     bool finished() const override final { return _finished; }
     void reset() override final { _finished = false; currentOffset = 0; setTargetOffsetToEnd(); }
 private:
     PixelDisplay& display;
     const String text;
-    uint32_t colour;
+    CRGB colour;
     uint16_t timeToHoldAtEnd;
     bool reverseOnFinish;
     uint8_t charSpacing;
@@ -61,7 +62,7 @@ private:
 
 class RandomFill : public DisplayEffect {
 public:
-    RandomFill(PixelDisplay& display, uint32_t fillInterval, uint32_t(*colourGenerator)(), const DisplayRegion& spawnRegion = defaultFull);
+    RandomFill(PixelDisplay& display, uint32_t fillInterval, CRGB(*colourGenerator)(), const DisplayRegion& spawnRegion = defaultFull);
     bool run() override final;
     bool finished() const override final { return _finished; }
     void reset() override final { _finished = false; _lastSpawnTime = 0; _display.fill(0, _spawnRegion); };
@@ -69,7 +70,7 @@ public:
 private:
     PixelDisplay& _display;
     uint32_t _fillInterval;
-    uint32_t (*_colourGenerator)();
+    CRGB (*_colourGenerator)();
     DisplayRegion _spawnRegion;
     bool _finished;
     uint32_t _lastSpawnTime = 0;
@@ -77,7 +78,7 @@ private:
 
 class BouncingBall : public DisplayEffect {
 public:
-    BouncingBall(PixelDisplay& display, float moveSpeed, uint32_t(*colourGenerator)(), const DisplayRegion& displayRegion = defaultFull);
+    BouncingBall(PixelDisplay& display, float moveSpeed, CRGB(*colourGenerator)(), const DisplayRegion& displayRegion = defaultFull);
     bool run() override final;
     bool finished() const override final { return _finished; }
     void reset() override final;
@@ -89,7 +90,7 @@ private:
     int yDir;
     PixelDisplay& _display;
     uint32_t _lastLoopTime;
-    uint32_t (*_colourGenerator)();
+    CRGB (*_colourGenerator)();
     DisplayRegion _displayRegion;
     bool _finished;
     float _moveSpeed = 0;
@@ -97,7 +98,7 @@ private:
 
 class GameOfLife : public DisplayEffect {
 public:
-    GameOfLife(PixelDisplay& display, uint32_t updateInterval, uint32_t(*colourGenerator)(), const DisplayRegion& displayRegion = defaultFull, bool wrap = true);
+    GameOfLife(PixelDisplay& display, uint32_t updateInterval, CRGB(*colourGenerator)(), const DisplayRegion& displayRegion = defaultFull, bool wrap = true);
     bool run() override final;
     bool finished() const override final { return _finished; }
     void reset() override final;
@@ -107,7 +108,7 @@ public:
 private:
     PixelDisplay& _display;
     uint32_t _lastLoopTime;
-    uint32_t (*_colourGenerator)();
+    CRGB (*_colourGenerator)();
     DisplayRegion _displayRegion;
     bool _dead;
     bool _finished;
@@ -129,11 +130,11 @@ private:
 
 // void tetris(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval);
 
-void showTime(PixelDisplay& display, int hour, int minute, uint32_t colour);
+void showTime(PixelDisplay& display, int hour, int minute, CRGB colour);
 
 void displayDiagnostic(PixelDisplay& display);
 
-void filterSolidColour(PixelDisplay& display, uint32_t colour);
+void filterSolidColour(PixelDisplay& display, CRGB colour);
 void filterRainbowWave(PixelDisplay& display, int speed, int width = 0);
 
 #endif //displayeffects_h

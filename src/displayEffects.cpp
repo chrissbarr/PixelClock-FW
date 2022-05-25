@@ -4,7 +4,7 @@
 TextScroller::TextScroller(
   PixelDisplay& display,
   const String& textString,
-  uint32_t colour,
+  CRGB colour,
   uint16_t timeToHoldAtEnd, 
   bool reverseOnFinish, 
   uint8_t characterSpacing) :
@@ -61,7 +61,7 @@ TextScroller::TextScroller(
     targetOffset = end - charSpacing - display.getWidth();
   }
 
-RandomFill::RandomFill(PixelDisplay& display, uint32_t fillInterval, uint32_t(*colourGenerator)(), const DisplayRegion& spawnRegion) :
+RandomFill::RandomFill(PixelDisplay& display, uint32_t fillInterval, CRGB(*colourGenerator)(), const DisplayRegion& spawnRegion) :
 _display(display), _fillInterval(fillInterval), _colourGenerator(colourGenerator)
 {
   if (spawnRegion == defaultFull) {
@@ -83,7 +83,7 @@ bool RandomFill::run()
         uint8_t x = random(_spawnRegion.xMin, _spawnRegion.xMax + 1);
         uint8_t y = random(_spawnRegion.yMin, _spawnRegion.yMax + 1);
         //Serial.print("X: "); Serial.print(x); Serial.print(" Y: "); Serial.println(y);
-        if (_display.getXY(x, y) == uint32_t(0)) {
+        if (_display.getXY(x, y) == CRGB(0)) {
           _display.setXY(x, y, _colourGenerator());
           filledPixel = true;
           _lastSpawnTime = timeNow;
@@ -96,7 +96,7 @@ bool RandomFill::run()
   return _finished;
 }
 
-BouncingBall::BouncingBall(PixelDisplay& display, float moveSpeed, uint32_t(*colourGenerator)(), const DisplayRegion& displayRegion) :
+BouncingBall::BouncingBall(PixelDisplay& display, float moveSpeed, CRGB(*colourGenerator)(), const DisplayRegion& displayRegion) :
   _display(display), _moveSpeed(moveSpeed), _colourGenerator(colourGenerator)
 {
   if (displayRegion == defaultFull) {
@@ -150,7 +150,7 @@ bool BouncingBall::run()
   return true;
 }
 
-GameOfLife::GameOfLife(PixelDisplay& display, uint32_t updateInterval, uint32_t(*colourGenerator)(), const DisplayRegion& displayRegion, bool wrap) :
+GameOfLife::GameOfLife(PixelDisplay& display, uint32_t updateInterval, CRGB(*colourGenerator)(), const DisplayRegion& displayRegion, bool wrap) :
   _display(display), _updateInterval(updateInterval), _colourGenerator(colourGenerator), _wrap(wrap)
 {
   if (displayRegion == defaultFull) {
@@ -198,7 +198,7 @@ bool GameOfLife::run()
           uint8_t r = uint8_t(currentVal >> 16) * 0.5;
           uint8_t g = uint8_t(currentVal >> 8) * 0.5;
           uint8_t b = uint8_t(currentVal) * 0.5;
-          _display.setXY(x, y, Adafruit_NeoPixel::Color(r, g, b));
+          _display.setXY(x, y, CRGB(r, g, b));
         }
       }
       _lastLoopTime = millis();
@@ -231,7 +231,7 @@ bool GameOfLife::run()
             }
             if (testX == xPos && testY == yPos) { continue; }
             testedCells++;
-            if (_display.getXY(testX, testY) != 0) {
+            if (_display.getXY(testX, testY) != CRGB(0)) {
               alive++;
             }
           }
@@ -413,7 +413,7 @@ std::size_t GameOfLife::hashBuffer(const std::vector<uint32_t>& vec) const
 //   }
 // }
 
-void showTime(PixelDisplay& display, int hour, int minute, uint32_t colour)
+void showTime(PixelDisplay& display, int hour, int minute, CRGB colour)
 {
   constexpr uint8_t bufSize = 6;
   char c_buf[bufSize];
@@ -429,18 +429,18 @@ void displayDiagnostic(PixelDisplay& display)
   delay(250);
 
   // Show Pixel 0
-  display.setXY(0, 0, Adafruit_NeoPixel::Color(255, 0, 0));
+  display.setXY(0, 0, CRGB(255, 0, 0));
   display.update();
   delay(250);
 
   // Solid Red, Green, Blue
-  display.fill(Adafruit_NeoPixel::Color(255, 0, 0));
+  display.fill(CRGB(255, 0, 0));
   display.update();
   delay(250);
-  display.fill(Adafruit_NeoPixel::Color(0, 255, 0));
+  display.fill(CRGB(0, 255, 0));
   display.update();
   delay(250);
-  display.fill(Adafruit_NeoPixel::Color(0, 0, 255));
+  display.fill(CRGB(0, 0, 255));
   display.update();
   delay(250);
 
@@ -448,7 +448,7 @@ void displayDiagnostic(PixelDisplay& display)
   for (uint8_t y = 0; y < display.getHeight(); y++) {
     for (uint8_t x = 0; x < display.getWidth(); x++) {
     display.fill(0);
-    display.setXY(x, y, Adafruit_NeoPixel::Color(100, 0, 0));
+    display.setXY(x, y, CRGB(100, 0, 0));
     display.update();
     delay(1);
     }
@@ -460,7 +460,7 @@ void displayDiagnostic(PixelDisplay& display)
   auto textScrollTest1 = TextScroller(
     display,
     "Hello - Testing!",
-    Adafruit_NeoPixel::Color(0, 0, 255),
+    CRGB(0, 0, 255),
     500,
     true,
     1
@@ -476,7 +476,7 @@ void displayDiagnostic(PixelDisplay& display)
   auto textScrollTest = TextScroller(
     display,
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 !\"#$%&'()*+'-./:;<=>?@",
-    Adafruit_NeoPixel::Color(0, 255, 0),
+    CRGB(0, 255, 0),
     500,
     false,
     1
@@ -489,11 +489,11 @@ void displayDiagnostic(PixelDisplay& display)
   display.update();
 }
 
-void filterSolidColour(PixelDisplay& display, uint32_t colour)
+void filterSolidColour(PixelDisplay& display, CRGB colour)
 {
   auto& buffer = display.getFilterBuffer();
   for (std::size_t i = 0; i < buffer.size(); i++) {
-    if (buffer[i] == 0) { continue; }
+    if (buffer[i] == CRGB(0)) { continue; }
     buffer[i] = colour;
   }
 }
@@ -506,11 +506,11 @@ void filterRainbowWave(PixelDisplay& display, int speed, int width)
   auto& buffer = display.getFilterBuffer();
 
   for (uint8_t x = 0; x < display.getWidth(); x++) {
-    uint16_t hue = wheelPos + (x * 65536L / width);
-    uint32_t colour = Adafruit_NeoPixel::gamma32(Adafruit_NeoPixel::ColorHSV(hue));
+    uint16_t hue = wheelPos + (x * 256 / width);
+    CRGB colour = CHSV(uint8_t(hue), 255, 255);
     for (uint8_t y = 0; y < display.getHeight(); y++) {
       auto index = display.XYToIndex(x, y);
-      if (buffer[index] == 0) { continue; }
+      if (buffer[index] == CRGB(0)) { continue; }
       buffer[index] = colour;
     }
   }

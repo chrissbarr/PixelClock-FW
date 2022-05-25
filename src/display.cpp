@@ -1,15 +1,15 @@
 #include <display.h>
 #include "characters.h"
 
-PixelDisplay::PixelDisplay(CRGBW *leds, uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset) :
-    leds(leds), width(width), height(height), size(width * height), serpentine(serpentine), vertical(vertical), pixelOffset(pixelOffset)
+PixelDisplay::PixelDisplay(uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset) :
+    width(width), height(height), size(width * height), serpentine(serpentine), vertical(vertical), pixelOffset(pixelOffset)
 {
   fullDisplay.xMin = 0;
   fullDisplay.xMax = width - 1;
   fullDisplay.yMin = 0;
   fullDisplay.yMax = height - 1;
 
-  buffer = std::vector<uint32_t>(size, 0);
+  buffer = BufferType(size, 0);
   filterBuffer.reserve(size);
 }
 
@@ -18,14 +18,14 @@ PixelDisplay::~PixelDisplay()
   
 }
 
-void PixelDisplay::setIndex(uint32_t index, uint32_t colour)
+void PixelDisplay::setIndex(uint32_t index, CRGB colour)
 {
   if (index < size) {
     buffer[index] = colour;
   }
 }
 
-uint32_t PixelDisplay::getIndex(uint32_t index) const
+CRGB PixelDisplay::getIndex(uint32_t index) const
 {
   if (index < size) {
     return buffer[index];
@@ -34,17 +34,17 @@ uint32_t PixelDisplay::getIndex(uint32_t index) const
   }
 }
 
-void PixelDisplay::setXY(uint8_t x, uint8_t y, uint32_t colour)
+void PixelDisplay::setXY(uint8_t x, uint8_t y, CRGB colour)
 {
     buffer[XYToIndex(x, y)] = colour;
 }
 
-uint32_t PixelDisplay::getXY(uint8_t x, uint8_t y) const
+CRGB PixelDisplay::getXY(uint8_t x, uint8_t y) const
 {
     return buffer[XYToIndex(x, y)];
 }
 
-void PixelDisplay::fill(uint32_t colour, const DisplayRegion& region)
+void PixelDisplay::fill(CRGB colour, const DisplayRegion& region)
 {
   for (uint8_t x = region.xMin; x <= region.xMax; x++) {
     for (uint8_t y = region.yMin; y <= region.yMax; y++) {
@@ -53,7 +53,7 @@ void PixelDisplay::fill(uint32_t colour, const DisplayRegion& region)
   }
 }
 
-void PixelDisplay::fill(uint32_t colour)
+void PixelDisplay::fill(CRGB colour)
 {
   for (uint32_t i = 0; i < size; i++) {
     buffer[i] = colour;
@@ -62,14 +62,14 @@ void PixelDisplay::fill(uint32_t colour)
 
 void PixelDisplay::update() 
 {
-  const std::vector<uint32_t>& buf = filterApplied ? filterBuffer : buffer;
-  for (uint32_t i = 0; i < buf.size(); i++) {
-    leds[i + pixelOffset] = buf[i];
-  }
+  // const std::vector<uint32_t>& buf = filterApplied ? filterBuffer : buffer;
+  // for (uint32_t i = 0; i < buf.size(); i++) {
+  //   leds[i + pixelOffset] = buf[i];
+  // }
   filterApplied = false;
 }
 
-void PixelDisplay::showCharacters(const String& string, uint32_t colour, int xOffset, uint8_t spacing)
+void PixelDisplay::showCharacters(const String& string, CRGB colour, int xOffset, uint8_t spacing)
 {
     int xOffsetLocal = 0;
     for (const auto& character : string) {
@@ -80,12 +80,12 @@ void PixelDisplay::showCharacters(const String& string, uint32_t colour, int xOf
     }
 }
 
-void PixelDisplay::showCharacter(char character, uint32_t colour, int xOffset)
+void PixelDisplay::showCharacter(char character, CRGB colour, int xOffset)
 {
     showCharacter(characterFontArray[charToIndex(character)], colour, xOffset);
 }
 
-void PixelDisplay::showCharacter(const FontGlyph& character, uint32_t colour, int xOffset)
+void PixelDisplay::showCharacter(const FontGlyph& character, CRGB colour, int xOffset)
 {
     for (uint8_t x = 0; x < character.width; x++) {
         int xPos = xOffset + x;
@@ -133,7 +133,7 @@ uint32_t PixelDisplay::XYToIndex(uint8_t x, uint8_t y) const
   return i;
 }
 
-bool PixelDisplay::filled(uint32_t colour, const DisplayRegion& region) const
+bool PixelDisplay::filled(CRGB colour, const DisplayRegion& region) const
 {
   bool filled = true;
   for (uint8_t x = region.xMin; x <= region.xMax; x++) {
@@ -144,7 +144,7 @@ bool PixelDisplay::filled(uint32_t colour, const DisplayRegion& region) const
   return filled;
 }
 
-bool PixelDisplay::filled(uint32_t colour) const
+bool PixelDisplay::filled(CRGB colour) const
 {
   bool filled = true;
   for (uint32_t i = 0; i < getSize(); i++) {
@@ -158,7 +158,7 @@ bool PixelDisplay::empty(const DisplayRegion& region) const
   bool empty = true;
   for (uint8_t x = region.xMin; x <= region.xMax; x++) {
     for (uint8_t y = region.yMin; y <= region.yMax; y++) {
-      if (getXY(x, y) != 0) { empty = false; }
+      if (getXY(x, y) != CRGB(0)) { empty = false; }
     }
   }
   return empty;
@@ -168,7 +168,7 @@ bool PixelDisplay::empty() const
 {
   bool empty = true;
   for (uint32_t i = 0; i < getSize(); i++) {
-    if (buffer[i] != 0) { empty = false; }
+    if (buffer[i] != CRGB(0)) { empty = false; }
   }
   return empty;
 }

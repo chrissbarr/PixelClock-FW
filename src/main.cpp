@@ -19,9 +19,8 @@ constexpr uint8_t matrixWidth = 17;
 constexpr uint8_t matrixHeight = 5;
 constexpr uint8_t matrixSize = matrixWidth * matrixHeight;
 
-CRGBW leds[matrixSize];
-CRGB *ledsRGB = (CRGB *) &leds[0];
-PixelDisplay display(leds, matrixWidth, matrixHeight, false, false);
+CRGB ledsDummyRGBW[getRGBWsize(matrixSize)];
+PixelDisplay display(matrixWidth, matrixHeight, false, false);
 
 
 // Buttons
@@ -49,7 +48,7 @@ void click(Button2& btn) {
 
 // Main loop timing
 uint32_t lastLoopTime = 0;
-constexpr uint32_t loopTargetTime = 10;
+constexpr uint32_t loopTargetTime = 5;
 std::vector<uint16_t> loopTimes;
 
 // Timekeeping
@@ -118,10 +117,7 @@ void setup() {
   Serial.begin(250000);
   Serial.println("Serial begin!");
 
-  FastLED.addLeds<SK6812, matrixLEDPin, RGB>(ledsRGB, getRGBWsize(matrixSize));  // GRB ordering is typical
-
-  //pixels.begin();
-  //pixels.setBrightness(255);
+  FastLED.addLeds<SK6812, matrixLEDPin, RGB>(ledsDummyRGBW, getRGBWsize(matrixSize));
 
   if (initialiseRTC()) {
     // Set Time to sync from RTC
@@ -207,20 +203,25 @@ void loop()
 
   // update display
   display.fill(0);
-  showTime(display, 12, 30, 1);
+  showTime(display, hourFormat12(), minute(), CRGB::Red);
   display.preFilter();
-  //filterSolidColour(display, colourGenerator_cycleHSV());
+  filterSolidColour(display, colourGenerator_cycleHSV());
   //int speed = 5000 * sin(double(millis()) / 5000);
-  filterRainbowWave(display, 1000, 100);
-  FastLED.setBrightness(1);
-  display.update();
-  FastLED.show();
-  //delay(1);
-  //delayMicroseconds(100);
-  //pixels.fill(0);
-  //pixels.show();
-  //delay(2);
+  //filterRainbowWave(display, 1, 100);
+  FastLED.setBrightness(2);
+  
+  uint8_t *byteToWrite = (uint8_t*)ledsDummyRGBW;
+  for (const CRGB& pixel : display.getOutputBuffer()) {
+    *byteToWrite++ = pixel.green;
+    *byteToWrite++ = pixel.red;
+    *byteToWrite++ = pixel.blue;
+    *byteToWrite++ = 0;
+  }
 
+  display.update();
+
+
+  FastLED.show();
 
   // Manage loop timing
   unsigned long loopTime = millis() - lastLoopTime;

@@ -25,21 +25,23 @@ constexpr bool operator==(const DisplayRegion& lhs, const DisplayRegion& rhs)
 // Set DisplayRegion arguments to this value to indicate that the full display should be used
 constexpr DisplayRegion defaultFull = {0, 0, 0, 0};
 
+using BufferType = std::vector<CRGB>;
+
 class PixelDisplay {
 public:
-    PixelDisplay(CRGBW *leds, uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset = 0);
+    PixelDisplay(uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset = 0);
     ~PixelDisplay();
 
-    void setIndex(uint32_t index, uint32_t colour);
-    uint32_t getIndex(uint32_t index) const;
-    void setXY(uint8_t x, uint8_t y, uint32_t colour);
-    uint32_t getXY(uint8_t x, uint8_t y) const;
-    void fill(uint32_t colour, const DisplayRegion& region);
-    void fill(uint32_t colour);
+    void setIndex(uint32_t index, CRGB colour);
+    CRGB getIndex(uint32_t index) const;
+    void setXY(uint8_t x, uint8_t y, CRGB colour);
+    CRGB getXY(uint8_t x, uint8_t y) const;
+    void fill(CRGB colour, const DisplayRegion& region);
+    void fill(CRGB colour);
 
-    void showCharacters(const String& string, uint32_t colour, int xOffset, uint8_t spacing = 0);
-    void showCharacter(char character, uint32_t colour, int xOffset);
-    void showCharacter(const FontGlyph& character, uint32_t colour, int xOffset);
+    void showCharacters(const String& string, CRGB colour, int xOffset, uint8_t spacing = 0);
+    void showCharacter(char character, CRGB colour, int xOffset);
+    void showCharacter(const FontGlyph& character, CRGB colour, int xOffset);
 
     void update();
 
@@ -47,8 +49,8 @@ public:
     uint8_t getHeight() const { return height; }
     uint32_t getSize() const { return size; }
 
-    bool filled(uint32_t colour, const DisplayRegion& region) const;
-    bool filled(uint32_t colour = 0) const;
+    bool filled(CRGB colour, const DisplayRegion& region) const;
+    bool filled(CRGB colour = 0) const;
     bool empty(const DisplayRegion& region) const;
     bool empty() const;
 
@@ -57,10 +59,11 @@ public:
     uint32_t XYToIndex(uint8_t x, uint8_t y) const;
 
     void preFilter();
-    std::vector<uint32_t>& getFilterBuffer() { return filterBuffer; }
+    BufferType& getFilterBuffer() { return filterBuffer; }
+    BufferType& getOutputBuffer() { return (filterApplied ? getFilterBuffer() : buffer); }
 
 private:
-    CRGBW* leds;
+    CRGB* leds;
     const uint8_t width;
     const uint8_t height;
     const uint32_t size;
@@ -68,8 +71,8 @@ private:
     const bool vertical;
     const uint32_t pixelOffset;
 
-    std::vector<uint32_t> buffer;
-    std::vector<uint32_t> filterBuffer;
+    BufferType buffer;
+    BufferType filterBuffer;
     bool filterApplied = false;
 
     DisplayRegion fullDisplay;

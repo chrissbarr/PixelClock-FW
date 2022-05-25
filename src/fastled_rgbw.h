@@ -53,7 +53,7 @@ struct CRGBW  {
 	}
 };
  
-inline uint16_t getRGBWsize(uint16_t nleds){
+constexpr uint16_t getRGBWsize(uint16_t nleds){
 	uint16_t nbytes = nleds * 4;
 	if(nbytes % 3 > 0) return nbytes / 3 + 1;
 	else return nbytes / 3;
