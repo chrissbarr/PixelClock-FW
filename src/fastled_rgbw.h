@@ -11,47 +11,6 @@
 #define FastLED_RGBW_h
 
 #include <Arduino.h>
-#include <FastLED.h>
- 
-struct CRGBW  {
-	union {
-		struct {
-			union {
-				uint8_t g;
-				uint8_t green;
-			};
-			union {
-				uint8_t r;
-				uint8_t red;
-			};
-			union {
-				uint8_t b;
-				uint8_t blue;
-			};
-			union {
-				uint8_t w;
-				uint8_t white;
-			};
-		};
-		uint8_t raw[4];
-	};
- 
-	CRGBW(){}
- 
-	CRGBW(uint8_t rd, uint8_t grn, uint8_t blu, uint8_t wht){
-		r = rd;
-		g = grn;
-		b = blu;
-		w = wht;
-	}
- 
-	inline void operator = (const CRGB c) __attribute__((always_inline)){ 
-		this->r = c.r;
-		this->g = c.g;
-		this->b = c.b;
-		this->white = 0;
-	}
-};
  
 constexpr uint16_t getRGBWsize(uint16_t nleds){
 	uint16_t nbytes = nleds * 4;

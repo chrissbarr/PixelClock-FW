@@ -2,7 +2,7 @@
 #define display_h
 
 #include <Arduino.h>
-#include <fastled_rgbw.h>
+#include <FastLED.h>
 #include "characters.h"
 
 #include <vector>
