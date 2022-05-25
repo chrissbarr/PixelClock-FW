@@ -235,15 +235,15 @@ bool GameOfLife::run()
         for (uint8_t y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
           uint8_t neighbours = neighbourCount(x, y, _display, _displayRegion, _wrap);
           //Serial.println(neighbours);
-          uint32_t currentVal = _display.getXY(x, y);
-          bool currentlyAlive = (currentVal != 0);
+          CRGB currentVal = _display.getXY(x, y);
+          bool currentlyAlive = (currentVal != CRGB(0));
           if (currentlyAlive) {
             if (neighbours == 2 || neighbours == 3) {
               // keep on living
               nextBuffer[_display.XYToIndex(x, y)] = currentVal;
             } else {
               // kill this cell
-              nextBuffer[_display.XYToIndex(x, y)] = 0;
+              nextBuffer[_display.XYToIndex(x, y)] = CRGB(0);
             }
           } else {
             if (neighbours == 3) {
@@ -258,7 +258,7 @@ bool GameOfLife::run()
       uint32_t livingCells = 0;
       for (uint32_t i = 0; i < nextBuffer.size(); i++) {
         _display.setIndex(i, nextBuffer[i]);
-        if (nextBuffer[i] != 0) {
+        if (nextBuffer[i] != CRGB(0)) {
           livingCells++;
         }
       }
@@ -297,12 +297,13 @@ bool GameOfLife::run()
   return _finished;
 }
 
-std::size_t GameOfLife::hashBuffer(const std::vector<uint32_t>& vec) const
+std::size_t GameOfLife::hashBuffer(const std::vector<CRGB>& vec) const
 {
   std::size_t seed = vec.size();
-  for(uint32_t i : vec) {
-    if (i != 0) { i = 1; }
-    seed ^= i + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+  for(CRGB i : vec) {
+    uint8_t val = 1;
+    if (i == CRGB(0)) { val = 0; }
+    seed ^= val + 0x9e3779b9 + (seed << 6) + (seed >> 2);
   }
   return seed;
 }

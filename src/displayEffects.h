@@ -114,10 +114,10 @@ private:
     uint32_t _updateInterval;
     uint32_t _notUniqueForNSteps;
 
-    std::vector<uint32_t> nextBuffer;
+    std::vector<CRGB> nextBuffer;
     std::deque<std::size_t> bufferHashes;
 
-    std::size_t hashBuffer(const std::vector<uint32_t>& vec) const; 
+    std::size_t hashBuffer(const std::vector<CRGB>& vec) const; 
 };
 
 // bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)(), DisplayRegion displayRegion);
