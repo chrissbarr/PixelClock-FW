@@ -478,6 +478,38 @@ void displayDiagnostic(PixelDisplay& display)
   display.update();
 }
 
+void SolidColour::apply(PixelDisplay& display) const
+{
+  auto& buffer = display.getFilterBuffer();
+  for (std::size_t i = 0; i < buffer.size(); i++) {
+    if (buffer[i] == CRGB(0)) { continue; }
+    buffer[i] = colour;
+  }
+}
+
+void RainbowWave::apply(PixelDisplay& display) const
+{
+  auto& buffer = display.getFilterBuffer();
+  static float wheelPos = 0;
+  wheelPos += speed;
+  int _width;
+  if (width == 0) { 
+    _width = display.getWidth(); 
+  } else {
+    _width = width;
+  }
+
+  for (uint8_t x = 0; x < display.getWidth(); x++) {
+    uint16_t hue = uint8_t(round(wheelPos)) + (x * 256 / width);
+    CRGB colour = CHSV(uint8_t(hue), 255, 255);
+    for (uint8_t y = 0; y < display.getHeight(); y++) {
+      auto index = display.XYToIndex(x, y);
+      if (buffer[index] == CRGB(0)) { continue; }
+      buffer[index] = colour;
+    }
+  }
+}
+
 void filterSolidColour(PixelDisplay& display, CRGB colour)
 {
   auto& buffer = display.getFilterBuffer();
@@ -489,18 +521,5 @@ void filterSolidColour(PixelDisplay& display, CRGB colour)
 
 void filterRainbowWave(PixelDisplay& display, int speed, int width)
 {
-  static uint16_t wheelPos = 0;
-  wheelPos += speed;
-  if (width == 0) { width = display.getWidth(); }
-  auto& buffer = display.getFilterBuffer();
 
-  for (uint8_t x = 0; x < display.getWidth(); x++) {
-    uint16_t hue = wheelPos + (x * 256 / width);
-    CRGB colour = CHSV(uint8_t(hue), 255, 255);
-    for (uint8_t y = 0; y < display.getHeight(); y++) {
-      auto index = display.XYToIndex(x, y);
-      if (buffer[index] == CRGB(0)) { continue; }
-      buffer[index] = colour;
-    }
-  }
 }

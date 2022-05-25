@@ -1,4 +1,5 @@
 #include <display.h>
+#include <displayEffects.h>
 #include "characters.h"
 
 PixelDisplay::PixelDisplay(uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset) :
@@ -59,10 +60,6 @@ void PixelDisplay::fill(CRGB colour)
 
 void PixelDisplay::update() 
 {
-  // const std::vector<uint32_t>& buf = filterApplied ? filterBuffer : buffer;
-  // for (uint32_t i = 0; i < buf.size(); i++) {
-  //   leds[i + pixelOffset] = buf[i];
-  // }
   filterApplied = false;
 }
 
@@ -170,9 +167,11 @@ bool PixelDisplay::empty() const
   return empty;
 }
 
-void PixelDisplay::preFilter()
+void PixelDisplay::applyFilter(const FilterMethod& filter)
 {
-  // copy current buffer into filter buffer
-  filterBuffer = buffer;
-  filterApplied = true;
+  if (!filterApplied) {
+    filterBuffer = buffer;
+    filterApplied = true;
+  }
+  filter.apply(*this);
 }

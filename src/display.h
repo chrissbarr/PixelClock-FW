@@ -26,6 +26,7 @@ constexpr bool operator==(const DisplayRegion& lhs, const DisplayRegion& rhs)
 constexpr DisplayRegion defaultFull = {0, 0, 0, 0};
 
 using BufferType = std::vector<CRGB>;
+class FilterMethod;
 
 class PixelDisplay {
 public:
@@ -58,9 +59,10 @@ public:
 
     uint32_t XYToIndex(uint8_t x, uint8_t y) const;
 
-    void preFilter();
     BufferType& getFilterBuffer() { return filterBuffer; }
     BufferType& getOutputBuffer() { return (filterApplied ? getFilterBuffer() : buffer); }
+
+    void applyFilter(const FilterMethod& filter);
 
 private:
     CRGB* leds;

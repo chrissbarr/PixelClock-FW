@@ -214,12 +214,10 @@ void loop()
   displayEffects[effectIndex]->run();
 
   // update display
-  //display.fill(0);
-  //showTime(display, hourFormat12(), minute(), CRGB::Red);
-  //display.preFilter();
-  filterSolidColour(display, colourGenerator_cycleHSV());
-  //int speed = 5000 * sin(double(millis()) / 5000);
-  //filterRainbowWave(display, 1, 100);
+  display.fill(0);
+  showTime(display, hourFormat12(), minute(), CRGB::Red);
+  display.applyFilter(SolidColour(CRGB::Purple));
+  display.applyFilter(RainbowWave(0.1, 100));
   FastLED.setBrightness(255);
   
   uint8_t *byteToWrite = (uint8_t*)ledsDummyRGBW;

@@ -9,7 +9,7 @@
 #include <deque>
 
 // Colour generating functions
-inline CRGB colourGenerator_randomHSV() { return CHSV(random(0, 256), 255, 255); }
+inline CRGB colourGenerator_randomHSV() { return CHSV(random8(), 255, 255); }
 inline CRGB colourGenerator_cycleHSV() { return CHSV((millis() / 10), 255, 255); }
 inline CRGB colourGenerator_black() { return 0; }
 
@@ -131,6 +131,28 @@ private:
 void showTime(PixelDisplay& display, int hour, int minute, CRGB colour);
 
 void displayDiagnostic(PixelDisplay& display);
+
+class FilterMethod {
+public:
+    virtual void apply(PixelDisplay& display) const = 0;
+};
+
+class SolidColour : public FilterMethod {
+public:
+    SolidColour(CRGB colour) : colour(colour) {}
+    void apply(PixelDisplay& display) const;
+private:
+    CRGB colour;
+};
+
+class RainbowWave : public FilterMethod {
+public:
+    RainbowWave(float speed, int width) : speed(speed), width(width) {}
+    void apply(PixelDisplay& display) const;
+private:
+    float speed;
+    int width;
+};
 
 void filterSolidColour(PixelDisplay& display, CRGB colour);
 void filterRainbowWave(PixelDisplay& display, int speed, int width = 0);
