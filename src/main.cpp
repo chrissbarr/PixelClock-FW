@@ -179,8 +179,10 @@ void setup() {
   filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Red, false), "SolidColour(CRGB::Red, false)"});
   filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Cyan, true), "SolidColour(CRGB::Cyan, true)"});
   filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Cyan, false), "SolidColour(CRGB::Cyan, false)"});
-  filterConfigs.push_back({std::make_unique<RainbowWave>(0.1, 10, true), "RainbowWave(0.1, 10, true)"});
-  filterConfigs.push_back({std::make_unique<RainbowWave>(0.1, 10, false), "RainbowWave(0.1, 10, false)"});
+  filterConfigs.push_back({std::make_unique<RainbowWave>(0.2, 10, RainbowWave::Direction::horizontal, true), "RainbowWave(0.2, 10, horizontal, true)"});
+  filterConfigs.push_back({std::make_unique<RainbowWave>(0.2, 10, RainbowWave::Direction::horizontal, false), "RainbowWave(0.2, 10, horizontal, false)"});
+  filterConfigs.push_back({std::make_unique<RainbowWave>(0.2, 10, RainbowWave::Direction::vertical, true), "RainbowWave(0.2, 10, vertical, true)"});
+  filterConfigs.push_back({std::make_unique<RainbowWave>(0.2, 10, RainbowWave::Direction::vertical, false), "RainbowWave(0.2, 10, vertical, false)"});
 
 
 

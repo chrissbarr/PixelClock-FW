@@ -154,12 +154,18 @@ private:
 
 class RainbowWave : public FilterMethod {
 public:
-    RainbowWave(float speed, int width, bool maintainBrightness = true) : speed(speed), width(width), maintainBrightness(maintainBrightness) {}
+    enum Direction {
+        horizontal,
+        vertical
+    };
+    RainbowWave(float speed, int width, Direction direction = Direction::horizontal, bool maintainBrightness = true) : speed(speed), width(width), direction(direction), maintainBrightness(maintainBrightness) {}
     void apply(PixelDisplay& display) const override;
+
 private:
     float speed;
     int width;
     bool maintainBrightness;
+    Direction direction;
 };
 
 #endif //displayeffects_h

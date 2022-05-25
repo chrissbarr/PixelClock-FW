@@ -508,11 +508,11 @@ void RainbowWave::apply(PixelDisplay& display) const
   }
 
   for (uint8_t x = 0; x < display.getWidth(); x++) {
-    uint16_t hue = uint8_t(round(wheelPos)) + (x * 256 / width);
     for (uint8_t y = 0; y < display.getHeight(); y++) {
+      uint8_t hue = uint8_t(round(wheelPos)) + ((direction == Direction::horizontal ? x : y) * 256 / width);
       auto index = display.XYToIndex(x, y);
       if (buffer[index] == CRGB(0)) { continue; }
-      buffer[index] = CHSV(uint8_t(hue), 255, maintainBrightness ? buffer[index].getAverageLight() : 255);
+      buffer[index] = CHSV(hue, 255, maintainBrightness ? buffer[index].getAverageLight() : 255);
     }
   }
 }
