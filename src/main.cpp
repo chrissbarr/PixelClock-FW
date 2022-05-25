@@ -7,6 +7,7 @@
 #include <Button2.h>
 #include <memory>
 #include <vector>
+#include <string>
 
 
 #include "characters.h"
@@ -75,6 +76,15 @@ Mode currentMode = Mode::Demo;
 
 std::vector<std::unique_ptr<DisplayEffect>> displayEffects;
 std::size_t effectIndex = 0;
+
+struct FilterConfig {
+  std::unique_ptr<FilterMethod> filter;
+  String description;
+};
+std::vector<FilterConfig> filterConfigs;
+std::size_t filterIndex = 0;
+uint32_t lastFilterChangeTime = 0;
+uint32_t filterChangePeriod = 3000;
 
 constexpr char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
@@ -154,16 +164,18 @@ void setup() {
 
   display.fill(0);
   display.update();
-  delay(500); 
+  delay(100); 
 
   //displayDiagnostic(display);
 
-  //displayEffects.push_back(std::make_unique<GameOfLife>(display, 100, colourGenerator_cycleHSV, display.getFullDisplayRegion(), false));
-  displayEffects.push_back(std::make_unique<BouncingBall>(display, 250, colourGenerator_cycleHSV));
-  displayEffects.push_back(std::make_unique<TextScroller>(display, "Test Text Scroller", Adafruit_NeoPixel::Color(255, 0, 0), 1000, true, 1));
+  displayEffects.push_back(std::make_unique<GameOfLife>(display, 100, colourGenerator_cycleHSV, display.getFullDisplayRegion(), false));
+  //displayEffects.push_back(std::make_unique<BouncingBall>(display, 250, colourGenerator_cycleHSV));
+  //displayEffects.push_back(std::make_unique<TextScroller>(display, "Test Text Scroller", Adafruit_NeoPixel::Color(255, 0, 0), 1000, true, 1));
   // //displayEffects.push_back(std::make_unique<TextScroller>(display, "Another Test! 1234:5678", Adafruit_NeoPixel::Color(0, 0, 255), 1000, true, 1));
-  displayEffects.push_back(std::make_unique<RandomFill>(display, 100, colourGenerator_randomHSV));
+  //displayEffects.push_back(std::make_unique<RandomFill>(display, 100, colourGenerator_randomHSV));
   displayEffects.front()->reset();
+
+  filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Red, true), "SolidColour(CRGB::Red, true)"});
 
   // start time tracking for main loop
   lastLoopTime = millis();
@@ -215,7 +227,19 @@ void loop()
   displayEffects[effectIndex]->run();
 
   // update display
-  //display.fill(0);
+  display.fill(0);
+  display.applyFilter(HSVTestPattern());
+
+  display.applyFilter(*(filterConfigs[filterIndex].filter));
+  if (millis() - lastFilterChangeTime > filterChangePeriod) {
+    filterIndex++;
+    if (filterIndex >= filterConfigs.size()) {
+      filterIndex = 0;
+    }
+    Serial.print("Filter: "); Serial.println(filterConfigs[filterIndex].description);
+    lastFilterChangeTime = millis();
+  }
+
   //showTime(display, hourFormat12(), minute(), CRGB::Red);
   //display.applyFilter(SolidColour(CRGB::Purple));
   //display.applyFilter(RainbowWave(0.1, 100));

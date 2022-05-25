@@ -475,12 +475,23 @@ void displayDiagnostic(PixelDisplay& display)
   display.update();
 }
 
+void HSVTestPattern::apply(PixelDisplay& display) const
+{
+  auto& buffer = display.getFilterBuffer();
+  for (uint8_t x = 0; x < display.getWidth(); x++) {
+    for (uint8_t y = 0; y < display.getHeight(); y++) {
+    auto index = display.XYToIndex(x, y);
+    buffer[index] = CHSV(x * (255 / display.getWidth()), 255, y * (255 / display.getHeight()));
+    }
+  }
+}
+
 void SolidColour::apply(PixelDisplay& display) const
 {
   auto& buffer = display.getFilterBuffer();
   for (std::size_t i = 0; i < buffer.size(); i++) {
     if (buffer[i] == CRGB(0)) { continue; }
-    buffer[i] = colour;
+    buffer[i] = maintainBrightness ? CRGB(colour).nscale8(buffer[i].getAverageLight()) : colour;
   }
 }
 
@@ -498,11 +509,10 @@ void RainbowWave::apply(PixelDisplay& display) const
 
   for (uint8_t x = 0; x < display.getWidth(); x++) {
     uint16_t hue = uint8_t(round(wheelPos)) + (x * 256 / width);
-    CRGB colour = CHSV(uint8_t(hue), 255, 255);
     for (uint8_t y = 0; y < display.getHeight(); y++) {
       auto index = display.XYToIndex(x, y);
       if (buffer[index] == CRGB(0)) { continue; }
-      buffer[index] = colour;
+      buffer[index] = CHSV(uint8_t(hue), 255, maintainBrightness ? buffer[index].getAverageLight() : 255);
     }
   }
 }

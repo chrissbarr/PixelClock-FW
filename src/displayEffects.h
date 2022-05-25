@@ -137,24 +137,29 @@ public:
     virtual void apply(PixelDisplay& display) const = 0;
 };
 
+class HSVTestPattern : public FilterMethod {
+public:
+    HSVTestPattern() {};
+    void apply(PixelDisplay& display) const override;
+};
+
 class SolidColour : public FilterMethod {
 public:
-    SolidColour(CRGB colour) : colour(colour) {}
-    void apply(PixelDisplay& display) const;
+    SolidColour(CRGB colour, bool maintainBrightness = true) : colour(colour), maintainBrightness(maintainBrightness) {}
+    void apply(PixelDisplay& display) const override;
 private:
     CRGB colour;
+    bool maintainBrightness;
 };
 
 class RainbowWave : public FilterMethod {
 public:
-    RainbowWave(float speed, int width) : speed(speed), width(width) {}
-    void apply(PixelDisplay& display) const;
+    RainbowWave(float speed, int width, bool maintainBrightness = true) : speed(speed), width(width), maintainBrightness(maintainBrightness) {}
+    void apply(PixelDisplay& display) const override;
 private:
     float speed;
     int width;
+    bool maintainBrightness;
 };
-
-void filterSolidColour(PixelDisplay& display, CRGB colour);
-void filterRainbowWave(PixelDisplay& display, int speed, int width = 0);
 
 #endif //displayeffects_h
