@@ -176,6 +176,14 @@ void setup() {
   displayEffects.front()->reset();
 
   filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Red, true), "SolidColour(CRGB::Red, true)"});
+  filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Red, false), "SolidColour(CRGB::Red, false)"});
+  filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Cyan, true), "SolidColour(CRGB::Cyan, true)"});
+  filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Cyan, false), "SolidColour(CRGB::Cyan, false)"});
+  filterConfigs.push_back({std::make_unique<RainbowWave>(0.1, 10, true), "RainbowWave(0.1, 10, true)"});
+  filterConfigs.push_back({std::make_unique<RainbowWave>(0.1, 10, false), "RainbowWave(0.1, 10, false)"});
+
+
+
 
   // start time tracking for main loop
   lastLoopTime = millis();
@@ -216,15 +224,15 @@ void loop()
   //   }
   // }
 
-  if (displayEffects[effectIndex]->finished()) {
-    Serial.println("Effect finished!");
-    effectIndex++;
-    if (effectIndex >= displayEffects.size()) {
-      effectIndex = 0;
-    }
-    displayEffects[effectIndex]->reset();
-  }
-  displayEffects[effectIndex]->run();
+  // if (displayEffects[effectIndex]->finished()) {
+  //   Serial.println("Effect finished!");
+  //   effectIndex++;
+  //   if (effectIndex >= displayEffects.size()) {
+  //     effectIndex = 0;
+  //   }
+  //   displayEffects[effectIndex]->reset();
+  // }
+  // displayEffects[effectIndex]->run();
 
   // update display
   display.fill(0);
