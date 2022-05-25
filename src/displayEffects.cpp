@@ -183,11 +183,7 @@ bool GameOfLife::run()
     if (millis() - _lastLoopTime > 50) {
       for (uint8_t x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
         for (uint8_t y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
-          uint32_t currentVal = _display.getXY(x, y);
-          uint8_t r = uint8_t(currentVal >> 16) * 0.5;
-          uint8_t g = uint8_t(currentVal >> 8) * 0.5;
-          uint8_t b = uint8_t(currentVal) * 0.5;
-          _display.setXY(x, y, CRGB(r, g, b));
+          _display.setXY(x, y, _display.getXY(x, y).fadeToBlackBy(10));
         }
       }
       _lastLoopTime = millis();
@@ -509,18 +505,4 @@ void RainbowWave::apply(PixelDisplay& display) const
       buffer[index] = colour;
     }
   }
-}
-
-void filterSolidColour(PixelDisplay& display, CRGB colour)
-{
-  auto& buffer = display.getFilterBuffer();
-  for (std::size_t i = 0; i < buffer.size(); i++) {
-    if (buffer[i] == CRGB(0)) { continue; }
-    buffer[i] = colour;
-  }
-}
-
-void filterRainbowWave(PixelDisplay& display, int speed, int width)
-{
-
 }

@@ -44,6 +44,7 @@ public:
     void showCharacter(char character, CRGB colour, int xOffset);
     void showCharacter(const FontGlyph& character, CRGB colour, int xOffset);
 
+    void setLEDStrip(CRGB* leds) { this->leds = leds; }
     void update();
 
     uint8_t getWidth() const { return width; }
@@ -65,7 +66,7 @@ public:
     void applyFilter(const FilterMethod& filter);
 
 private:
-    CRGB* leds;
+    CRGB* leds = nullptr;
     const uint8_t width;
     const uint8_t height;
     const uint32_t size;

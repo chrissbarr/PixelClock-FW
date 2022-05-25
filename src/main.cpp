@@ -130,6 +130,7 @@ void setup() {
   Serial.println("Serial begin!");
 
   FastLED.addLeds<SK6812, matrixLEDPin, RGB>(ledsDummyRGBW, getRGBWsize(matrixSize));
+  display.setLEDStrip(ledsDummyRGBW);
 
   if (initialiseRTC()) {
     // Set Time to sync from RTC
@@ -214,22 +215,12 @@ void loop()
   displayEffects[effectIndex]->run();
 
   // update display
-  display.fill(0);
-  showTime(display, hourFormat12(), minute(), CRGB::Red);
-  display.applyFilter(SolidColour(CRGB::Purple));
-  display.applyFilter(RainbowWave(0.1, 100));
+  //display.fill(0);
+  //showTime(display, hourFormat12(), minute(), CRGB::Red);
+  //display.applyFilter(SolidColour(CRGB::Purple));
+  //display.applyFilter(RainbowWave(0.1, 100));
   FastLED.setBrightness(255);
-  
-  uint8_t *byteToWrite = (uint8_t*)ledsDummyRGBW;
-  for (const CRGB& pixel : display.getOutputBuffer()) {
-    *byteToWrite++ = pixel.green;
-    *byteToWrite++ = pixel.red;
-    *byteToWrite++ = pixel.blue;
-    *byteToWrite++ = 0;
-  }
-
   display.update();
-  FastLED.show();
 
   // Manage loop timing
   unsigned long loopTime = millis() - lastLoopTime;

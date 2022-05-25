@@ -60,6 +60,18 @@ void PixelDisplay::fill(CRGB colour)
 
 void PixelDisplay::update() 
 {
+  //Serial.println("Update...");
+  if (leds) {
+    uint8_t *byteToWrite = (uint8_t*)leds;
+    for (const CRGB& pixel : getOutputBuffer()) {
+      //Serial.println("Writing pixel...");
+      *byteToWrite++ = pixel.green;
+      *byteToWrite++ = pixel.red;
+      *byteToWrite++ = pixel.blue;
+      *byteToWrite++ = 0;
+    }
+    FastLED.show();
+  }
   filterApplied = false;
 }
 
