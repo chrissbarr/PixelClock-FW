@@ -13,8 +13,6 @@ inline CRGB colourGenerator_randomHSV() { return CHSV(random(0, 256), 255, 255);
 inline CRGB colourGenerator_cycleHSV() { return CHSV((millis() / 10), 255, 255); }
 inline CRGB colourGenerator_black() { return 0; }
 
-template <uint32_t C> uint32_t colourGenerator_fixed() { return C; }
-
 /**
  * @brief Abstract Base Class for classes that implement an Effect (e.g., a pattern, demo, game, etc. that takes place over time)
  * 
@@ -78,7 +76,7 @@ private:
 
 class BouncingBall : public DisplayEffect {
 public:
-    BouncingBall(PixelDisplay& display, float moveSpeed, CRGB(*colourGenerator)(), const DisplayRegion& displayRegion = defaultFull);
+    BouncingBall(PixelDisplay& display, uint32_t updateInterval, CRGB(*colourGenerator)(), const DisplayRegion& displayRegion = defaultFull);
     bool run() override final;
     bool finished() const override final { return _finished; }
     void reset() override final;
@@ -90,10 +88,10 @@ private:
     int yDir;
     PixelDisplay& _display;
     uint32_t _lastLoopTime;
+    uint32_t _updateInterval;
     CRGB (*_colourGenerator)();
     DisplayRegion _displayRegion;
     bool _finished;
-    float _moveSpeed = 0;
 };
 
 class GameOfLife : public DisplayEffect {

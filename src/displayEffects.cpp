@@ -96,44 +96,33 @@ bool RandomFill::run()
   return _finished;
 }
 
-BouncingBall::BouncingBall(PixelDisplay& display, float moveSpeed, CRGB(*colourGenerator)(), const DisplayRegion& displayRegion) :
-  _display(display), _moveSpeed(moveSpeed), _colourGenerator(colourGenerator)
+BouncingBall::BouncingBall(PixelDisplay& display, uint32_t updateInterval, CRGB(*colourGenerator)(), const DisplayRegion& displayRegion) :
+  _display(display), _updateInterval(updateInterval), _colourGenerator(colourGenerator)
 {
   if (displayRegion == defaultFull) {
     _displayRegion = display.getFullDisplayRegion();
   } else {
     _displayRegion = displayRegion;
   }
-  //reset();
 }
 
 void BouncingBall::reset()
 {
-  ballx = 4;//random(_displayRegion.xMin, _displayRegion.xMax + 1);
-  bally = 3;//random(_displayRegion.yMin, _displayRegion.yMax + 1);
-  //float ballDirection = 45;//random(0, 360);
-  //const float degToRad = 0.0174533;
-  xDir = 1;// = 0.2;//std::cos(ballDirection * degToRad);
-  yDir = 1;// = 0.1;//std::sin(ballDirection * degToRad);
+  ballx = random(_displayRegion.xMin + 1, _displayRegion.xMax);
+  bally = random(_displayRegion.yMin + 1, _displayRegion.yMax);
+  xDir = 1;
+  yDir = 1;
   _finished = false; 
-  _lastLoopTime = 0;
-  _display.fill(0, _displayRegion); 
-
+  _lastLoopTime = millis();
+  _display.fill(0, _displayRegion);
 }
 
 bool BouncingBall::run()
 {
-  if (_lastLoopTime == 0) {
-    _lastLoopTime = millis();
-    return true;
-  }
-
   uint32_t millisSinceLastRun = millis() - _lastLoopTime;
-  if (millisSinceLastRun > 500) {
+  if (millisSinceLastRun > _updateInterval) {
     ballx += xDir;
     bally += yDir;
-    Serial.print("X "); Serial.println(ballx);
-    Serial.print("Y "); Serial.println(bally);
 
     if (ballx <= _displayRegion.xMin || ballx >= _displayRegion.xMax) { 
       xDir = -xDir; 

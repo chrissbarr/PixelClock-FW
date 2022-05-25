@@ -157,12 +157,12 @@ void setup() {
 
   //displayDiagnostic(display);
 
-  displayEffects.push_back(std::make_unique<GameOfLife>(display, 100, colourGenerator_cycleHSV, display.getFullDisplayRegion(), false));
-  displayEffects.push_back(std::make_unique<BouncingBall>(display, 0.1, colourGenerator_cycleHSV));
+  //displayEffects.push_back(std::make_unique<GameOfLife>(display, 100, colourGenerator_cycleHSV, display.getFullDisplayRegion(), false));
+  displayEffects.push_back(std::make_unique<BouncingBall>(display, 250, colourGenerator_cycleHSV));
   displayEffects.push_back(std::make_unique<TextScroller>(display, "Test Text Scroller", Adafruit_NeoPixel::Color(255, 0, 0), 1000, true, 1));
   // //displayEffects.push_back(std::make_unique<TextScroller>(display, "Another Test! 1234:5678", Adafruit_NeoPixel::Color(0, 0, 255), 1000, true, 1));
   displayEffects.push_back(std::make_unique<RandomFill>(display, 100, colourGenerator_randomHSV));
-  //displayEffects.front()->reset();
+  displayEffects.front()->reset();
 
   // start time tracking for main loop
   lastLoopTime = millis();
@@ -214,13 +214,13 @@ void loop()
   displayEffects[effectIndex]->run();
 
   // update display
-  display.fill(0);
-  showTime(display, hourFormat12(), minute(), CRGB::Red);
-  display.preFilter();
+  //display.fill(0);
+  //showTime(display, hourFormat12(), minute(), CRGB::Red);
+  //display.preFilter();
   filterSolidColour(display, colourGenerator_cycleHSV());
   //int speed = 5000 * sin(double(millis()) / 5000);
   //filterRainbowWave(display, 1, 100);
-  FastLED.setBrightness(2);
+  FastLED.setBrightness(255);
   
   uint8_t *byteToWrite = (uint8_t*)ledsDummyRGBW;
   for (const CRGB& pixel : display.getOutputBuffer()) {

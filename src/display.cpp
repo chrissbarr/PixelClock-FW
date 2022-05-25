@@ -13,10 +13,7 @@ PixelDisplay::PixelDisplay(uint8_t width, uint8_t height, bool serpentine, bool 
   filterBuffer.reserve(size);
 }
 
-PixelDisplay::~PixelDisplay()
-{
-  
-}
+PixelDisplay::~PixelDisplay() {}
 
 void PixelDisplay::setIndex(uint32_t index, CRGB colour)
 {
@@ -36,12 +33,12 @@ CRGB PixelDisplay::getIndex(uint32_t index) const
 
 void PixelDisplay::setXY(uint8_t x, uint8_t y, CRGB colour)
 {
-    buffer[XYToIndex(x, y)] = colour;
+  buffer[XYToIndex(x, y)] = colour;
 }
 
 CRGB PixelDisplay::getXY(uint8_t x, uint8_t y) const
 {
-    return buffer[XYToIndex(x, y)];
+  return buffer[XYToIndex(x, y)];
 }
 
 void PixelDisplay::fill(CRGB colour, const DisplayRegion& region)
@@ -87,16 +84,16 @@ void PixelDisplay::showCharacter(char character, CRGB colour, int xOffset)
 
 void PixelDisplay::showCharacter(const FontGlyph& character, CRGB colour, int xOffset)
 {
-    for (uint8_t x = 0; x < character.width; x++) {
-        int xPos = xOffset + x;
-        for (uint8_t y = 0; y < 5; y++) {
-            if (bitRead(character.glyph[y], character.width-1-x) == 1) {
-                if (uint32_t(xPos) >= getWidth()) { continue; }
-                if (xPos < 0) { continue; }
-                setXY(uint8_t(xPos), y, colour);
-            }
-        }
+  for (uint8_t x = 0; x < character.width; x++) {
+    int xPos = xOffset + x;
+    for (uint8_t y = 0; y < 5; y++) {
+      if (bitRead(character.glyph[y], character.width-1-x) == 1) {
+        if (uint32_t(xPos) >= getWidth()) { continue; }
+        if (xPos < 0) { continue; }
+        setXY(uint8_t(xPos), y, colour);
+      }
     }
+  }
 }
 
 uint32_t PixelDisplay::XYToIndex(uint8_t x, uint8_t y) const
