@@ -273,7 +273,10 @@ void loop()
     maxTime = 0;
   }
 
-  while (millis() - lastLoopTime < loopTargetTime) {}
+  while (millis() - lastLoopTime < loopTargetTime) {
+    yield();
+    FastLED.show();
+  }
   lastLoopTime = millis();
 }
 

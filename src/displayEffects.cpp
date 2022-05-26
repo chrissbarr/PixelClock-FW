@@ -454,6 +454,7 @@ void displayDiagnostic(PixelDisplay& display)
   while(!textScrollTest1.run()) {
     display.update();
     display.fill(0);
+    delay(1);
   }
 
   // Scroll full character set
@@ -470,6 +471,7 @@ void displayDiagnostic(PixelDisplay& display)
   while(!textScrollTest.run()) {
     display.update();
     display.fill(0);
+    delay(1);
   }
   display.fill(0);
   display.update();
