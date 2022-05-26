@@ -34,7 +34,7 @@ public:
 
 class TextScroller : public DisplayEffect {
 public:
-    TextScroller(PixelDisplay& display, const String& textString, CRGB colour, uint16_t timeToHoldAtEnd = 1000, bool reverseOnFinish = false, uint8_t characterSpacing = 1);
+    TextScroller(PixelDisplay& display, String textString, CRGB colour, uint16_t stepDelay = 100, uint16_t timeToHoldAtEnd = 1000, bool reverseOnFinish = false, uint8_t characterSpacing = 1);
     bool run() override final;
     bool finished() const override final { return _finished; }
     void reset() override final { _finished = false; currentOffset = 0; setTargetOffsetToEnd(); }
@@ -50,7 +50,7 @@ private:
     uint32_t currentOffset;
     uint32_t lastUpdateTime;
 
-    uint32_t stepDelay = 100;
+    uint32_t stepDelay;
     uint32_t arrivedAtEndTime = 0;
 
     bool _finished = false;

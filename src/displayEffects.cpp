@@ -3,14 +3,16 @@
 
 TextScroller::TextScroller(
   PixelDisplay& display,
-  const String& textString,
+  String textString,
   CRGB colour,
+  uint16_t stepDelay,
   uint16_t timeToHoldAtEnd, 
   bool reverseOnFinish, 
   uint8_t characterSpacing) :
   display(display),
   text(textString),
   colour(colour),
+  stepDelay(stepDelay),
   timeToHoldAtEnd(timeToHoldAtEnd),
   reverseOnFinish(reverseOnFinish),
   charSpacing(characterSpacing)
@@ -47,7 +49,7 @@ TextScroller::TextScroller(
         lastUpdateTime = millis();
       }
     }
-    display.fill(0);
+    display.fill(CRGB::Black);
     display.showCharacters(text, colour, -currentOffset, charSpacing);
     return _finished;
   }
@@ -447,6 +449,7 @@ void displayDiagnostic(PixelDisplay& display)
     display,
     "Hello - Testing!",
     CRGB(0, 0, 255),
+    50,
     500,
     true,
     1
@@ -464,6 +467,7 @@ void displayDiagnostic(PixelDisplay& display)
     display,
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 !\"#$%&'()*+'-./:;<=>?@",
     CRGB(0, 255, 0),
+    50,
     500,
     false,
     1
