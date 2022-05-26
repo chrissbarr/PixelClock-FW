@@ -19,10 +19,9 @@ constexpr int16_t matrixLEDPin = 14;
 constexpr uint8_t matrixWidth = 17;
 constexpr uint8_t matrixHeight = 5;
 constexpr uint8_t matrixSize = matrixWidth * matrixHeight;
-
-CRGB ledsDummyRGBW[getRGBWsize(matrixSize)];
+constexpr uint16_t dummyLEDCount = getRGBWsize(matrixSize);
+CRGB ledsDummyRGBW[dummyLEDCount];
 PixelDisplay display(matrixWidth, matrixHeight, false, false);
-
 
 // Buttons
 constexpr int16_t buttonPin1 = 13;
@@ -139,7 +138,7 @@ void setup() {
   Serial.begin(250000);
   Serial.println("Serial begin!");
 
-  FastLED.addLeds<SK6812, matrixLEDPin, RGB>(ledsDummyRGBW, getRGBWsize(matrixSize));
+  FastLED.addLeds<SK6812, matrixLEDPin, RGB>(ledsDummyRGBW, dummyLEDCount);
   display.setLEDStrip(ledsDummyRGBW);
 
   if (initialiseRTC()) {
@@ -268,6 +267,7 @@ void loop()
     Serial.print("Avg time:" ); Serial.println(avgTime);
     Serial.print("Min time:" ); Serial.println(minTime);
     Serial.print("Max time:" ); Serial.println(maxTime);
+    Serial.print("FastLED FPS:" ); Serial.println(FastLED.getFPS());
     lastReportTime = millis();
     minTime = std::numeric_limits<uint16_t>::max();
     maxTime = 0;
