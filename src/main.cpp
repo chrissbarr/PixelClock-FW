@@ -5,6 +5,8 @@
 #include <TimeLib.h>
 #include <RTClib.h>
 #include <Button2.h>
+#include <TSL2591I2C.h>
+
 #include <memory>
 #include <vector>
 #include <string>
@@ -46,9 +48,11 @@ void click(Button2& btn) {
     }
 }
 
+TSL2591I2C tsl2591;
+
 // Main loop timing
 uint32_t lastLoopTime = 0;
-constexpr uint32_t loopTargetTime = 5;
+constexpr uint32_t loopTargetTime = 15;
 uint32_t lastReportTime = 0;
 constexpr uint32_t reportInterval = 5000;
 
@@ -133,10 +137,48 @@ bool initialiseRTC()
   }
 }
 
+void initialiseLightSensor()
+{
+  Wire.begin();
+  if (!tsl2591.begin())
+	{
+		Serial.println("begin() failed. check the connection to your TSL2591.");
+		while (1);
+	}
+
+	Serial.print("sensor ID: "); Serial.println(tsl2591.getID(), HEX);
+
+	tsl2591.resetToDefaults();
+
+	//set channel
+	tsl2591.setChannel(TSL2591MI::TSL2591_CHANNEL_0);
+
+	//set gain
+	tsl2591.setGain(TSL2591MI::TSL2591_GAIN_MED);
+
+	//set integration time
+	tsl2591.setIntegrationTime(TSL2591MI::TSL2591_INTEGRATION_TIME_100ms);
+
+  if (!tsl2591.measure()) {
+    Serial.println("could not start measurement. ");
+    return;
+  }
+
+  while (!tsl2591.hasValue()) {
+    delay(1);
+  }
+
+	Serial.print("Irradiance: "); Serial.print(tsl2591.getIrradiance(), 7); Serial.println(" W / m^2");
+	Serial.print("Brightness: "); Serial.print(tsl2591.getBrightness(), 7); Serial.println(" lux");
+  
+}
+
 void setup() {
   delay(1000);
   Serial.begin(250000);
   Serial.println("Serial begin!");
+
+  initialiseLightSensor();
 
   FastLED.addLeds<SK6812, matrixLEDPin, RGB>(ledsDummyRGBW, dummyLEDCount);
   display.setLEDStrip(ledsDummyRGBW);
@@ -225,21 +267,23 @@ void loop()
   //   }
   // }
 
-  // if (displayEffects[effectIndex]->finished()) {
-  //   Serial.println("Effect finished!");
-  //   effectIndex++;
-  //   if (effectIndex >= displayEffects.size()) {
-  //     effectIndex = 0;
-  //   }
-  //   displayEffects[effectIndex]->reset();
-  // }
-  // displayEffects[effectIndex]->run();
+  if (displayEffects[effectIndex]->finished()) {
+    Serial.println("Effect finished!");
+    effectIndex++;
+    if (effectIndex >= displayEffects.size()) {
+      effectIndex = 0;
+    }
+    displayEffects[effectIndex]->reset();
+  }
+  displayEffects[effectIndex]->run();
 
   // update display
-  display.fill(0);
-  display.applyFilter(HSVTestPattern());
+  //display.fill(0);
+  //display.applyFilter(HSVTestPattern());
+  //showTime(display, hourFormat12(), minute(), CRGB::Red);
 
-  display.applyFilter(*(filterConfigs[filterIndex].filter));
+
+  //display.applyFilter(*(filterConfigs[filterIndex].filter));
   if (millis() - lastFilterChangeTime > filterChangePeriod) {
     filterIndex++;
     if (filterIndex >= filterConfigs.size()) {
@@ -249,11 +293,15 @@ void loop()
     lastFilterChangeTime = millis();
   }
 
-  //showTime(display, hourFormat12(), minute(), CRGB::Red);
   //display.applyFilter(SolidColour(CRGB::Purple));
-  //display.applyFilter(RainbowWave(0.1, 100));
-  FastLED.setBrightness(255);
+  FastLED.setDither(1);
+  //display.applyFilter(SolidColour(CRGB(1, 0, 0), false));
+  //FastLED.setBrightness(100);
   display.update();
+  //delay(1);
+  //display.fill(0);
+  //display.update();
+  //delay(20);
 
   // Manage loop timing
   unsigned long loopTime = millis() - lastLoopTime;
@@ -273,11 +321,22 @@ void loop()
     maxTime = 0;
   }
 
+  yield();
   while (millis() - lastLoopTime < loopTargetTime) {
     yield();
-    FastLED.show();
+    //FastLED.show();
   }
   lastLoopTime = millis();
+
+  if (tsl2591.hasValue()) {
+    Serial.print("Irradiance: "); Serial.print(tsl2591.getIrradiance(), 7); Serial.println(" W / m^2");
+    Serial.print("Brightness: "); Serial.print(tsl2591.getBrightness(), 7); Serial.println(" lux");
+    float maxBrightness = 1.7;
+    uint8_t brightness = uint8_t(constrain(map(tsl2591.getBrightness() * 1000, 0, 1700, 0, 255), 1, 255));
+    FastLED.setBrightness(brightness);
+    tsl2591.measure();
+  }
+
 }
 
 
