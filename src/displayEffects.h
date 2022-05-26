@@ -7,6 +7,7 @@
 #include <FastLED.h>
 
 #include <deque>
+#include <memory>
 
 // Colour generating functions
 inline CRGB colourGenerator_randomHSV() { return CHSV(random8(), 255, 255); }
@@ -30,6 +31,41 @@ public:
     virtual bool finished() const = 0;
     // Resets the effect to it's initial state
     virtual void reset() = 0;
+};
+
+class DisplayEffectDecorator : public DisplayEffect {
+protected:
+    std::shared_ptr<DisplayEffect> effect;
+public:
+    DisplayEffectDecorator(std::shared_ptr<DisplayEffect> effect) : effect(effect) {}
+    bool run() { return effect->run(); }
+    bool finished() const { return effect->finished(); }
+    void reset() { effect->reset(); }
+};
+
+class EffectDecorator_Timeout : public DisplayEffectDecorator {
+public:
+    EffectDecorator_Timeout(std::shared_ptr<DisplayEffect> effect, uint32_t timeout) : DisplayEffectDecorator(effect), timeoutDuration(timeout) {}
+    bool run() 
+    { 
+        effect->run(); 
+        return finished();
+    }
+    bool finished() const 
+    { 
+        if (millis() - lastResetTime > timeoutDuration) {
+            return true;
+        }
+        return effect->finished(); 
+    }
+    void reset() 
+    { 
+        lastResetTime = millis();
+        effect->reset();
+    }
+private:
+    uint32_t lastResetTime = 0;
+    uint32_t timeoutDuration;
 };
 
 class TextScroller : public DisplayEffect {
