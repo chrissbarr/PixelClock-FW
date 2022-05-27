@@ -3,7 +3,6 @@
 
 #include "display.h"
 #include <Arduino.h>
-#include <Adafruit_NeoPixel.h>
 #include <FastLED.h>
 
 #include <deque>
@@ -154,6 +153,24 @@ private:
     std::deque<std::size_t> bufferHashes;
 
     std::size_t hashBuffer(const std::vector<CRGB>& vec) const; 
+};
+
+struct ClockFaceTimeStruct {
+    uint8_t hour;
+    uint8_t minute;
+    uint8_t second;
+};
+
+class ClockFace : public DisplayEffect {
+public:
+    ClockFace(PixelDisplay& display, ClockFaceTimeStruct (*timeCallbackFunction)()) : _display(display), timeCallbackFunction(timeCallbackFunction) {}
+    bool run() override final;
+    bool finished() const override final { return false; }
+    void reset() override final { };
+
+private:
+    PixelDisplay& _display;
+    ClockFaceTimeStruct (*timeCallbackFunction)();
 };
 
 // bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)(), DisplayRegion displayRegion);

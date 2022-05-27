@@ -70,6 +70,15 @@ constexpr float approxRollingAverage(float avg, float newSample, int N)
 // Timekeeping
 RTC_DS3231 rtc;
 
+ClockFaceTimeStruct timeCallbackFunction() {
+  DateTime now = rtc.now();
+  ClockFaceTimeStruct val;
+  val.hour = now.hour();
+  val.minute = now.minute();
+  val.second = now.second();
+  return val;
+}
+
 enum class Mode {
   DisplayTime,
   SetTime,
@@ -210,21 +219,23 @@ void setup() {
   //displayDiagnostic(display);
 
   displayEffects.push_back(std::make_unique<GameOfLife>(display, 100, colourGenerator_cycleHSV, display.getFullDisplayRegion(), false));
-  displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<BouncingBall>(display, 250, colourGenerator_cycleHSV), 10000));
+  //displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<BouncingBall>(display, 250, colourGenerator_cycleHSV), 10000));
+  displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<ClockFace>(display, timeCallbackFunction), 1000));
+
   //displayEffects.push_back(std::make_unique<BouncingBall>(display, 250, colourGenerator_cycleHSV));
   //displayEffects.push_back(std::make_unique<TextScroller>(display, "Test Text Scroller", Adafruit_NeoPixel::Color(255, 0, 0), 1000, true, 1));
   // //displayEffects.push_back(std::make_unique<TextScroller>(display, "Another Test! 1234:5678", Adafruit_NeoPixel::Color(0, 0, 255), 1000, true, 1));
   //displayEffects.push_back(std::make_unique<RandomFill>(display, 100, colourGenerator_randomHSV));
   displayEffects.front()->reset();
 
-  filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Red, true), "SolidColour(CRGB::Red, true)"});
-  filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Red, false), "SolidColour(CRGB::Red, false)"});
-  filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Cyan, true), "SolidColour(CRGB::Cyan, true)"});
-  filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Cyan, false), "SolidColour(CRGB::Cyan, false)"});
+  //filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Red, true), "SolidColour(CRGB::Red, true)"});
+  //filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Red, false), "SolidColour(CRGB::Red, false)"});
+  //filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Cyan, true), "SolidColour(CRGB::Cyan, true)"});
+  //filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Cyan, false), "SolidColour(CRGB::Cyan, false)"});
   filterConfigs.push_back({std::make_unique<RainbowWave>(0.2, 10, RainbowWave::Direction::horizontal, true), "RainbowWave(0.2, 10, horizontal, true)"});
-  filterConfigs.push_back({std::make_unique<RainbowWave>(0.2, 10, RainbowWave::Direction::horizontal, false), "RainbowWave(0.2, 10, horizontal, false)"});
+  //filterConfigs.push_back({std::make_unique<RainbowWave>(0.2, 10, RainbowWave::Direction::horizontal, false), "RainbowWave(0.2, 10, horizontal, false)"});
   filterConfigs.push_back({std::make_unique<RainbowWave>(0.2, 10, RainbowWave::Direction::vertical, true), "RainbowWave(0.2, 10, vertical, true)"});
-  filterConfigs.push_back({std::make_unique<RainbowWave>(0.2, 10, RainbowWave::Direction::vertical, false), "RainbowWave(0.2, 10, vertical, false)"});
+  //filterConfigs.push_back({std::make_unique<RainbowWave>(0.2, 10, RainbowWave::Direction::vertical, false), "RainbowWave(0.2, 10, vertical, false)"});
 
 
 

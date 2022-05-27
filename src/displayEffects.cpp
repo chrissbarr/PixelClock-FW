@@ -401,6 +401,16 @@ std::size_t GameOfLife::hashBuffer(const std::vector<CRGB>& vec) const
 //   }
 // }
 
+bool ClockFace::run()
+{
+  constexpr uint8_t bufSize = 6;
+  char c_buf[bufSize];
+  auto times = timeCallbackFunction();
+  snprintf(c_buf, bufSize, "%2d:%02d", times.hour, times.minute);
+  _display.showCharacters(String(c_buf), CRGB::White, 0, 1);
+  return false;
+}
+
 void showTime(PixelDisplay& display, int hour, int minute, CRGB colour)
 {
   constexpr uint8_t bufSize = 6;
