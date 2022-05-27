@@ -1,23 +1,32 @@
+// C++ Std Library
+#include <memory>
+#include <vector>
+#include <string>
+
+// Libraries
 #include <SPI.h>
 #include <FastLED.h>
-#include <fastled_rgbw.h>
-
 #include <TimeLib.h>
 #include <RTClib.h>
 #include <Button2.h>
 #include <TSL2591I2C.h>
 
-#include <memory>
-#include <vector>
-#include <string>
-
-
+// Project Scope
 #include "characters.h"
 #include "display.h"
 #include "displayEffects.h"
+#include "fastled_rgbw.h"
+
+// Pinout
+constexpr int16_t matrixLEDPin = 4;
+constexpr int16_t buttonPin1 = 27;
+constexpr int16_t buttonPin2 = 33;
+constexpr int16_t buttonPin3 = 15;
+constexpr int16_t buttonPin4 = 32;
+constexpr int16_t buttonPin5 = 14;
+constexpr int16_t buzzerPin = 26;
 
 // LED Panel Configuration
-constexpr int16_t matrixLEDPin = 14;
 constexpr uint8_t matrixWidth = 17;
 constexpr uint8_t matrixHeight = 5;
 constexpr uint8_t matrixSize = matrixWidth * matrixHeight;
@@ -26,11 +35,7 @@ CRGB ledsDummyRGBW[dummyLEDCount];
 PixelDisplay display(matrixWidth, matrixHeight, false, false);
 
 // Buttons
-constexpr int16_t buttonPin1 = 13;
-constexpr int16_t buttonPin2 = 15;
-constexpr int16_t buttonPin3 = 0;
-constexpr int16_t buttonPin4 = 16;
-constexpr int16_t buttonPin5 = 2;
+
 Button2 buttons[] = {
   Button2(buttonPin1),
   Button2(buttonPin2),
@@ -189,7 +194,7 @@ void setup() {
 
   initialiseLightSensor();
 
-  FastLED.addLeds<SK6812, matrixLEDPin, RGB>(ledsDummyRGBW, dummyLEDCount);
+  FastLED.addLeds<WS2812, matrixLEDPin, RGB>(ledsDummyRGBW, dummyLEDCount);
   display.setLEDStrip(ledsDummyRGBW);
 
   if (initialiseRTC()) {
@@ -216,7 +221,7 @@ void setup() {
   display.update();
   delay(100); 
 
-  //displayDiagnostic(display);
+  displayDiagnostic(display);
 
   displayEffects.push_back(std::make_unique<GameOfLife>(display, 100, colourGenerator_cycleHSV, display.getFullDisplayRegion(), false));
   //displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<BouncingBall>(display, 250, colourGenerator_cycleHSV), 10000));
