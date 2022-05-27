@@ -1,6 +1,8 @@
 #include "displayEffects.h"
 #include "display.h"
 
+#include <random>
+
 TextScroller::TextScroller(
   PixelDisplay& display,
   String textString,
@@ -141,8 +143,8 @@ bool BouncingBall::run()
   return true;
 }
 
-GameOfLife::GameOfLife(PixelDisplay& display, uint32_t updateInterval, CRGB(*colourGenerator)(), const DisplayRegion& displayRegion, bool wrap) :
-  _display(display), _updateInterval(updateInterval), _colourGenerator(colourGenerator), _wrap(wrap)
+GameOfLife::GameOfLife(PixelDisplay& display, uint32_t updateInterval, uint32_t fadeInterval, CRGB(*colourGenerator)(), const DisplayRegion& displayRegion, bool wrap) :
+  _display(display), _updateInterval(updateInterval), _fadeInterval(fadeInterval), _colourGenerator(colourGenerator), _wrap(wrap)
 {
   if (displayRegion == defaultFull) {
     _displayRegion = display.getFullDisplayRegion();
@@ -163,15 +165,45 @@ void GameOfLife::reset()
   _finished = false;
   _dead = false;
   _notUniqueForNSteps = 0;
+
+  GoLScore lastScore = {_lastSeed, _lifespan};
+  Serial.print("GoL Last Score: "); Serial.print(lastScore.lifespan); Serial.print("\tSeed: "); Serial.println(lastScore.seed);
+  if (lastScore.lifespan > 3) {
+    bestScores.insert(lastScore);
+    if (bestScores.size() > bestScoresToKeep) {
+      bestScores.erase(bestScores.begin());
+    }
+  }
+
+  _lifespan = 0;
   seedDisplay();
 }
 
 void GameOfLife::seedDisplay()
 {
   _display.fill(0);
+
+  if (bestScores.size() == bestScoresToKeep) {
+    Serial.println("Using seed from best scores...");
+    int randomIndex = random(bestScoresToKeep);
+    auto randomScoreToRepeat = (*std::next(bestScores.begin(), randomIndex));
+    Serial.print("Using score: "); Serial.print(randomScoreToRepeat.lifespan); Serial.print("\tSeed: "); Serial.println(randomScoreToRepeat.seed);
+    _lastSeed = randomScoreToRepeat.seed;
+  } else {
+    Serial.println("Using random seed...");
+    _lastSeed = micros();
+  }
+
+  std::minstd_rand simple_rand;
+  simple_rand.seed(_lastSeed);
+  std::uniform_int_distribution<uint8_t> dist(0, 10);
+
+
+  randomSeed(_lastSeed);
+
   for (uint8_t x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
     for (uint8_t y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
-      int chance = random(10);
+      int chance = dist(simple_rand);
       if (chance == 0) {
         _display.setXY(x, y, _colourGenerator());
       }
@@ -182,21 +214,23 @@ void GameOfLife::seedDisplay()
 bool GameOfLife::run()
 {
   if (_dead) {
-    if (millis() - _lastLoopTime > 50) {
-      for (uint8_t x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
-        for (uint8_t y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
-          _display.setXY(x, y, _display.getXY(x, y).fadeToBlackBy(10));
+    if (_fadeOnDeath) {
+      if (millis() - _lastLoopTime >= _fadeInterval) {
+        for (uint8_t x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
+          for (uint8_t y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
+            _display.setXY(x, y, _display.getXY(x, y).fadeToBlackBy(10));
+          }
         }
+        _lastLoopTime = millis();
       }
-      _lastLoopTime = millis();
     }
 
-    if (_display.empty()) {
+    if (!_fadeOnDeath || _display.empty()) {
       _finished = true;
     }
     
   } else {
-    if (millis() - _lastLoopTime > _updateInterval) {
+    if (millis() - _lastLoopTime >= _updateInterval) {
       auto neighbourCount = [](uint8_t xPos, uint8_t yPos, const PixelDisplay& _display, const DisplayRegion& _region, bool wrap)->uint8_t {
         uint8_t alive = 0;
         uint8_t testedCells = 0;
@@ -281,13 +315,14 @@ bool GameOfLife::run()
         bufferHashes.pop_front();
       }
 
-      Serial.print("Living cells this timestep: "); Serial.println(livingCells);
-      Serial.print("State is unique: "); Serial.println(unique);
-      Serial.print("State not unique for N steps: "); Serial.println(_notUniqueForNSteps);
+      //Serial.print("Living cells this timestep: "); Serial.println(livingCells);
+      //Serial.print("State is unique: "); Serial.println(unique);
+      //Serial.print("State not unique for N steps: "); Serial.println(_notUniqueForNSteps);
 
       if (livingCells == 0 || _notUniqueForNSteps >= 20) {
         _dead = true;
       } 
+      _lifespan++;
       _lastLoopTime = millis();
     }
   }

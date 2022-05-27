@@ -7,6 +7,7 @@
 
 #include <deque>
 #include <memory>
+#include <set>
 
 // Colour generating functions
 inline CRGB colourGenerator_randomHSV() { return CHSV(random8(), 255, 255); }
@@ -129,12 +130,27 @@ private:
     bool _finished;
 };
 
+struct GoLScore {
+    uint32_t seed;
+    uint16_t lifespan;
+};
+
+constexpr bool operator <(const GoLScore& x, const GoLScore& y) {
+    return x.lifespan < y.lifespan;
+}
+
 class GameOfLife : public DisplayEffect {
 public:
-    GameOfLife(PixelDisplay& display, uint32_t updateInterval, CRGB(*colourGenerator)(), const DisplayRegion& displayRegion = defaultFull, bool wrap = true);
+    GameOfLife(PixelDisplay& display, uint32_t updateInterval, uint32_t fadeInterval, CRGB(*colourGenerator)(), const DisplayRegion& displayRegion = defaultFull, bool wrap = true);
     bool run() override final;
     bool finished() const override final { return _finished; }
     void reset() override final;
+
+    void setUpdateInterval(uint32_t interval) { _updateInterval = interval; }
+    void setFadeInterval(uint32_t interval) { _fadeInterval = interval; }
+    bool prepopulatedSeeds() const { return bestScores.size() >= bestScoresToKeep; }
+    void setFadeOnDeath(bool fade) { _fadeOnDeath = fade; }
+    std::set<GoLScore>& getScores() { return bestScores; }
 
     void seedDisplay();
 
@@ -146,8 +162,16 @@ private:
     bool _dead;
     bool _finished;
     bool _wrap;
+    bool _fadeOnDeath = true;
     uint32_t _updateInterval;
+    uint32_t _fadeInterval;
     uint32_t _notUniqueForNSteps;
+
+    uint32_t _lastSeed = 0;
+    uint16_t _lifespan = 0;
+
+    std::set<GoLScore> bestScores;
+    uint8_t bestScoresToKeep = 100;
 
     std::vector<CRGB> nextBuffer;
     std::deque<std::size_t> bufferHashes;

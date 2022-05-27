@@ -222,9 +222,30 @@ void setup() {
 
   //displayDiagnostic(display);
 
-  displayEffects.push_back(std::make_unique<GameOfLife>(display, 100, colourGenerator_cycleHSV, display.getFullDisplayRegion(), false));
+  Serial.println("Pregenerating GoL seeds...");
+  Serial.println(millis());
+  std::unique_ptr<GameOfLife> gol = std::make_unique<GameOfLife>(display, 0, 0, colourGenerator_cycleHSV, display.getFullDisplayRegion(), false);
+  gol->setFadeOnDeath(false);
+  while (!gol->prepopulatedSeeds()) {
+    while (!gol->finished()) {
+      gol->run();
+    }
+    gol->reset();
+  }
+  Serial.print("Seed generation finished: "); Serial.println(millis());
+  gol->setUpdateInterval(100);
+  gol->setFadeInterval(50);
+  gol->setFadeOnDeath(true);
+
+  Serial.println("GoL scores: ");
+  for (const auto& score : gol->getScores()) {
+    Serial.print(score.lifespan); Serial.print("\t"); Serial.println(score.seed);
+  }
+
+
+  displayEffects.push_back(std::move(gol));
   //displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<BouncingBall>(display, 250, colourGenerator_cycleHSV), 10000));
-  displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<ClockFace>(display, timeCallbackFunction), 1000));
+  //displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<ClockFace>(display, timeCallbackFunction), 1000));
 
   //displayEffects.push_back(std::make_unique<BouncingBall>(display, 250, colourGenerator_cycleHSV));
   //displayEffects.push_back(std::make_unique<TextScroller>(display, "Test Text Scroller", Adafruit_NeoPixel::Color(255, 0, 0), 1000, true, 1));
@@ -323,11 +344,11 @@ void loop()
     if (tsl2591.hasValue()) {
       float brightness = tsl2591.getBrightness();
       float irradiance = tsl2591.getIrradiance();
-      Serial.print("Irradiance: "); Serial.print(irradiance, 7); Serial.println(" W / m^2");
-      Serial.print("Brightness: "); Serial.print(brightness, 7); Serial.println(" lux");
+      //Serial.print("Irradiance: "); Serial.print(irradiance, 7); Serial.println(" W / m^2");
+      //Serial.print("Brightness: "); Serial.print(brightness, 7); Serial.println(" lux");
       float maxBrightness = 1.7;
       uint8_t newBrightness = uint8_t(constrain(map(brightness * 1000, 0, 1700, 0, 255), 1, 255));
-      Serial.print("Brightness set to: "); Serial.println(newBrightness);
+      //Serial.print("Brightness set to: "); Serial.println(newBrightness);
       FastLED.setBrightness(newBrightness);
       //tsl2591.measure();
     }
