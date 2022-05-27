@@ -54,6 +54,9 @@ void click(Button2& btn) {
 }
 
 TSL2591I2C tsl2591;
+bool lightSensorActive = false;
+uint32_t lightSensorLastPollTime = 0;
+uint32_t lightSensorPollInterval = 200;
 
 // Main loop timing
 uint32_t lastLoopTime = 0;
@@ -151,40 +154,36 @@ bool initialiseRTC()
   }
 }
 
-void initialiseLightSensor()
+bool initialiseLightSensor()
 {
   Wire.begin();
-  if (!tsl2591.begin())
-	{
-		Serial.println("begin() failed. check the connection to your TSL2591.");
-		while (1);
-	}
+  Serial.print("Initialising TSL2591: ");
+  if (!tsl2591.begin())	{
+    Serial.println("Error!");
+    return false;
+  } else {
+    Serial.println("Success!");
+    Serial.print("Sensor ID: "); Serial.println(tsl2591.getID(), HEX);
+    tsl2591.resetToDefaults();
+    tsl2591.setChannel(TSL2591MI::TSL2591_CHANNEL_0);
+    tsl2591.setGain(TSL2591MI::TSL2591_GAIN_MED);
+    tsl2591.setIntegrationTime(TSL2591MI::TSL2591_INTEGRATION_TIME_100ms);
 
-	Serial.print("sensor ID: "); Serial.println(tsl2591.getID(), HEX);
+    Serial.println("Performing test measurement...");
 
-	tsl2591.resetToDefaults();
+    if (!tsl2591.measure()) {
+      Serial.println("Could not start measurement. ");
+      return false;
+    }
 
-	//set channel
-	tsl2591.setChannel(TSL2591MI::TSL2591_CHANNEL_0);
+    while (!tsl2591.hasValue()) {
+      delay(1);
+    }
 
-	//set gain
-	tsl2591.setGain(TSL2591MI::TSL2591_GAIN_MED);
-
-	//set integration time
-	tsl2591.setIntegrationTime(TSL2591MI::TSL2591_INTEGRATION_TIME_100ms);
-
-  if (!tsl2591.measure()) {
-    Serial.println("could not start measurement. ");
-    return;
+    Serial.print("Irradiance: "); Serial.print(tsl2591.getIrradiance(), 7); Serial.println(" W / m^2");
+    Serial.print("Brightness: "); Serial.print(tsl2591.getBrightness(), 7); Serial.println(" lux");
+    return true;
   }
-
-  while (!tsl2591.hasValue()) {
-    delay(1);
-  }
-
-	Serial.print("Irradiance: "); Serial.print(tsl2591.getIrradiance(), 7); Serial.println(" W / m^2");
-	Serial.print("Brightness: "); Serial.print(tsl2591.getBrightness(), 7); Serial.println(" lux");
-  
 }
 
 void setup() {
@@ -192,7 +191,7 @@ void setup() {
   Serial.begin(250000);
   Serial.println("Serial begin!");
 
-  initialiseLightSensor();
+  lightSensorActive = initialiseLightSensor();
 
   FastLED.addLeds<WS2812, matrixLEDPin, RGB>(ledsDummyRGBW, dummyLEDCount);
   display.setLEDStrip(ledsDummyRGBW);
@@ -221,7 +220,7 @@ void setup() {
   display.update();
   delay(100); 
 
-  displayDiagnostic(display);
+  //displayDiagnostic(display);
 
   displayEffects.push_back(std::make_unique<GameOfLife>(display, 100, colourGenerator_cycleHSV, display.getFullDisplayRegion(), false));
   //displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<BouncingBall>(display, 250, colourGenerator_cycleHSV), 10000));
@@ -320,6 +319,21 @@ void loop()
   //display.update();
   //delay(20);
 
+  if (lightSensorActive && millis() - lightSensorLastPollTime > lightSensorPollInterval) {
+    if (tsl2591.hasValue()) {
+      float brightness = tsl2591.getBrightness();
+      float irradiance = tsl2591.getIrradiance();
+      Serial.print("Irradiance: "); Serial.print(irradiance, 7); Serial.println(" W / m^2");
+      Serial.print("Brightness: "); Serial.print(brightness, 7); Serial.println(" lux");
+      float maxBrightness = 1.7;
+      uint8_t newBrightness = uint8_t(constrain(map(brightness * 1000, 0, 1700, 0, 255), 1, 255));
+      Serial.print("Brightness set to: "); Serial.println(newBrightness);
+      FastLED.setBrightness(newBrightness);
+      //tsl2591.measure();
+    }
+    lightSensorLastPollTime = millis();
+  }
+
   // Manage loop timing
   unsigned long loopTime = millis() - lastLoopTime;
 
@@ -344,16 +358,6 @@ void loop()
     //FastLED.show();
   }
   lastLoopTime = millis();
-
-  if (tsl2591.hasValue()) {
-    Serial.print("Irradiance: "); Serial.print(tsl2591.getIrradiance(), 7); Serial.println(" W / m^2");
-    Serial.print("Brightness: "); Serial.print(tsl2591.getBrightness(), 7); Serial.println(" lux");
-    float maxBrightness = 1.7;
-    uint8_t brightness = uint8_t(constrain(map(tsl2591.getBrightness() * 1000, 0, 1700, 0, 255), 1, 255));
-    FastLED.setBrightness(brightness);
-    tsl2591.measure();
-  }
-
 }
 
 
