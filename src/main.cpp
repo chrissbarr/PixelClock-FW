@@ -143,21 +143,21 @@ void setup() {
   initialiseTime();
   delay(1000);
 
-  pinMode(buttonPin1, INPUT_PULLUP);
-  pinMode(buttonPin2, INPUT_PULLUP);
-  pinMode(buttonPin3, INPUT_PULLUP);
-  pinMode(buttonPin4, INPUT_PULLUP);
-  pinMode(buttonPin5, INPUT_PULLUP);
-  while (true) {
-    Serial.print(digitalRead(buttonPin1));
-    Serial.print(digitalRead(buttonPin2));
-    Serial.print(digitalRead(buttonPin3));
-    Serial.print(digitalRead(buttonPin4));
-    Serial.print(digitalRead(buttonPin5));
-    Serial.println();
-    yield();
-    delay(100);
-  }
+  // pinMode(buttonPin1, INPUT_PULLUP);
+  // pinMode(buttonPin2, INPUT_PULLUP);
+  // pinMode(buttonPin3, INPUT_PULLUP);
+  // pinMode(buttonPin4, INPUT_PULLUP);
+  // pinMode(buttonPin5, INPUT_PULLUP);
+  // while (true) {
+  //   Serial.print(digitalRead(buttonPin1));
+  //   Serial.print(digitalRead(buttonPin2));
+  //   Serial.print(digitalRead(buttonPin3));
+  //   Serial.print(digitalRead(buttonPin4));
+  //   Serial.print(digitalRead(buttonPin5));
+  //   Serial.println();
+  //   yield();
+  //   delay(100);
+  // }
 
   lightSensorActive = initialiseLightSensor();
 
@@ -165,11 +165,9 @@ void setup() {
   display.setLEDStrip(ledsDummyRGBW);
 
   Serial.println("Loading melody...");
-  const int nNotes = 8;
-  String notes[nNotes] = { "C4", "G3", "G3", "A3", "G3", "SILENCE", "B3", "C4" };
-  const int timeUnit = 175;
+  const char melodyString[] = "tetris:d=4,o=5,b=160:e6,8b,8c6,8d6,16e6,16d6,8c6,8b,a,8a,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,2a,8p,d6,8f6,a6,8g6,8f6,e6,8e6,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,a";
   // create a melody
-  Melody melody = MelodyFactory.load("Nice Melody", timeUnit, notes, nNotes);
+  Melody melody = MelodyFactory.loadRtttlString(melodyString);
 
   // get basic info about the melody
   Serial.println(String(" Title:") + melody.getTitle());
