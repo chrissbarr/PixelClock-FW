@@ -59,24 +59,20 @@ protected:
 class Mode_ClockFace : public MainModeFunction
 {
 public:
-  Mode_ClockFace(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton) : 
-  MainModeFunction("Clockface", display, selectButton, leftButton, rightButton) {
-    faces.push_back(std::make_unique<ClockFace>(_display, timeCallbackFunction));
-  }
+  Mode_ClockFace(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton);
 protected:
   void moveIntoCore() override final {
     faces[clockfaceIndex]->reset();
   }
-  void runCore() override final {
-    faces[clockfaceIndex]->run();
-    if (faces[clockfaceIndex]->finished()) {
-      faces[clockfaceIndex]->reset();
-    }
-  }
+  void runCore() override final;
   void moveOutCore() override final {}
 private:
   std::vector<std::unique_ptr<DisplayEffect>> faces;
   uint8_t clockfaceIndex = 0;
+  std::vector<std::unique_ptr<FilterMethod>> filters;
+  uint8_t filterIndex = 0;
+  uint32_t lastFilterChangeTime = 0;
+  uint32_t filterChangePeriod = 10000;
 };
 
 class Mode_SettingsMenu : public MainModeFunction

@@ -54,6 +54,30 @@ void Mode_SettingsMenu::runCore()
   menuTextScroller->run();
 }
 
+Mode_ClockFace::Mode_ClockFace(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton) : 
+  MainModeFunction("Clockface", display, selectButton, leftButton, rightButton) {
+  faces.push_back(std::make_unique<ClockFace>(_display, timeCallbackFunction));
+  filters.push_back(std::make_unique<RainbowWave>(1, 30, RainbowWave::Direction::horizontal, false));
+  filters.push_back(std::make_unique<RainbowWave>(1, 30, RainbowWave::Direction::vertical, false));
+}
+
+void Mode_ClockFace::runCore()
+{
+  faces[clockfaceIndex]->run();
+  if (faces[clockfaceIndex]->finished()) {
+    faces[clockfaceIndex]->reset();
+  }
+
+  if (millis() - lastFilterChangeTime > filterChangePeriod) {
+    filterIndex++;
+    if (filterIndex == filters.size()) {
+      filterIndex = 0;
+    }
+    lastFilterChangeTime = millis();
+  }
+  _display.applyFilter(*filters[filterIndex]);
+}
+
 ModeManager::ModeManager(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton)
 {
   modes.push_back(std::make_unique<Mode_ClockFace>(display, selectButton, leftButton, rightButton));

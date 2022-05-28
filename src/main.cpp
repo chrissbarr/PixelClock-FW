@@ -106,18 +106,6 @@ constexpr float approxRollingAverage(float avg, float newSample, int N)
   return avg;
 }
 
-std::vector<std::shared_ptr<DisplayEffect>> displayEffects;
-std::size_t effectIndex = 0;
-
-struct FilterConfig {
-  std::unique_ptr<FilterMethod> filter;
-  String description;
-};
-std::vector<FilterConfig> filterConfigs;
-std::size_t filterIndex = 0;
-uint32_t lastFilterChangeTime = 0;
-uint32_t filterChangePeriod = 3000;
-
 std::unique_ptr<GameOfLife> golTrainer;
 std::shared_ptr<GameOfLife> golActual;
 
