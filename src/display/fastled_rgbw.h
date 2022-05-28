@@ -10,6 +10,8 @@
 #ifndef FastLED_RGBW_h
 #define FastLED_RGBW_h
 
+#define FASTLED_INTERNAL
+#include <FastLED.h>
 #include <Arduino.h>
  
 constexpr uint16_t getRGBWsize(uint16_t nleds){

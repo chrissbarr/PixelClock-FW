@@ -5,7 +5,6 @@
 
 // Libraries
 #include <SPI.h>
-#include <FastLED.h>
 
 #include <Button2.h>
 #include <TSL2591I2C.h>
@@ -174,7 +173,7 @@ void setup() {
   Serial.println(String(" Time unit:") + melody.getTimeUnit());
 
   Serial.print("Start playing in blocking mode... ");
-  player.play(melody);
+  //player.play(melody);
   Serial.println("Melody ends!");
 
 
@@ -221,8 +220,43 @@ void setup() {
   //displayEffects.push_back(golActual);
   //displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<BouncingBall>(display, 250, colourGenerator_cycleHSV), 10000));
   displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<ClockFace>(display, timeCallbackFunction), 1000));
-  displayEffects.push_back(std::make_shared<Gravity>(display, 250, false));
-  displayEffects.push_back(std::make_shared<Gravity>(display, 250, true));
+  displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::down));
+  displayEffects.push_back(std::make_shared<Gravity>(display, 100, true, Gravity::Direction::down));
+
+  displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<ClockFace>(display, timeCallbackFunction), 1000));
+  displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::up));
+  displayEffects.push_back(std::make_shared<Gravity>(display, 100, true, Gravity::Direction::up));
+
+  displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<ClockFace>(display, timeCallbackFunction), 1000));
+  displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::left));
+  displayEffects.push_back(std::make_shared<Gravity>(display, 100, true, Gravity::Direction::left));
+
+  displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<ClockFace>(display, timeCallbackFunction), 1000));
+  displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::right));
+  displayEffects.push_back(std::make_shared<Gravity>(display, 100, true, Gravity::Direction::right));
+
+  displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<ClockFace>(display, timeCallbackFunction), 1000));
+  displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::down));
+
+  auto region = display.getFullDisplayRegion();
+  while (region.yMax != region.yMin) {
+    region.yMax--;
+    displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::left, region));
+    displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::down));
+    displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::right, region));
+    displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::down));
+  }
+  
+
+  // displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::left));
+  // displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::down));
+  // displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::right));
+  // displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::down));
+  // displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::left));
+  // displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::down));
+  // displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::right));
+  // displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::down));
+  // displayEffects.push_back(std::make_shared<Gravity>(display, 100, true, Gravity::Direction::down));
 
   //displayEffects.push_back(std::make_unique<BouncingBall>(display, 250, colourGenerator_cycleHSV));
   //displayEffects.push_back(std::make_unique<TextScroller>(display, "Test Text Scroller", Adafruit_NeoPixel::Color(255, 0, 0), 1000, true, 1));

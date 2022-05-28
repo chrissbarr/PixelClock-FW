@@ -143,8 +143,8 @@ bool BouncingBall::run()
   return true;
 }
 
-Gravity::Gravity(PixelDisplay& display, uint32_t moveInterval, bool empty, const DisplayRegion& displayRegion) :
-  _display(display), _moveInterval(moveInterval), _empty(empty)
+Gravity::Gravity(PixelDisplay& display, uint32_t moveInterval, bool empty, Gravity::Direction direction, const DisplayRegion& displayRegion) :
+  _display(display), _moveInterval(moveInterval), _empty(empty), _direction(direction)
 {
   if (displayRegion == defaultFull) {
     _displayRegion = display.getFullDisplayRegion();
@@ -164,26 +164,83 @@ bool Gravity::run()
   uint32_t timenow = millis();
   if (timenow - _lastMoveTime > _moveInterval) {
     bool anyPixelsMovedThisUpdate = false;
-    for (int y = _displayRegion.yMax; y >= _displayRegion.yMin; y--) {
-      for (uint8_t x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
-        CRGB cellColour = _display.getXY(x, y);
-        if (cellColour != CRGB(0)) {
-          // if this is the last row
-          if (y == _displayRegion.yMax) {
-            if (_empty) {
-              _display.setXY(x, y, 0);
-              anyPixelsMovedThisUpdate = true;
-            }
-            continue;
+
+    auto movePixel = [](PixelDisplay& display, const DisplayRegion& displayRegion, int x, int y, int xMove, int yMove, bool empty) {
+      auto currentIndex = display.XYToIndex(x, y);
+      CRGB cellColour = display.getIndex(currentIndex);
+      if (cellColour != CRGB(0)) {
+        // if this is the last row
+        if ( yMove == 1 && y == displayRegion.yMax
+          || yMove == -1 && y == displayRegion.yMin
+          || xMove == 1 && x == displayRegion.xMax
+          || xMove == -1 && x == displayRegion.yMin
+          ) {
+          if (empty) {
+            display.setIndex(currentIndex, 0);
+            return true;
           }
-          if (_display.getXY(x, y + 1) == CRGB(0)) {
-            _display.setXY(x, y + 1, cellColour);
-            _display.setXY(x, y, 0);
-            anyPixelsMovedThisUpdate = true;
-          }
+          return false;
+        }
+        auto moveIntoIndex = display.XYToIndex(x + xMove, y + yMove);
+        if (display.getIndex(moveIntoIndex) == CRGB(0)) {
+          display.setIndex(moveIntoIndex, cellColour);
+          display.setIndex(currentIndex, 0);
+          return true;
         }
       }
+      return false;
+    };
+
+    switch(_direction) {
+      case Gravity::Direction::down:
+      {
+        for (int y = _displayRegion.yMax; y >= _displayRegion.yMin; y--) {
+          for (int x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
+            if (movePixel(_display, _displayRegion, x, y, 0, 1, _empty)) {
+              anyPixelsMovedThisUpdate = true;
+            }
+          }
+        }
+        break;
+      }
+      case Gravity::Direction::up:
+      {
+        for (int y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
+          for (int x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
+            if (movePixel(_display, _displayRegion, x, y, 0, -1, _empty)) {
+              anyPixelsMovedThisUpdate = true;
+            }
+          }
+        }
+        break;
+      }
+      case Gravity::Direction::left:
+      {
+        for (int y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
+          for (int x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
+            if (movePixel(_display, _displayRegion, x, y, -1, 0, _empty)) {
+              anyPixelsMovedThisUpdate = true;
+            }
+          }
+        }
+        break;
+      }
+      case Gravity::Direction::right:
+      {
+        for (int y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
+          for (int x = _displayRegion.xMax; x >= _displayRegion.xMin; x--) {
+            if (movePixel(_display, _displayRegion, x, y, 1, 0, _empty)) {
+              anyPixelsMovedThisUpdate = true;
+            }
+          }
+        }
+        break;
+      }
     }
+
+
+
+
     if (!anyPixelsMovedThisUpdate) { _finished = true; }
     _lastMoveTime = timenow;
   }  

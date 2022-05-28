@@ -4,7 +4,7 @@
 #include "timekeeping.h"
 #include "display/display.h"
 #include <Arduino.h>
-#include <FastLED.h>
+#include "display/fastled_rgbw.h"
 
 #include <deque>
 #include <memory>
@@ -146,10 +146,21 @@ private:
 
 class Gravity : public DisplayEffect {
 public:
-    Gravity(PixelDisplay& display, uint32_t moveInterval, bool empty, const DisplayRegion& displayRegion = defaultFull);
+
+    enum class Direction {
+        up, 
+        down,
+        left,
+        right
+    };
+
+    Gravity(PixelDisplay& display, uint32_t moveInterval, bool empty, Gravity::Direction direction, const DisplayRegion& displayRegion = defaultFull);
     bool run() override final;
     bool finished() const override final { return _finished; }
     void reset() override final;
+
+    Direction getDirection() const { return _direction; }
+    void setDirection(Direction direction) { _direction = direction; }
 private:
     PixelDisplay& _display;
     DisplayRegion _displayRegion;
@@ -157,6 +168,7 @@ private:
     uint32_t _moveInterval;
     uint32_t _lastMoveTime = 0;
     bool _empty;
+    Direction _direction;
 };
 
 // bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)(), DisplayRegion displayRegion);
