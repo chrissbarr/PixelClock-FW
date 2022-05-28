@@ -11,10 +11,10 @@
 #include <TSL2591I2C.h>
 
 // Project Scope
-#include "characters.h"
-#include "display.h"
-#include "displayEffects.h"
-#include "fastled_rgbw.h"
+#include "display/display.h"
+#include "display/displayEffects.h"
+#include "display/gameOfLife.h"
+#include "display/fastled_rgbw.h"
 #include "timekeeping.h"
 
 // Pinout

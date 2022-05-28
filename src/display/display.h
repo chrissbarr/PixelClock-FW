@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 #include <FastLED.h>
-#include "characters.h"
+#include "display/characters.h"
 
 #include <vector>
 
