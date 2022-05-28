@@ -13,6 +13,7 @@
 inline CRGB colourGenerator_randomHSV() { return CHSV(random8(), 255, 255); }
 inline CRGB colourGenerator_cycleHSV() { return CHSV((millis() / 10), 255, 255); }
 inline CRGB colourGenerator_black() { return 0; }
+inline CRGB colourGenerator_white() { return CRGB::White; }
 
 /**
  * @brief Abstract Base Class for classes that implement an Effect (e.g., a pattern, demo, game, etc. that takes place over time)
@@ -148,9 +149,12 @@ public:
 
     void setUpdateInterval(uint32_t interval) { _updateInterval = interval; }
     void setFadeInterval(uint32_t interval) { _fadeInterval = interval; }
-    bool prepopulatedSeeds() const { return bestScores.size() >= bestScoresToKeep; }
+    void setSeedingMode(bool enabled) { _seeding = enabled; }
+    std::size_t getSeededCount() const { return bestScores.size(); }
     void setFadeOnDeath(bool fade) { _fadeOnDeath = fade; }
-    std::multiset<GoLScore>& getScores() { return bestScores; }
+    const std::multiset<GoLScore>& getScores() const { return bestScores; }
+    void setScores(const std::multiset<GoLScore>& scores) { bestScores = scores; }
+    uint32_t getIterations() const { return iterationId; }
 
     void seedDisplay();
 
@@ -159,7 +163,7 @@ private:
     uint32_t _lastLoopTime;
     CRGB (*_colourGenerator)();
     DisplayRegion _displayRegion;
-    bool _dead;
+    bool _dead = false;
     bool _finished;
     bool _wrap;
     bool _fadeOnDeath = true;
@@ -171,10 +175,13 @@ private:
     uint16_t _lifespan = 0;
 
     std::multiset<GoLScore> bestScores;
-    uint8_t bestScoresToKeep = 100;
+    uint8_t bestScoresToKeep = 20;
     uint32_t iterationId = 0;
+    bool _seeding = false;
 
-    std::vector<CRGB> nextBuffer;
+    uint8_t readBuffer = 0;
+    uint8_t writeBuffer = 1;
+    std::vector<std::vector<CRGB>> buffers;
     std::deque<std::size_t> bufferHashes;
 
     std::size_t hashBuffer(const std::vector<CRGB>& vec) const; 

@@ -94,7 +94,7 @@ enum class Mode {
 };
 Mode currentMode = Mode::Demo;
 
-std::vector<std::unique_ptr<DisplayEffect>> displayEffects;
+std::vector<std::shared_ptr<DisplayEffect>> displayEffects;
 std::size_t effectIndex = 0;
 
 struct FilterConfig {
@@ -186,6 +186,9 @@ bool initialiseLightSensor()
   }
 }
 
+std::unique_ptr<GameOfLife> golTrainer;
+std::shared_ptr<GameOfLife> golActual;
+
 void setup() {
   delay(1000);
   Serial.begin(250000);
@@ -224,26 +227,38 @@ void setup() {
 
   Serial.println("Pregenerating GoL seeds...");
   Serial.println(millis());
-  std::unique_ptr<GameOfLife> gol = std::make_unique<GameOfLife>(display, 0, 0, colourGenerator_cycleHSV, display.getFullDisplayRegion(), false);
-  gol->setFadeOnDeath(false);
-  while (!gol->prepopulatedSeeds()) {
-    while (!gol->finished()) {
-      gol->run();
-    }
-    gol->reset();
-  }
-  Serial.print("Seed generation finished: "); Serial.println(millis());
-  gol->setUpdateInterval(100);
-  gol->setFadeInterval(50);
-  gol->setFadeOnDeath(true);
 
+  // construct an instance of GoL that will be used to seed interesting states
+  golTrainer = std::make_unique<GameOfLife>(display, 0, 0, colourGenerator_white, display.getFullDisplayRegion(), false);
+  golTrainer->setFadeOnDeath(false);
+  golTrainer->setSeedingMode(true);
+
+  // run until we have a few initial states
+  while (golTrainer->getSeededCount() < 3) {
+    while (!golTrainer->finished()) {
+      golTrainer->run();
+    }
+    golTrainer->reset();
+  }
   Serial.println("GoL scores: ");
-  for (const auto& score : gol->getScores()) {
+  for (const auto& score : golTrainer->getScores()) {
     Serial.print(score.lifespan); Serial.print("\t"); Serial.println(score.seed);
   }
 
+  golActual = std::make_shared<GameOfLife>(display, 500, 50, colourGenerator_cycleHSV, display.getFullDisplayRegion(), false);
+  golActual->setScores(golTrainer->getScores());
 
-  displayEffects.push_back(std::move(gol));
+  for (const auto& score : golActual->getScores()) {
+    Serial.print(score.lifespan); Serial.print("\t"); Serial.println(score.seed);
+  }
+
+  Serial.println("trainer again...");
+
+  for (const auto& score : golTrainer->getScores()) {
+    Serial.print(score.lifespan); Serial.print("\t"); Serial.println(score.seed);
+  }
+
+  displayEffects.push_back(golActual);
   //displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<BouncingBall>(display, 250, colourGenerator_cycleHSV), 10000));
   //displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<ClockFace>(display, timeCallbackFunction), 1000));
 
@@ -377,6 +392,24 @@ void loop()
   while (millis() - lastLoopTime < loopTargetTime) {
     yield();
     //FastLED.show();
+
+    //Serial.println("Running trainer...");
+    golTrainer->run();
+    if (golTrainer->finished()) {
+      //Serial.println("Resetting trainer...");
+      golTrainer->reset();
+
+      if (golTrainer->getIterations() % 1000 == 0) {
+        golActual->setScores(golTrainer->getScores());
+        Serial.println("GoL scores: ");
+        for (const auto& score : golActual->getScores()) {
+          Serial.print(score.lifespan); Serial.print("\t"); Serial.println(score.seed);
+        }
+      }
+    }
+
+
+    
   }
   lastLoopTime = millis();
 }
