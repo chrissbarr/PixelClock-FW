@@ -76,9 +76,11 @@ public:
     bool run() override final;
     bool finished() const override final { return _finished; }
     void reset() override final { _finished = false; currentOffset = 0; setTargetOffsetToEnd(); }
+
+    void setText(const String& textIn) { text = textIn; }
 private:
     PixelDisplay& display;
-    const String text;
+    String text;
     CRGB colour;
     uint16_t timeToHoldAtEnd;
     bool reverseOnFinish;
