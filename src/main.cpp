@@ -21,6 +21,7 @@
 #include "display/fastled_rgbw.h"
 #include "timekeeping.h"
 #include "brightnessSensor.h"
+#include "modes.h"
 
 // LED Panel Configuration
 constexpr uint8_t matrixWidth = 17;
@@ -39,18 +40,8 @@ Button2 buttonLeft(buttonPin3, INPUT_PULLUP);
 Button2 buttonRight(buttonPin4, INPUT_PULLUP);
 Button2 buttonBrightness(buttonPin5, INPUT_PULLUP);
 
-void clearAllButtonCallbacks(Button2& button)
-{
-  button.setChangedHandler(nullptr);
-  button.setClickHandler(nullptr);
-  button.setDoubleClickHandler(nullptr);
-  button.setLongClickDetectedHandler(nullptr);
-  button.setLongClickHandler(nullptr);
-  button.setPressedHandler(nullptr);
-  button.setReleasedHandler(nullptr);
-  button.setTapHandler(nullptr);
-  button.setTripleClickHandler(nullptr);
-}
+// Modes
+std::unique_ptr<ModeManager> modeManager;
 
 //// Brightness Handling
 std::unique_ptr<BrightnessSensor> brightnessSensor;
@@ -73,94 +64,7 @@ std::vector<BrightnessMode> brightnessModes = {
 };
 uint8_t brightnessModeIndex = 0;
 
-class MainModeFunction
-{
-protected:
-  virtual void moveIntoCore() = 0;
-  virtual void moveOutCore() = 0;
-  virtual void runCore() = 0;
-public:
-  MainModeFunction(String name) : _name(name) {}
-  void moveInto()
-  {
-    clearAllButtonCallbacks(buttonSelect);
-    clearAllButtonCallbacks(buttonLeft);
-    clearAllButtonCallbacks(buttonRight);
-    this->moveIntoCore();
-  }
 
-  void run() 
-  {
-    this->runCore();
-  }
-
-  void moveOut()
-  {
-    this->moveOutCore();
-  }
-
-  String getName() const { return _name; }
-
-private:
-
-  String _name;
-};
-
-class Mode_ClockFace : public MainModeFunction
-{
-public:
-  Mode_ClockFace() : MainModeFunction("Clockface") {
-    faces.push_back(std::make_unique<ClockFace>(display, timeCallbackFunction));
-  }
-protected:
-  void moveIntoCore() override final {
-    faces[clockfaceIndex]->reset();
-  }
-  void runCore() override final {
-    faces[clockfaceIndex]->run();
-    if (faces[clockfaceIndex]->finished()) {
-      faces[clockfaceIndex]->reset();
-    }
-  }
-  void moveOutCore() override final {}
-private:
-  std::vector<std::unique_ptr<DisplayEffect>> faces;
-  uint8_t clockfaceIndex = 0;
-};
-
-class Mode_SettingsMenu : public MainModeFunction
-{
-public:
-  Mode_SettingsMenu() : MainModeFunction("Settings Menu") {
-    menuTextScroller = std::make_unique<TextScroller>(display, "Placeholder", CRGB::Red, 250, 1000, true, 1);
-    menuPages = {
-      {"Set Time"},
-      {"Set Date"},
-      {"Set Brightness"}
-    };
-  }
-protected:
-  void moveIntoCore() override final {
-    menuTextScroller->reset();
-    menuIndex = 0;
-  }
-  void runCore() override final {
-    menuTextScroller->setText(menuPages[menuIndex].scrollerText);
-    menuTextScroller->run();
-  }
-  void moveOutCore() override final {}
-private:
-  std::unique_ptr<TextScroller> menuTextScroller;
-  struct MenuPage {
-    String scrollerText;
-  };
-
-  std::vector<MenuPage> menuPages;
-  uint8_t menuIndex = 0;
-};
-
-std::vector<std::unique_ptr<MainModeFunction>> mainModes;
-uint8_t modeIndex = 0;
 
 void brightnessButton_callback(Button2& btn) 
 {
@@ -179,28 +83,8 @@ void brightnessButton_callback(Button2& btn)
   Serial.print("New Brightness Name: "); Serial.println(brightnessModes[brightnessModeIndex].name);
 }
 
-void click(Button2& btn) {
-  Serial.println("Button click callback...");
-  if (btn == buttonMode) {
-    Serial.println("BTN0");
-    Serial.println("Switching to next mode...");
-    Serial.print("Current Mode Index: "); Serial.println(modeIndex);
-    Serial.print("Current Mode Name: "); Serial.println(mainModes[modeIndex]->getName());
-
-    mainModes[modeIndex]->moveOut();
-    modeIndex++;
-    if (modeIndex == mainModes.size()) {
-      modeIndex = 0;
-    }
-    mainModes[modeIndex]->moveInto();
-
-    Serial.print("New Mode Index: "); Serial.println(modeIndex);
-    Serial.print("New Mode Name: "); Serial.println(mainModes[modeIndex]->getName());
-
-  } 
-  if (btn == buttonBrightness) {
-    Serial.println("B clicked");
-  }
+void modeButton_callback(Button2& btn) {
+  modeManager->cycleMode();
 }
 
 
@@ -245,12 +129,12 @@ void setup() {
   Wire.begin();
 
   brightnessSensor = std::make_unique<BrightnessSensor>();
+  modeManager = std::make_unique<ModeManager>(display, buttonSelect, buttonLeft, buttonRight);
 
   initialiseTime();
   delay(1000);
 
-  mainModes.push_back(std::make_unique<Mode_ClockFace>());
-  mainModes.push_back(std::make_unique<Mode_SettingsMenu>());
+
 
   FastLED.addLeds<WS2812, matrixLEDPin, RGB>(ledsDummyRGBW, dummyLEDCount);
   display.setLEDStrip(ledsDummyRGBW);
@@ -268,7 +152,7 @@ void setup() {
   //player.play(melody);
   Serial.println("Melody ends!");
 
-  buttonMode.setClickHandler(click);
+  buttonMode.setTapHandler(modeButton_callback);
   buttonBrightness.setTapHandler(brightnessButton_callback);
 
   display.fill(0);
@@ -293,8 +177,11 @@ void loop()
   // update buttons
   buttonMode.loop();
   buttonBrightness.loop();
+  buttonSelect.loop();
+  buttonLeft.loop();
+  buttonRight.loop();
 
-  mainModes[modeIndex]->run();
+  modeManager->run();
 
   FastLED.setBrightness(brightnessModes[brightnessModeIndex].function());
   FastLED.setDither(1);
@@ -303,7 +190,7 @@ void loop()
   brightnessSensor->update();
 
   // Manage loop timing
-  unsigned long loopTime = millis() - lastLoopTime;
+  uint32_t loopTime = millis() - lastLoopTime;
 
   avgTime = approxRollingAverage(avgTime, float(loopTime), 1000);
   if (loopTime > maxTime) { maxTime = loopTime; }

@@ -75,7 +75,7 @@ public:
     TextScroller(PixelDisplay& display, String textString, CRGB colour, uint16_t stepDelay = 100, uint16_t timeToHoldAtEnd = 1000, bool reverseOnFinish = false, uint8_t characterSpacing = 1);
     bool run() override final;
     bool finished() const override final { return _finished; }
-    void reset() override final { _finished = false; currentOffset = 0; setTargetOffsetToEnd(); }
+    void reset() override final { _finished = false; currentOffset = 0; setTargetOffsetToEnd(); arrivedAtEndTime = 0; }
 
     void setText(const String& textIn) { text = textIn; }
 private:
