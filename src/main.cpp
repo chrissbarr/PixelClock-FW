@@ -10,6 +10,9 @@
 #include <Button2.h>
 #include <TSL2591I2C.h>
 
+#include <melody_player.h>
+#include <melody_factory.h>
+
 // Project Scope
 #include "display/display.h"
 #include "display/displayEffects.h"
@@ -34,24 +37,27 @@ constexpr uint16_t dummyLEDCount = getRGBWsize(matrixSize);
 CRGB ledsDummyRGBW[dummyLEDCount];
 PixelDisplay display(matrixWidth, matrixHeight, false, false);
 
+MelodyPlayer player(buzzerPin, HIGH);
+
+
 // Buttons
 
-Button2 buttons[] = {
-  Button2(buttonPin1),
-  Button2(buttonPin2),
-  Button2(buttonPin3),
-  Button2(buttonPin4),
-  Button2(buttonPin5)
-};
+// Button2 buttons[] = {
+//   Button2(buttonPin1),
+//   Button2(buttonPin2),
+//   Button2(buttonPin3),
+//   Button2(buttonPin4),
+//   Button2(buttonPin5)
+// };
 
-void click(Button2& btn) {
-    if (btn == buttons[0]) {
-      Serial.println("A clicked");
-    } 
-    if (btn == buttons[1]) {
-      Serial.println("B clicked");
-    }
-}
+// void click(Button2& btn) {
+//     if (btn == buttons[0]) {
+//       Serial.println("A clicked");
+//     } 
+//     if (btn == buttons[1]) {
+//       Serial.println("B clicked");
+//     }
+// }
 
 TSL2591I2C tsl2591;
 bool lightSensorActive = false;
@@ -137,16 +143,47 @@ void setup() {
   initialiseTime();
   delay(1000);
 
+  pinMode(buttonPin1, INPUT_PULLUP);
+  pinMode(buttonPin2, INPUT_PULLUP);
+  pinMode(buttonPin3, INPUT_PULLUP);
+  pinMode(buttonPin4, INPUT_PULLUP);
+  pinMode(buttonPin5, INPUT_PULLUP);
+  while (true) {
+    Serial.print(digitalRead(buttonPin1));
+    Serial.print(digitalRead(buttonPin2));
+    Serial.print(digitalRead(buttonPin3));
+    Serial.print(digitalRead(buttonPin4));
+    Serial.print(digitalRead(buttonPin5));
+    Serial.println();
+    yield();
+    delay(100);
+  }
+
   lightSensorActive = initialiseLightSensor();
 
   FastLED.addLeds<WS2812, matrixLEDPin, RGB>(ledsDummyRGBW, dummyLEDCount);
   display.setLEDStrip(ledsDummyRGBW);
 
+  Serial.println("Loading melody...");
+  const int nNotes = 8;
+  String notes[nNotes] = { "C4", "G3", "G3", "A3", "G3", "SILENCE", "B3", "C4" };
+  const int timeUnit = 175;
+  // create a melody
+  Melody melody = MelodyFactory.load("Nice Melody", timeUnit, notes, nNotes);
+
+  // get basic info about the melody
+  Serial.println(String(" Title:") + melody.getTitle());
+  Serial.println(String(" Time unit:") + melody.getTimeUnit());
+
+  Serial.print("Start playing in blocking mode... ");
+  player.play(melody);
+  Serial.println("Melody ends!");
 
 
-  for (Button2 button : buttons) {
-    //button.setClickHandler(click);
-  }
+
+  // for (Button2 button : buttons) {
+  //   //button.setClickHandler(click);
+  // }
 
 
   display.fill(0);
@@ -183,9 +220,9 @@ void setup() {
   golActual->setScores(golTrainer->getScores());
 
 
-  displayEffects.push_back(golActual);
+  //displayEffects.push_back(golActual);
   //displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<BouncingBall>(display, 250, colourGenerator_cycleHSV), 10000));
-  //displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<ClockFace>(display, timeCallbackFunction), 1000));
+  displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<ClockFace>(display, timeCallbackFunction), 1000));
 
   //displayEffects.push_back(std::make_unique<BouncingBall>(display, 250, colourGenerator_cycleHSV));
   //displayEffects.push_back(std::make_unique<TextScroller>(display, "Test Text Scroller", Adafruit_NeoPixel::Color(255, 0, 0), 1000, true, 1));
@@ -215,9 +252,9 @@ void loop()
 {
 
   // update buttons
-  for (Button2 button : buttons) {
-    button.loop();
-  }
+  // for (Button2 button : buttons) {
+  //   button.loop();
+  // }
 
   // time_t currentTime = now();
   // switch (currentMode) {
@@ -244,6 +281,7 @@ void loop()
   //   }
   // }
 
+  display.fill(0);
   if (displayEffects[effectIndex]->finished()) {
     Serial.println("Effect finished!");
     effectIndex++;
@@ -255,12 +293,12 @@ void loop()
   displayEffects[effectIndex]->run();
 
   // update display
-  //display.fill(0);
+  
   //display.applyFilter(HSVTestPattern());
   //showTime(display, hourFormat12(), minute(), CRGB::Red);
 
 
-  //display.applyFilter(*(filterConfigs[filterIndex].filter));
+  display.applyFilter(*(filterConfigs[filterIndex].filter));
   if (millis() - lastFilterChangeTime > filterChangePeriod) {
     filterIndex++;
     if (filterIndex >= filterConfigs.size()) {
