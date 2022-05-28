@@ -84,7 +84,7 @@ class Mode_SettingsMenu : public MainModeFunction
 public:
   Mode_SettingsMenu(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton) 
   : MainModeFunction("Settings Menu", display, selectButton, leftButton, rightButton) {
-    menuTextScroller = std::make_unique<TextScroller>(_display, "Placeholder", CRGB::Red, 100, 1000, true, 1);
+    menuTextScroller = std::make_unique<TextScroller>(_display, "Placeholder", CRGB::Red, 50, 2000, true, 1);
     menuPages = {
       {"Set Time"},
       {"Set Date"},

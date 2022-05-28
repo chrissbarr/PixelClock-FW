@@ -15,6 +15,7 @@ void MainModeFunction::clearAllButtonCallbacks(Button2& button)
 
 void Mode_SettingsMenu::moveIntoCore()
 {
+  menuTextScroller->setText(menuPages[menuIndex].scrollerText);
   menuTextScroller->reset();
   menuIndex = 0;
   leftButton.setTapHandler([this](Button2& btn) { cycleActiveSetting(btn); });
@@ -41,7 +42,7 @@ void Mode_SettingsMenu::cycleActiveSetting(Button2& btn)
       menuIndex++;
     }
   }
-  
+
   Serial.print("New Setting Index: "); Serial.println(menuIndex);
   Serial.print("New Setting Name: "); Serial.println(menuPages[menuIndex].scrollerText);
   menuTextScroller->setText(menuPages[menuIndex].scrollerText);
@@ -50,8 +51,6 @@ void Mode_SettingsMenu::cycleActiveSetting(Button2& btn)
 
 void Mode_SettingsMenu::runCore() 
 {
-  //leftButton.
-  menuTextScroller->setText(menuPages[menuIndex].scrollerText);
   menuTextScroller->run();
 }
 
