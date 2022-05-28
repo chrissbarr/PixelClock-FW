@@ -2,31 +2,25 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <functional>
 
 // Libraries
 #include <SPI.h>
 
 #include <Button2.h>
-#include <TSL2591I2C.h>
+
 
 #include <melody_player.h>
 #include <melody_factory.h>
 
 // Project Scope
+#include "pinout.h"
 #include "display/display.h"
 #include "display/displayEffects.h"
 #include "display/gameOfLife.h"
 #include "display/fastled_rgbw.h"
 #include "timekeeping.h"
-
-// Pinout
-constexpr int16_t matrixLEDPin = 4;
-constexpr int16_t buttonPin1 = 27;
-constexpr int16_t buttonPin2 = 33;
-constexpr int16_t buttonPin3 = 15;
-constexpr int16_t buttonPin4 = 32;
-constexpr int16_t buttonPin5 = 14;
-constexpr int16_t buzzerPin = 26;
+#include "brightnessSensor.h"
 
 // LED Panel Configuration
 constexpr uint8_t matrixWidth = 17;
@@ -38,30 +32,178 @@ PixelDisplay display(matrixWidth, matrixHeight, false, false);
 
 MelodyPlayer player(buzzerPin, HIGH);
 
-
 // Buttons
+Button2 buttonMode(buttonPin1, INPUT_PULLUP);
+Button2 buttonSelect(buttonPin2, INPUT_PULLUP);
+Button2 buttonLeft(buttonPin3, INPUT_PULLUP);
+Button2 buttonRight(buttonPin4, INPUT_PULLUP);
+Button2 buttonBrightness(buttonPin5, INPUT_PULLUP);
 
-// Button2 buttons[] = {
-//   Button2(buttonPin1),
-//   Button2(buttonPin2),
-//   Button2(buttonPin3),
-//   Button2(buttonPin4),
-//   Button2(buttonPin5)
-// };
+void clearAllButtonCallbacks(Button2& button)
+{
+  button.setChangedHandler(nullptr);
+  button.setClickHandler(nullptr);
+  button.setDoubleClickHandler(nullptr);
+  button.setLongClickDetectedHandler(nullptr);
+  button.setLongClickHandler(nullptr);
+  button.setPressedHandler(nullptr);
+  button.setReleasedHandler(nullptr);
+  button.setTapHandler(nullptr);
+  button.setTripleClickHandler(nullptr);
+}
 
-// void click(Button2& btn) {
-//     if (btn == buttons[0]) {
-//       Serial.println("A clicked");
-//     } 
-//     if (btn == buttons[1]) {
-//       Serial.println("B clicked");
-//     }
-// }
+//// Brightness Handling
+std::unique_ptr<BrightnessSensor> brightnessSensor;
+struct BrightnessMode {
+  String name;
+  std::function<uint8_t()> function;
+};
 
-TSL2591I2C tsl2591;
-bool lightSensorActive = false;
-uint32_t lightSensorLastPollTime = 0;
-uint32_t lightSensorPollInterval = 200;
+uint8_t brightnessFromSensor()
+{
+  float maxBrightness = 1.7;
+  return uint8_t(constrain(map(brightnessSensor->getBrightness() * 1000, 0, 1700, 0, 255), 1, 255));
+}
+
+std::vector<BrightnessMode> brightnessModes = {
+  {"High", [](){ return 255; }},
+  {"Med", [](){ return 127; }},
+  {"Low", [](){ return 10; }},
+  {"Auto", brightnessFromSensor}
+};
+uint8_t brightnessModeIndex = 0;
+
+class MainModeFunction
+{
+protected:
+  virtual void moveIntoCore() = 0;
+  virtual void moveOutCore() = 0;
+  virtual void runCore() = 0;
+public:
+  MainModeFunction(String name) : _name(name) {}
+  void moveInto()
+  {
+    clearAllButtonCallbacks(buttonSelect);
+    clearAllButtonCallbacks(buttonLeft);
+    clearAllButtonCallbacks(buttonRight);
+    this->moveIntoCore();
+  }
+
+  void run() 
+  {
+    this->runCore();
+  }
+
+  void moveOut()
+  {
+    this->moveOutCore();
+  }
+
+  String getName() const { return _name; }
+
+private:
+
+  String _name;
+};
+
+class Mode_ClockFace : public MainModeFunction
+{
+public:
+  Mode_ClockFace() : MainModeFunction("Clockface") {
+    faces.push_back(std::make_unique<ClockFace>(display, timeCallbackFunction));
+  }
+protected:
+  void moveIntoCore() override final {
+    faces[clockfaceIndex]->reset();
+  }
+  void runCore() override final {
+    faces[clockfaceIndex]->run();
+    if (faces[clockfaceIndex]->finished()) {
+      faces[clockfaceIndex]->reset();
+    }
+  }
+  void moveOutCore() override final {}
+private:
+  std::vector<std::unique_ptr<DisplayEffect>> faces;
+  uint8_t clockfaceIndex = 0;
+};
+
+class Mode_SettingsMenu : public MainModeFunction
+{
+public:
+  Mode_SettingsMenu() : MainModeFunction("Settings Menu") {
+    menuTextScroller = std::make_unique<TextScroller>(display, "Placeholder", CRGB::Red, 250, 1000, true, 1);
+    menuPages = {
+      {"Set Time"},
+      {"Set Date"},
+      {"Set Brightness"}
+    };
+  }
+protected:
+  void moveIntoCore() override final {
+    menuTextScroller->reset();
+    menuIndex = 0;
+  }
+  void runCore() override final {
+    menuTextScroller->setText(menuPages[menuIndex].scrollerText);
+    menuTextScroller->run();
+  }
+  void moveOutCore() override final {}
+private:
+  std::unique_ptr<TextScroller> menuTextScroller;
+  struct MenuPage {
+    String scrollerText;
+  };
+
+  std::vector<MenuPage> menuPages;
+  uint8_t menuIndex = 0;
+};
+
+std::vector<std::unique_ptr<MainModeFunction>> mainModes;
+uint8_t modeIndex = 0;
+
+void brightnessButton_callback(Button2& btn) 
+{
+  Serial.println("Brightness button callback...");
+
+  Serial.println("Switching to next brightness...");
+  Serial.print("Current Brightness Index: "); Serial.println(brightnessModeIndex);
+  Serial.print("Current Brightness Name: "); Serial.println(brightnessModes[brightnessModeIndex].name);
+
+  brightnessModeIndex++;
+  if (brightnessModeIndex == brightnessModes.size()) {
+    brightnessModeIndex = 0;
+  }
+
+  Serial.print("New Brightness Index: "); Serial.println(brightnessModeIndex);
+  Serial.print("New Brightness Name: "); Serial.println(brightnessModes[brightnessModeIndex].name);
+}
+
+void click(Button2& btn) {
+  Serial.println("Button click callback...");
+  if (btn == buttonMode) {
+    Serial.println("BTN0");
+    Serial.println("Switching to next mode...");
+    Serial.print("Current Mode Index: "); Serial.println(modeIndex);
+    Serial.print("Current Mode Name: "); Serial.println(mainModes[modeIndex]->getName());
+
+    mainModes[modeIndex]->moveOut();
+    modeIndex++;
+    if (modeIndex == mainModes.size()) {
+      modeIndex = 0;
+    }
+    mainModes[modeIndex]->moveInto();
+
+    Serial.print("New Mode Index: "); Serial.println(modeIndex);
+    Serial.print("New Mode Name: "); Serial.println(mainModes[modeIndex]->getName());
+
+  } 
+  if (btn == buttonBrightness) {
+    Serial.println("B clicked");
+  }
+}
+
+
 
 // Main loop timing
 uint32_t lastLoopTime = 0;
@@ -80,13 +222,6 @@ constexpr float approxRollingAverage(float avg, float newSample, int N)
   return avg;
 }
 
-enum class Mode {
-  DisplayTime,
-  SetTime,
-  Demo
-};
-Mode currentMode = Mode::Demo;
-
 std::vector<std::shared_ptr<DisplayEffect>> displayEffects;
 std::size_t effectIndex = 0;
 
@@ -99,38 +234,6 @@ std::size_t filterIndex = 0;
 uint32_t lastFilterChangeTime = 0;
 uint32_t filterChangePeriod = 3000;
 
-bool initialiseLightSensor()
-{
-  Wire.begin();
-  Serial.print("Initialising TSL2591: ");
-  if (!tsl2591.begin())	{
-    Serial.println("Error!");
-    return false;
-  } else {
-    Serial.println("Success!");
-    Serial.print("Sensor ID: "); Serial.println(tsl2591.getID(), HEX);
-    tsl2591.resetToDefaults();
-    tsl2591.setChannel(TSL2591MI::TSL2591_CHANNEL_0);
-    tsl2591.setGain(TSL2591MI::TSL2591_GAIN_MED);
-    tsl2591.setIntegrationTime(TSL2591MI::TSL2591_INTEGRATION_TIME_100ms);
-
-    Serial.println("Performing test measurement...");
-
-    if (!tsl2591.measure()) {
-      Serial.println("Could not start measurement. ");
-      return false;
-    }
-
-    while (!tsl2591.hasValue()) {
-      delay(1);
-    }
-
-    Serial.print("Irradiance: "); Serial.print(tsl2591.getIrradiance(), 7); Serial.println(" W / m^2");
-    Serial.print("Brightness: "); Serial.print(tsl2591.getBrightness(), 7); Serial.println(" lux");
-    return true;
-  }
-}
-
 std::unique_ptr<GameOfLife> golTrainer;
 std::shared_ptr<GameOfLife> golActual;
 
@@ -139,26 +242,15 @@ void setup() {
   Serial.begin(250000);
   Serial.println("Serial begin!");
 
+  Wire.begin();
+
+  brightnessSensor = std::make_unique<BrightnessSensor>();
+
   initialiseTime();
   delay(1000);
 
-  // pinMode(buttonPin1, INPUT_PULLUP);
-  // pinMode(buttonPin2, INPUT_PULLUP);
-  // pinMode(buttonPin3, INPUT_PULLUP);
-  // pinMode(buttonPin4, INPUT_PULLUP);
-  // pinMode(buttonPin5, INPUT_PULLUP);
-  // while (true) {
-  //   Serial.print(digitalRead(buttonPin1));
-  //   Serial.print(digitalRead(buttonPin2));
-  //   Serial.print(digitalRead(buttonPin3));
-  //   Serial.print(digitalRead(buttonPin4));
-  //   Serial.print(digitalRead(buttonPin5));
-  //   Serial.println();
-  //   yield();
-  //   delay(100);
-  // }
-
-  lightSensorActive = initialiseLightSensor();
+  mainModes.push_back(std::make_unique<Mode_ClockFace>());
+  mainModes.push_back(std::make_unique<Mode_SettingsMenu>());
 
   FastLED.addLeds<WS2812, matrixLEDPin, RGB>(ledsDummyRGBW, dummyLEDCount);
   display.setLEDStrip(ledsDummyRGBW);
@@ -176,12 +268,8 @@ void setup() {
   //player.play(melody);
   Serial.println("Melody ends!");
 
-
-
-  // for (Button2 button : buttons) {
-  //   //button.setClickHandler(click);
-  // }
-
+  buttonMode.setClickHandler(click);
+  buttonBrightness.setTapHandler(brightnessButton_callback);
 
   display.fill(0);
   display.update();
@@ -192,87 +280,6 @@ void setup() {
   Serial.println("Pregenerating GoL seeds...");
   uint32_t startTime = millis();
 
-  // construct an instance of GoL that will be used to seed interesting states
-  golTrainer = std::make_unique<GameOfLife>(display, 0, 0, colourGenerator_white, display.getFullDisplayRegion(), false);
-  golTrainer->setFadeOnDeath(false);
-  golTrainer->setSeedingMode(true);
-
-  // run until we have a few initial states
-  while (golTrainer->getSeededCount() < 3) {
-    while (!golTrainer->finished()) {
-      golTrainer->run();
-      // catch any infinite-running seeds
-      if (golTrainer->getLifespan() > 500) { break; }
-    }
-    golTrainer->reset();
-  }
-  Serial.println("GoL scores: ");
-  for (const auto& score : golTrainer->getScores()) {
-    Serial.print(score.lifespan); Serial.print("\t"); Serial.println(score.seed);
-  }
-  uint32_t stopTime = millis();
-  Serial.print("Seeding duration: "); Serial.println(stopTime - startTime);
-
-  golActual = std::make_shared<GameOfLife>(display, 250, 50, colourGenerator_cycleHSV, display.getFullDisplayRegion(), false);
-  golActual->setScores(golTrainer->getScores());
-
-
-  //displayEffects.push_back(golActual);
-  //displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<BouncingBall>(display, 250, colourGenerator_cycleHSV), 10000));
-  displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<ClockFace>(display, timeCallbackFunction), 1000));
-  displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::down));
-  displayEffects.push_back(std::make_shared<Gravity>(display, 100, true, Gravity::Direction::down));
-
-  displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<ClockFace>(display, timeCallbackFunction), 1000));
-  displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::up));
-  displayEffects.push_back(std::make_shared<Gravity>(display, 100, true, Gravity::Direction::up));
-
-  displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<ClockFace>(display, timeCallbackFunction), 1000));
-  displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::left));
-  displayEffects.push_back(std::make_shared<Gravity>(display, 100, true, Gravity::Direction::left));
-
-  displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<ClockFace>(display, timeCallbackFunction), 1000));
-  displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::right));
-  displayEffects.push_back(std::make_shared<Gravity>(display, 100, true, Gravity::Direction::right));
-
-  displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<ClockFace>(display, timeCallbackFunction), 1000));
-  displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::down));
-
-  auto region = display.getFullDisplayRegion();
-  while (region.yMax != region.yMin) {
-    region.yMax--;
-    displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::left, region));
-    displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::down));
-    displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::right, region));
-    displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::down));
-  }
-  
-
-  // displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::left));
-  // displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::down));
-  // displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::right));
-  // displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::down));
-  // displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::left));
-  // displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::down));
-  // displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::right));
-  // displayEffects.push_back(std::make_shared<Gravity>(display, 100, false, Gravity::Direction::down));
-  // displayEffects.push_back(std::make_shared<Gravity>(display, 100, true, Gravity::Direction::down));
-
-  //displayEffects.push_back(std::make_unique<BouncingBall>(display, 250, colourGenerator_cycleHSV));
-  //displayEffects.push_back(std::make_unique<TextScroller>(display, "Test Text Scroller", Adafruit_NeoPixel::Color(255, 0, 0), 1000, true, 1));
-  // //displayEffects.push_back(std::make_unique<TextScroller>(display, "Another Test! 1234:5678", Adafruit_NeoPixel::Color(0, 0, 255), 1000, true, 1));
-  //displayEffects.push_back(std::make_unique<RandomFill>(display, 100, colourGenerator_randomHSV));
-  displayEffects.front()->reset();
-
-  //filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Red, true), "SolidColour(CRGB::Red, true)"});
-  //filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Red, false), "SolidColour(CRGB::Red, false)"});
-  //filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Cyan, true), "SolidColour(CRGB::Cyan, true)"});
-  //filterConfigs.push_back({std::make_unique<SolidColour>(CRGB::Cyan, false), "SolidColour(CRGB::Cyan, false)"});
-  filterConfigs.push_back({std::make_unique<RainbowWave>(0.2, 10, RainbowWave::Direction::horizontal, true), "RainbowWave(0.2, 10, horizontal, true)"});
-  //filterConfigs.push_back({std::make_unique<RainbowWave>(0.2, 10, RainbowWave::Direction::horizontal, false), "RainbowWave(0.2, 10, horizontal, false)"});
-  filterConfigs.push_back({std::make_unique<RainbowWave>(0.2, 10, RainbowWave::Direction::vertical, true), "RainbowWave(0.2, 10, vertical, true)"});
-  //filterConfigs.push_back({std::make_unique<RainbowWave>(0.2, 10, RainbowWave::Direction::vertical, false), "RainbowWave(0.2, 10, vertical, false)"});
-
 
 
 
@@ -280,92 +287,20 @@ void setup() {
   lastLoopTime = millis();
 }
 
-TextScroller settingsMenuTextScroller_settime(display, "Set Time", 1000, true, 1);
-
 void loop()
 {
 
   // update buttons
-  // for (Button2 button : buttons) {
-  //   button.loop();
-  // }
+  buttonMode.loop();
+  buttonBrightness.loop();
 
-  // time_t currentTime = now();
-  // switch (currentMode) {
-  //   case Mode::DisplayTime:
-  //   {
-  //     display.fill(0);
-  //     showTime(display, hourFormat12(currentTime), minute(currentTime), colourGenerator_cycleHSV());
-  //     break;
-  //   }
-  //   case Mode::SetTime:
-  //   {
-  //     display.fill(0);
-  //     if (second(currentTime) % 1) {
-  //       showTime(display, hourFormat12(currentTime), minute(currentTime), colourGenerator_cycleHSV());
-  //     }
-  //     break;
-  //   }
-  //   case Mode::Demo:
-  //   {
-  //     display.fill(0);
-  //     settingsMenuTextScroller_settime.run();
-  //     //tetris(display, 100, 100);
-  //     //if (display.filled()) { display.fill(0); }
-  //   }
-  // }
+  mainModes[modeIndex]->run();
 
-  //display.fill(0);
-  if (displayEffects[effectIndex]->finished()) {
-    Serial.println("Effect finished!");
-    effectIndex++;
-    if (effectIndex >= displayEffects.size()) {
-      effectIndex = 0;
-    }
-    displayEffects[effectIndex]->reset();
-  }
-  displayEffects[effectIndex]->run();
-
-  // update display
-  
-  //display.applyFilter(HSVTestPattern());
-  //showTime(display, hourFormat12(), minute(), CRGB::Red);
-
-
-  display.applyFilter(*(filterConfigs[filterIndex].filter));
-  if (millis() - lastFilterChangeTime > filterChangePeriod) {
-    filterIndex++;
-    if (filterIndex >= filterConfigs.size()) {
-      filterIndex = 0;
-    }
-    Serial.print("Filter: "); Serial.println(filterConfigs[filterIndex].description);
-    lastFilterChangeTime = millis();
-  }
-
-  //display.applyFilter(SolidColour(CRGB::Purple));
+  FastLED.setBrightness(brightnessModes[brightnessModeIndex].function());
   FastLED.setDither(1);
-  //display.applyFilter(SolidColour(CRGB(1, 0, 0), false));
-  //FastLED.setBrightness(100);
   display.update();
-  //delay(1);
-  //display.fill(0);
-  //display.update();
-  //delay(20);
 
-  if (lightSensorActive && millis() - lightSensorLastPollTime > lightSensorPollInterval) {
-    if (tsl2591.hasValue()) {
-      float brightness = tsl2591.getBrightness();
-      float irradiance = tsl2591.getIrradiance();
-      //Serial.print("Irradiance: "); Serial.print(irradiance, 7); Serial.println(" W / m^2");
-      //Serial.print("Brightness: "); Serial.print(brightness, 7); Serial.println(" lux");
-      float maxBrightness = 1.7;
-      uint8_t newBrightness = uint8_t(constrain(map(brightness * 1000, 0, 1700, 0, 255), 1, 255));
-      //Serial.print("Brightness set to: "); Serial.println(newBrightness);
-      FastLED.setBrightness(newBrightness);
-      //tsl2591.measure();
-    }
-    lightSensorLastPollTime = millis();
-  }
+  brightnessSensor->update();
 
   // Manage loop timing
   unsigned long loopTime = millis() - lastLoopTime;
@@ -388,25 +323,6 @@ void loop()
   yield();
   while (millis() - lastLoopTime < loopTargetTime) {
     yield();
-    //FastLED.show();
-
-    //Serial.println("Running trainer...");
-    golTrainer->run();
-    if (golTrainer->finished()) {
-      //Serial.println("Resetting trainer...");
-      golTrainer->reset();
-
-      if (golTrainer->getIterations() % 1000 == 0) {
-        golActual->setScores(golTrainer->getScores());
-        Serial.println("GoL scores: ");
-        for (const auto& score : golActual->getScores()) {
-          Serial.print(score.lifespan); Serial.print("\t"); Serial.println(score.seed);
-        }
-      }
-    }
-
-
-    
   }
   lastLoopTime = millis();
 }
