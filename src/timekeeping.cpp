@@ -2,17 +2,11 @@
 
 std::unique_ptr<RTC_DS3231> rtc;
 
-// Provide the RTC time to the Time library.
-time_t time_provider() {
-  Serial.println("time provider called!");
-  return rtc->now().unixtime();
-}
-
 bool initialiseTime()
 {
   if (initialiseRTC()) {
     // Set Time to sync from RTC
-    setSyncProvider(time_provider);
+    setSyncProvider([](){ return time_t(rtc->now().unixtime()); });
     setSyncInterval(60);
 
     if(timeStatus() != timeSet) {
