@@ -1,6 +1,7 @@
 #ifndef displayeffects_h
 #define displayeffects_h
 
+#include "timekeeping.h"
 #include "display.h"
 #include <Arduino.h>
 #include <FastLED.h>
@@ -185,12 +186,6 @@ private:
     std::deque<std::size_t> bufferHashes;
 
     std::size_t hashBuffer(const std::vector<CRGB>& vec) const; 
-};
-
-struct ClockFaceTimeStruct {
-    uint8_t hour;
-    uint8_t minute;
-    uint8_t second;
 };
 
 class ClockFace : public DisplayEffect {

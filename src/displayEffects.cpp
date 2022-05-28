@@ -463,7 +463,7 @@ bool ClockFace::run()
   constexpr uint8_t bufSize = 6;
   char c_buf[bufSize];
   auto times = timeCallbackFunction();
-  snprintf(c_buf, bufSize, "%2d:%02d", times.hour, times.minute);
+  snprintf(c_buf, bufSize, "%2d:%02d", times.hour12, times.minute);
   _display.showCharacters(String(c_buf), CRGB::White, 0, 1);
   return false;
 }

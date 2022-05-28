@@ -6,8 +6,7 @@
 // Libraries
 #include <SPI.h>
 #include <FastLED.h>
-#include <TimeLib.h>
-#include <RTClib.h>
+
 #include <Button2.h>
 #include <TSL2591I2C.h>
 
@@ -16,6 +15,7 @@
 #include "display.h"
 #include "displayEffects.h"
 #include "fastled_rgbw.h"
+#include "timekeeping.h"
 
 // Pinout
 constexpr int16_t matrixLEDPin = 4;
@@ -75,18 +75,6 @@ constexpr float approxRollingAverage(float avg, float newSample, int N)
   return avg;
 }
 
-// Timekeeping
-RTC_DS3231 rtc;
-
-ClockFaceTimeStruct timeCallbackFunction() {
-  DateTime now = rtc.now();
-  ClockFaceTimeStruct val;
-  val.hour = now.hour();
-  val.minute = now.minute();
-  val.second = now.second();
-  return val;
-}
-
 enum class Mode {
   DisplayTime,
   SetTime,
@@ -105,54 +93,6 @@ std::vector<FilterConfig> filterConfigs;
 std::size_t filterIndex = 0;
 uint32_t lastFilterChangeTime = 0;
 uint32_t filterChangePeriod = 3000;
-
-constexpr char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-
-// Provide the RTC time to the Time library.
-time_t time_provider() {
-    return rtc.now().unixtime();
-}
-
-bool initialiseRTC()
-{
-  Serial.print("Initialising RTC: ");
-
-  if (! rtc.begin()) {
-    Serial.println("Error!");
-    return false;
-  } else {
-    Serial.println("Success!");
-
-    if (rtc.lostPower()) {
-      Serial.println("RTC has lost power and time needs to be set!");
-    } else {
-      Serial.println("RTC reports it has not lost power.");
-    }
-
-    DateTime now = rtc.now();
-    Serial.println("RTC has time: ");
-    Serial.print(now.year(), DEC);
-    Serial.print('/');
-    Serial.print(now.month(), DEC);
-    Serial.print('/');
-    Serial.print(now.day(), DEC);
-    Serial.print(" (");
-    Serial.print(daysOfTheWeek[now.dayOfTheWeek()]);
-    Serial.print(") ");
-    Serial.print(now.hour(), DEC);
-    Serial.print(':');
-    Serial.print(now.minute(), DEC);
-    Serial.print(':');
-    Serial.print(now.second(), DEC);
-    Serial.println();
-    Serial.print(" since midnight 1/1/1970 = ");
-    Serial.print(now.unixtime());
-    Serial.print("s = ");
-    Serial.print(now.unixtime() / 86400L);
-    Serial.println("d");
-    return true;
-  }
-}
 
 bool initialiseLightSensor()
 {
@@ -194,25 +134,15 @@ void setup() {
   Serial.begin(250000);
   Serial.println("Serial begin!");
 
+  initialiseTime();
+  delay(1000);
+
   lightSensorActive = initialiseLightSensor();
 
   FastLED.addLeds<WS2812, matrixLEDPin, RGB>(ledsDummyRGBW, dummyLEDCount);
   display.setLEDStrip(ledsDummyRGBW);
 
-  if (initialiseRTC()) {
-    // Set Time to sync from RTC
-    setSyncProvider(time_provider);
-    setSyncInterval(60);
 
-    if(timeStatus() != timeSet) {
-     Serial.println("Unable to sync with the RTC.");
-    } else {
-     Serial.println("RTC has set the system time"); 
-    }
-  } else {
-    Serial.println("Setting time to placeholder value.");
-    setTime(11,55,50,1,1,2022);
-  }
 
   for (Button2 button : buttons) {
     //button.setClickHandler(click);
@@ -247,7 +177,7 @@ void setup() {
   uint32_t stopTime = millis();
   Serial.print("Seeding duration: "); Serial.println(stopTime - startTime);
 
-  golActual = std::make_shared<GameOfLife>(display, 500, 50, colourGenerator_cycleHSV, display.getFullDisplayRegion(), false);
+  golActual = std::make_shared<GameOfLife>(display, 250, 50, colourGenerator_cycleHSV, display.getFullDisplayRegion(), false);
   golActual->setScores(golTrainer->getScores());
 
 
