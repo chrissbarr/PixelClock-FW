@@ -150,7 +150,7 @@ public:
     void setFadeInterval(uint32_t interval) { _fadeInterval = interval; }
     bool prepopulatedSeeds() const { return bestScores.size() >= bestScoresToKeep; }
     void setFadeOnDeath(bool fade) { _fadeOnDeath = fade; }
-    std::set<GoLScore>& getScores() { return bestScores; }
+    std::multiset<GoLScore>& getScores() { return bestScores; }
 
     void seedDisplay();
 
@@ -170,8 +170,9 @@ private:
     uint32_t _lastSeed = 0;
     uint16_t _lifespan = 0;
 
-    std::set<GoLScore> bestScores;
+    std::multiset<GoLScore> bestScores;
     uint8_t bestScoresToKeep = 100;
+    uint32_t iterationId = 0;
 
     std::vector<CRGB> nextBuffer;
     std::deque<std::size_t> bufferHashes;
