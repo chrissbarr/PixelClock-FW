@@ -143,6 +143,53 @@ bool BouncingBall::run()
   return true;
 }
 
+Gravity::Gravity(PixelDisplay& display, uint32_t moveInterval, bool empty, const DisplayRegion& displayRegion) :
+  _display(display), _moveInterval(moveInterval), _empty(empty)
+{
+  if (displayRegion == defaultFull) {
+    _displayRegion = display.getFullDisplayRegion();
+  } else {
+    _displayRegion = displayRegion;
+  }
+}
+
+void Gravity::reset()
+{
+  _lastMoveTime = millis();
+  _finished = false;
+}
+
+bool Gravity::run()
+{
+  uint32_t timenow = millis();
+  if (timenow - _lastMoveTime > _moveInterval) {
+    bool anyPixelsMovedThisUpdate = false;
+    for (int y = _displayRegion.yMax; y >= _displayRegion.yMin; y--) {
+      for (uint8_t x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
+        CRGB cellColour = _display.getXY(x, y);
+        if (cellColour != CRGB(0)) {
+          // if this is the last row
+          if (y == _displayRegion.yMax) {
+            if (_empty) {
+              _display.setXY(x, y, 0);
+              anyPixelsMovedThisUpdate = true;
+            }
+            continue;
+          }
+          if (_display.getXY(x, y + 1) == CRGB(0)) {
+            _display.setXY(x, y + 1, cellColour);
+            _display.setXY(x, y, 0);
+            anyPixelsMovedThisUpdate = true;
+          }
+        }
+      }
+    }
+    if (!anyPixelsMovedThisUpdate) { _finished = true; }
+    _lastMoveTime = timenow;
+  }  
+  return _finished;
+}
+
 
 // bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)(), DisplayRegion displayRegion)
 // {
@@ -243,16 +290,9 @@ bool ClockFace::run()
   char c_buf[bufSize];
   auto times = timeCallbackFunction();
   snprintf(c_buf, bufSize, "%2d:%02d", times.hour12, times.minute);
+  _display.fill(0);
   _display.showCharacters(String(c_buf), CRGB::White, 0, 1);
   return false;
-}
-
-void showTime(PixelDisplay& display, int hour, int minute, CRGB colour)
-{
-  constexpr uint8_t bufSize = 6;
-  char c_buf[bufSize];
-  snprintf(c_buf, bufSize, "%2d:%02d", hour, minute);
-  display.showCharacters(String(c_buf), colour, 0, 1);
 }
 
 void displayDiagnostic(PixelDisplay& display)

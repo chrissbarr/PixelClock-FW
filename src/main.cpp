@@ -221,6 +221,8 @@ void setup() {
   //displayEffects.push_back(golActual);
   //displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<BouncingBall>(display, 250, colourGenerator_cycleHSV), 10000));
   displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<ClockFace>(display, timeCallbackFunction), 1000));
+  displayEffects.push_back(std::make_shared<Gravity>(display, 250, false));
+  displayEffects.push_back(std::make_shared<Gravity>(display, 250, true));
 
   //displayEffects.push_back(std::make_unique<BouncingBall>(display, 250, colourGenerator_cycleHSV));
   //displayEffects.push_back(std::make_unique<TextScroller>(display, "Test Text Scroller", Adafruit_NeoPixel::Color(255, 0, 0), 1000, true, 1));
@@ -279,7 +281,7 @@ void loop()
   //   }
   // }
 
-  display.fill(0);
+  //display.fill(0);
   if (displayEffects[effectIndex]->finished()) {
     Serial.println("Effect finished!");
     effectIndex++;

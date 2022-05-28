@@ -144,6 +144,21 @@ private:
     ClockFaceTimeStruct (*timeCallbackFunction)();
 };
 
+class Gravity : public DisplayEffect {
+public:
+    Gravity(PixelDisplay& display, uint32_t moveInterval, bool empty, const DisplayRegion& displayRegion = defaultFull);
+    bool run() override final;
+    bool finished() const override final { return _finished; }
+    void reset() override final;
+private:
+    PixelDisplay& _display;
+    DisplayRegion _displayRegion;
+    bool _finished = false;
+    uint32_t _moveInterval;
+    uint32_t _lastMoveTime = 0;
+    bool _empty;
+};
+
 // bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)(), DisplayRegion displayRegion);
 // inline bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)())
 // {
@@ -151,8 +166,6 @@ private:
 // }
 
 // void tetris(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval);
-
-void showTime(PixelDisplay& display, int hour, int minute, CRGB colour);
 
 void displayDiagnostic(PixelDisplay& display);
 
