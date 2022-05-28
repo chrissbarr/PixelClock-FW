@@ -226,7 +226,7 @@ void setup() {
   //displayDiagnostic(display);
 
   Serial.println("Pregenerating GoL seeds...");
-  Serial.println(millis());
+  uint32_t startTime = millis();
 
   // construct an instance of GoL that will be used to seed interesting states
   golTrainer = std::make_unique<GameOfLife>(display, 0, 0, colourGenerator_white, display.getFullDisplayRegion(), false);
@@ -244,19 +244,12 @@ void setup() {
   for (const auto& score : golTrainer->getScores()) {
     Serial.print(score.lifespan); Serial.print("\t"); Serial.println(score.seed);
   }
+  uint32_t stopTime = millis();
+  Serial.print("Seeding duration: "); Serial.println(stopTime - startTime);
 
   golActual = std::make_shared<GameOfLife>(display, 500, 50, colourGenerator_cycleHSV, display.getFullDisplayRegion(), false);
   golActual->setScores(golTrainer->getScores());
 
-  for (const auto& score : golActual->getScores()) {
-    Serial.print(score.lifespan); Serial.print("\t"); Serial.println(score.seed);
-  }
-
-  Serial.println("trainer again...");
-
-  for (const auto& score : golTrainer->getScores()) {
-    Serial.print(score.lifespan); Serial.print("\t"); Serial.println(score.seed);
-  }
 
   displayEffects.push_back(golActual);
   //displayEffects.push_back(std::make_unique<EffectDecorator_Timeout>(std::make_shared<BouncingBall>(display, 250, colourGenerator_cycleHSV), 10000));
