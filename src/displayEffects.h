@@ -156,6 +156,7 @@ public:
     const std::multiset<GoLScore>& getScores() const { return bestScores; }
     void setScores(const std::multiset<GoLScore>& scores) { bestScores = scores; }
     uint32_t getIterations() const { return iterationId; }
+    uint16_t getLifespan() const { return _lifespan; }
 
     void seedDisplay();
 

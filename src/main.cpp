@@ -167,6 +167,8 @@ void setup() {
   while (golTrainer->getSeededCount() < 3) {
     while (!golTrainer->finished()) {
       golTrainer->run();
+      // catch any infinite-running seeds
+      if (golTrainer->getLifespan() > 500) { break; }
     }
     golTrainer->reset();
   }
