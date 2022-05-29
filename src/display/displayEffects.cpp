@@ -52,7 +52,7 @@ void TextScroller::setTargetOffset(int targetCharacterIndex)
 {
   int end = 0;
   int charIndex = 0;
-  for (char character : text) {
+  for (const char& character : text) {
     if (targetCharacterIndex != -1 && charIndex == targetCharacterIndex) {
       break;
     }

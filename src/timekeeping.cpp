@@ -89,3 +89,47 @@ void setTimeGlobally(uint32_t timeToSet)
   }
   setTime(timeToSet);
 }
+
+LoopTimeManager::LoopTimeManager(uint32_t desiredLoopDuration, uint32_t statReportInterval) :
+  desiredLoopDuration(desiredLoopDuration), statReportInterval(statReportInterval)
+{
+  loopTimeMin = std::numeric_limits<uint16_t>::max();
+  loopTimeMax = 0;
+}
+
+void LoopTimeManager::idle()
+{
+  // Manage loop timing
+  uint32_t loopTime = millis() - lastLoopTime;
+
+  loopTimeAvg = approxRollingAverage(loopTimeAvg, float(loopTime), 1000);
+  if (loopTime > loopTimeMax) { loopTimeMax = loopTime; }
+  if (loopTime < loopTimeMin) { loopTimeMin = loopTime; }
+
+  if (millis() - lastStatReportTime > statReportInterval) {
+    Serial.println("Loop Timing Statistics");
+    Serial.print("Avg time:" ); Serial.println(loopTimeAvg);
+    Serial.print("Min time:" ); Serial.println(loopTimeMin);
+    Serial.print("Max time:" ); Serial.println(loopTimeMax);
+    //Serial.print("FastLED FPS:" ); Serial.println(FastLED.getFPS());
+    lastStatReportTime = millis();
+    loopTimeMin = std::numeric_limits<uint16_t>::max();
+    loopTimeMax = 0;
+  }
+
+  // ensure we yield at least once
+  yield();
+  while (millis() - lastLoopTime < desiredLoopDuration) {
+    // idle in this loop until desiredLoopDuration has elapsed
+    yield();
+  }
+  lastLoopTime = millis();
+}
+
+constexpr float LoopTimeManager::approxRollingAverage(float avg, float newSample, int N) const
+{
+  avg -= avg / N;
+  avg += newSample / N;
+  return avg;
+}
+

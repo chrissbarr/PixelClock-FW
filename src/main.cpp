@@ -83,21 +83,9 @@ void modeButton_callback(Button2& btn) {
 }
 
 // Main loop timing
-uint32_t lastLoopTime = 0;
-constexpr uint32_t loopTargetTime = 15;
-uint32_t lastReportTime = 0;
-constexpr uint32_t reportInterval = 5000;
-
-float avgTime = 0;
-uint16_t minTime = std::numeric_limits<uint16_t>::max();
-uint16_t maxTime = 0;
-
-constexpr float approxRollingAverage(float avg, float newSample, int N) 
-{
-  avg -= avg / N;
-  avg += newSample / N;
-  return avg;
-}
+constexpr uint32_t loopTargetTime = 15;     // Constant loop update rate to target (milliseconds)
+constexpr uint32_t reportInterval = 10000;  // Statistics on loop timing will be reported this often (milliseconds)
+LoopTimeManager loopTimeManager(loopTargetTime, reportInterval);
 
 void setup() {
   delay(1000);
@@ -135,12 +123,6 @@ void setup() {
   delay(100); 
 
   //displayDiagnostic(display);
-
-  Serial.println("Pregenerating GoL seeds...");
-  uint32_t startTime = millis();
-
-  // start time tracking for main loop
-  lastLoopTime = millis();
 }
 
 void loop()
@@ -160,29 +142,7 @@ void loop()
 
   brightnessSensor->update();
 
-  // Manage loop timing
-  uint32_t loopTime = millis() - lastLoopTime;
-
-  avgTime = approxRollingAverage(avgTime, float(loopTime), 1000);
-  if (loopTime > maxTime) { maxTime = loopTime; }
-  if (loopTime < minTime) { minTime = loopTime; }
-
-  if (millis() - lastReportTime > reportInterval) {
-    Serial.println("Loop Timing Statistics");
-    Serial.print("Avg time:" ); Serial.println(avgTime);
-    Serial.print("Min time:" ); Serial.println(minTime);
-    Serial.print("Max time:" ); Serial.println(maxTime);
-    Serial.print("FastLED FPS:" ); Serial.println(FastLED.getFPS());
-    lastReportTime = millis();
-    minTime = std::numeric_limits<uint16_t>::max();
-    maxTime = 0;
-  }
-
-  yield();
-  while (millis() - lastLoopTime < loopTargetTime) {
-    yield();
-  }
-  lastLoopTime = millis();
+  loopTimeManager.idle();
 }
 
 
