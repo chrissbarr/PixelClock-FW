@@ -46,6 +46,8 @@ public:
     this->moveOutCore();
   }
 
+  virtual bool finished() const { return false; }
+
   String getName() const { return _name; }
 
 protected:
@@ -89,33 +91,62 @@ private:
   uint8_t effectIndex = 0;
 };
 
-
 class Mode_SettingsMenu : public MainModeFunction
 {
 public:
-  Mode_SettingsMenu(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton) 
-  : MainModeFunction("Settings Menu", display, selectButton, leftButton, rightButton) {
-    menuTextScroller = std::make_unique<TextScroller>(_display, "Placeholder", CRGB::Red, 50, 2000, true, 1);
-    menuPages = {
-      {"Set Time"},
-      {"Set Date"},
-      {"Set Brightness"}
-    };
-  }
+  Mode_SettingsMenu(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton);
 protected:
   void moveIntoCore() override final;
   void runCore() override final;
   void moveOutCore() override final {}
 private:
   void cycleActiveSetting(Button2& btn);
+  void registerButtonCallbacks();
   std::unique_ptr<TextScroller> menuTextScroller;
-  struct MenuPage {
-    String scrollerText;
-  };
-
-  std::vector<MenuPage> menuPages;
+  std::vector<std::shared_ptr<MainModeFunction>> menuPages;
+  std::shared_ptr<MainModeFunction> activeMenuPage = nullptr;
   uint8_t menuIndex = 0;
 };
+
+class Mode_SettingsMenu_SetTime : public MainModeFunction
+{
+public:
+  Mode_SettingsMenu_SetTime(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton);
+  bool finished() const override;
+protected:
+  void moveIntoCore() override final;
+  void runCore() override final;
+  void moveOutCore() override final {}
+private:
+  int secondsOffset = 0;
+  std::unique_ptr<ClockFace> clockface;
+  enum class TimeSegment {
+    hour,
+    minute,
+    second,
+    done
+  };
+  TimeSegment currentlySettingTimeSegment = TimeSegment::hour;
+};
+
+class Mode_SettingsMenu_SetBrightness : public MainModeFunction
+{
+public:
+  Mode_SettingsMenu_SetBrightness(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton) 
+  : MainModeFunction("Set Brightness", display, selectButton, leftButton, rightButton) {}
+protected:
+  void moveIntoCore() override final {}
+  void runCore() override final {}
+  void moveOutCore() override final {}
+};
+
+// class MenuPage
+// {
+// public:
+//   MenuPage(String name) : name(name) {}
+// private:
+//   String name;
+// };
 
 class ModeManager
 {

@@ -64,17 +64,18 @@ bool initialiseRTC()
   }
 }
 
-ClockFaceTimeStruct timeCallbackFunction()
+ClockFaceTimeStruct timeCallbackFunction(time_t time)
 {
-  ClockFaceTimeStruct val;
-  // get the time once, just in case it changes during this function
-  time_t time = now();
-
   // extract elements of time into struct
+  ClockFaceTimeStruct val;
   val.hour12 = hourFormat12(time);
   val.hour24 = hour(time);
   val.minute = minute(time);
   val.second = second(time);
-
   return val;
+}
+
+ClockFaceTimeStruct timeCallbackFunction()
+{
+  return timeCallbackFunction(now());
 }

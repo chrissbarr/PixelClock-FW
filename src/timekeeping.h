@@ -15,6 +15,7 @@ struct ClockFaceTimeStruct {
     uint8_t second;
 };
 
+ClockFaceTimeStruct timeCallbackFunction(time_t time);
 ClockFaceTimeStruct timeCallbackFunction();
 
 constexpr char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};

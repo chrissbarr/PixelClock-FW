@@ -136,14 +136,15 @@ private:
 
 class ClockFace : public DisplayEffect {
 public:
-    ClockFace(PixelDisplay& display, ClockFaceTimeStruct (*timeCallbackFunction)()) : _display(display), timeCallbackFunction(timeCallbackFunction) {}
+    ClockFace(PixelDisplay& display, std::function<ClockFaceTimeStruct(void)> timeCallbackFunction) : _display(display), timeCallbackFunction(timeCallbackFunction) {}
     bool run() override final;
     bool finished() const override final { return false; }
     void reset() override final { };
 
 private:
     PixelDisplay& _display;
-    ClockFaceTimeStruct (*timeCallbackFunction)();
+    //ClockFaceTimeStruct (*timeCallbackFunction)();
+    std::function<ClockFaceTimeStruct(void)> timeCallbackFunction;
 };
 
 class Gravity : public DisplayEffect {

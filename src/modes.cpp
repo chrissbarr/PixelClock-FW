@@ -14,21 +14,27 @@ void MainModeFunction::clearAllButtonCallbacks(Button2& button)
   button.setTripleClickHandler(nullptr);
 }
 
+Mode_SettingsMenu::Mode_SettingsMenu(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton) 
+  : MainModeFunction("Settings Menu", display, selectButton, leftButton, rightButton) 
+{
+  menuTextScroller = std::make_unique<TextScroller>(_display, "Placeholder", CRGB::Red, 50, 2000, true, 1);
+  menuPages.push_back(std::make_unique<Mode_SettingsMenu_SetTime>(display, selectButton, leftButton, rightButton));
+  menuPages.push_back(std::make_unique<Mode_SettingsMenu_SetBrightness>(display, selectButton, leftButton, rightButton));
+}
+
 void Mode_SettingsMenu::moveIntoCore()
 {
-  menuTextScroller->setText(menuPages[menuIndex].scrollerText);
+  menuTextScroller->setText(menuPages[menuIndex]->getName());
   menuTextScroller->reset();
   menuIndex = 0;
-  leftButton.setTapHandler([this](Button2& btn) { cycleActiveSetting(btn); });
-  rightButton.setTapHandler([this](Button2& btn) { cycleActiveSetting(btn); });
-  Serial.println("Registered settings button callbacks");
+  registerButtonCallbacks();
 }
 
 void Mode_SettingsMenu::cycleActiveSetting(Button2& btn)
 {
   Serial.println("Switching to next setting...");
   Serial.print("Current Setting Index: "); Serial.println(menuIndex);
-  Serial.print("Current Setting Name: "); Serial.println(menuPages[menuIndex].scrollerText);
+  Serial.print("Current Setting Name: "); Serial.println(menuPages[menuIndex]->getName());
 
   if (btn == leftButton) {
     if (menuIndex == 0) {
@@ -45,19 +51,123 @@ void Mode_SettingsMenu::cycleActiveSetting(Button2& btn)
   }
 
   Serial.print("New Setting Index: "); Serial.println(menuIndex);
-  Serial.print("New Setting Name: "); Serial.println(menuPages[menuIndex].scrollerText);
-  menuTextScroller->setText(menuPages[menuIndex].scrollerText);
+  Serial.print("New Setting Name: "); Serial.println(menuPages[menuIndex]->getName());
+  menuTextScroller->setText(menuPages[menuIndex]->getName());
   menuTextScroller->reset();
+}
+
+void Mode_SettingsMenu::registerButtonCallbacks()
+{
+  leftButton.setTapHandler([this](Button2& btn) { cycleActiveSetting(btn); });
+  rightButton.setTapHandler([this](Button2& btn) { cycleActiveSetting(btn); });
+
+  auto moveIntoSetting = [this](Button2& btn) {
+    activeMenuPage = menuPages[menuIndex];
+    activeMenuPage->moveInto();
+  };
+  selectButton.setTapHandler(moveIntoSetting);
+  Serial.println("Registered settings button callbacks");
 }
 
 void Mode_SettingsMenu::runCore() 
 {
-  menuTextScroller->run();
+  if (activeMenuPage) {
+    activeMenuPage->run();
+    if (activeMenuPage->finished()) {
+      activeMenuPage->moveOut();
+      activeMenuPage.reset();
+      registerButtonCallbacks();
+    }
+  } else {
+    menuTextScroller->run();
+  }
+}
+
+Mode_SettingsMenu_SetTime::Mode_SettingsMenu_SetTime(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton) 
+  : MainModeFunction("Set Time", display, selectButton, leftButton, rightButton)
+{
+  auto modifiedTimeCallback = [this]()->ClockFaceTimeStruct {
+    return timeCallbackFunction(now() + this->secondsOffset);
+  };
+  clockface = std::make_unique<ClockFace>(_display, modifiedTimeCallback);
+}
+
+bool Mode_SettingsMenu_SetTime::finished() const
+{
+  return currentlySettingTimeSegment == TimeSegment::done;
+}
+
+void Mode_SettingsMenu_SetTime::moveIntoCore()
+{
+  auto changeTimeCallback = [this](Button2& btn) {
+    Serial.println("Inc/Dec Current Time");
+    int changeDir = 1;
+    if (btn == leftButton) {
+      changeDir = -1;
+    } 
+
+    switch (currentlySettingTimeSegment) {
+      case TimeSegment::hour:
+      {
+        int changeAmt = changeDir * 60 * 60;
+        Serial.print("Changing hour by: "); Serial.println(changeAmt);
+        this->secondsOffset += changeAmt;
+        break;
+      }
+      case TimeSegment::minute:
+      {
+        int changeAmt = changeDir * 60;
+        Serial.print("Changing minute by: "); Serial.println(changeAmt);
+        this->secondsOffset += changeAmt;
+        break;
+      }
+      case TimeSegment::second:
+      {
+        int changeAmt = changeDir;
+        Serial.print("Changing second by: "); Serial.println(changeAmt);
+        this->secondsOffset += changeAmt;
+        break;
+      }
+    }
+  };
+  leftButton.setTapHandler(changeTimeCallback);
+  rightButton.setTapHandler(changeTimeCallback);
+
+  auto advanceTimeSegment = [this](Button2& btn) {
+    Serial.println("Moving to next time segment...");
+
+    switch (currentlySettingTimeSegment) {
+      case TimeSegment::hour:
+      {
+        currentlySettingTimeSegment = TimeSegment::minute;
+        break;
+      }
+      case TimeSegment::minute:
+      {
+        currentlySettingTimeSegment = TimeSegment::second;
+        break;
+      }
+      case TimeSegment::second:
+      {
+        currentlySettingTimeSegment = TimeSegment::done;
+        break;
+      }
+    }
+  };
+  selectButton.setTapHandler(advanceTimeSegment);
+  currentlySettingTimeSegment = TimeSegment::hour;
+
+  secondsOffset = 0;
+}
+
+void Mode_SettingsMenu_SetTime::runCore()
+{
+  clockface->run();
 }
 
 Mode_ClockFace::Mode_ClockFace(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton) : 
   MainModeFunction("Clockface", display, selectButton, leftButton, rightButton) {
-  faces.push_back(std::make_unique<ClockFace>(_display, timeCallbackFunction));
+  faces.push_back(std::make_unique<ClockFace>(_display, [](){ return timeCallbackFunction(now()); }));
   filters.push_back(std::make_unique<RainbowWave>(1, 30, RainbowWave::Direction::horizontal, false));
   filters.push_back(std::make_unique<RainbowWave>(1, 30, RainbowWave::Direction::vertical, false));
   timePrev = timeCallbackFunction();
