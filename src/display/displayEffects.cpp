@@ -9,61 +9,94 @@ TextScroller::TextScroller(
   CRGB colour,
   uint16_t stepDelay,
   uint16_t timeToHoldAtEnd, 
-  bool reverseOnFinish, 
   uint8_t characterSpacing) :
   display(display),
   text(textString),
   colour(colour),
   stepDelay(stepDelay),
   timeToHoldAtEnd(timeToHoldAtEnd),
-  reverseOnFinish(reverseOnFinish),
   charSpacing(characterSpacing)
   {
     lastUpdateTime = millis();
     currentOffset = 0;
-    setTargetOffsetToEnd();
+    setTargetOffset(0);
   }
 
-  bool TextScroller::run()
-  {
-    if (currentOffset == targetOffset) {
-      if (arrivedAtEndTime == 0) {
-        arrivedAtEndTime = millis();
-      } else {
-        if (millis() - arrivedAtEndTime > timeToHoldAtEnd) {
-          if (reverseOnFinish && currentOffset != 0) {
-            targetOffset = 0;
-            arrivedAtEndTime = 0;
-          } else {
-            _finished = true;
-            setTargetOffsetToEnd();
-            arrivedAtEndTime = 0;
-          }
-        }
-      }
+bool TextScroller::run()
+{
+  Serial.println("TextScroller::run()");
+  Serial.print("current offset: "); Serial.println(currentOffset);
+  Serial.print("target offset:  "); Serial.println(targetOffset);
+  if (currentOffset == targetOffset) {
+    if (arrivedAtEndTime == 0) {
+      arrivedAtEndTime = millis();
     } else {
-      if (millis() - lastUpdateTime >= stepDelay) {
-        if (targetOffset > currentOffset) {
-          currentOffset += 1;
-        } else {
-          currentOffset -= 1;
-        }
-        lastUpdateTime = millis();
+      if (millis() - arrivedAtEndTime > timeToHoldAtEnd) {
+        _finished = true;
       }
     }
-    display.fill(CRGB::Black);
-    display.showCharacters(text, colour, -currentOffset, charSpacing);
-    return _finished;
+  } else {
+    if (millis() - lastUpdateTime >= stepDelay) {
+      if (targetOffset > currentOffset) {
+        currentOffset += 1;
+      } else if (targetOffset < currentOffset) {
+        currentOffset -= 1;
+      }
+      lastUpdateTime = millis();
+    }
+  }
+  display.fill(CRGB::Black);
+  display.showCharacters(text, colour, -currentOffset, charSpacing);
+  return _finished;
+}
+
+void TextScroller::setTargetOffset(int targetCharacterIndex)
+{
+  Serial.print("setTargetOffset("); Serial.print(targetCharacterIndex); Serial.println(")");
+  int end = 0;
+  int charIndex = 0;
+  for (char character : text) {
+    if (targetCharacterIndex != -1 && charIndex == targetCharacterIndex) {
+      break;
+    }
+    end += characterFontArray[charToIndex(character)].width + charSpacing;
+    charIndex++;
+  }
+  targetOffset = end;
+  if (targetCharacterIndex == -1) {
+    targetOffset -= (charSpacing + display.getWidth());
+  }
+  _finished = false;
+}
+
+RepeatingTextScroller::RepeatingTextScroller(
+PixelDisplay& display,
+String textString,
+CRGB colour,
+uint16_t stepDelay,
+uint16_t timeToHoldAtEnd, 
+uint8_t characterSpacing) :
+TextScroller(display, textString, colour, stepDelay, timeToHoldAtEnd, characterSpacing)
+{
+  TextScroller::setTargetOffset(-1);
+}
+
+bool RepeatingTextScroller::run()
+{
+  bool scrollerFinished = TextScroller::run();
+  if (scrollerFinished) {
+    if (forward) {
+      TextScroller::setTargetOffset(0);
+      forward = false;
+    } else {
+      TextScroller::setTargetOffset(-1);
+      forward = true;
+    }
+    cycles++;
   }
 
-  void TextScroller::setTargetOffsetToEnd()
-  {
-    int end = 0;
-    for (char character : text) {
-      end += characterFontArray[charToIndex(character)].width + charSpacing;
-    }
-    targetOffset = end - charSpacing - display.getWidth();
-  }
+  return finished();
+}
 
 RandomFill::RandomFill(PixelDisplay& display, uint32_t fillInterval, CRGB(*colourGenerator)(), const DisplayRegion& spawnRegion) :
 _display(display), _fillInterval(fillInterval), _colourGenerator(colourGenerator)
@@ -388,13 +421,12 @@ void displayDiagnostic(PixelDisplay& display)
   // Scroll short test
   display.fill(0);
   display.update();
-  auto textScrollTest1 = TextScroller(
+  auto textScrollTest1 = RepeatingTextScroller(
     display,
     "Hello - Testing!",
     CRGB(0, 0, 255),
     50,
     500,
-    true,
     1
   );
   while(!textScrollTest1.run()) {
@@ -406,13 +438,12 @@ void displayDiagnostic(PixelDisplay& display)
   // Scroll full character set
   display.fill(0);
   display.update();
-  auto textScrollTest = TextScroller(
+  auto textScrollTest = RepeatingTextScroller(
     display,
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 !\"#$%&'()*+'-./:;<=>?@",
     CRGB(0, 255, 0),
     50,
     500,
-    false,
     1
   );
   while(!textScrollTest.run()) {

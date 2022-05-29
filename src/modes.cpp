@@ -17,7 +17,7 @@ void MainModeFunction::clearAllButtonCallbacks(Button2& button)
 Mode_SettingsMenu::Mode_SettingsMenu(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton) 
   : MainModeFunction("Settings Menu", display, selectButton, leftButton, rightButton) 
 {
-  menuTextScroller = std::make_unique<TextScroller>(_display, "Placeholder", CRGB::Red, 50, 2000, true, 1);
+  menuTextScroller = std::make_unique<RepeatingTextScroller>(_display, "Placeholder", CRGB::Red, 50, 2000, 1);
   menuPages.push_back(std::make_unique<Mode_SettingsMenu_SetTime>(display, selectButton, leftButton, rightButton));
   menuPages.push_back(std::make_unique<Mode_SettingsMenu_SetBrightness>(display, selectButton, leftButton, rightButton));
 }
