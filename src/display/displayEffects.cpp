@@ -24,15 +24,13 @@ TextScroller::TextScroller(
 
 bool TextScroller::run()
 {
-  Serial.println("TextScroller::run()");
-  Serial.print("current offset: "); Serial.println(currentOffset);
-  Serial.print("target offset:  "); Serial.println(targetOffset);
   if (currentOffset == targetOffset) {
     if (arrivedAtEndTime == 0) {
       arrivedAtEndTime = millis();
     } else {
       if (millis() - arrivedAtEndTime > timeToHoldAtEnd) {
         _finished = true;
+        arrivedAtEndTime = 0;
       }
     }
   } else {
@@ -52,7 +50,6 @@ bool TextScroller::run()
 
 void TextScroller::setTargetOffset(int targetCharacterIndex)
 {
-  Serial.print("setTargetOffset("); Serial.print(targetCharacterIndex); Serial.println(")");
   int end = 0;
   int charIndex = 0;
   for (char character : text) {

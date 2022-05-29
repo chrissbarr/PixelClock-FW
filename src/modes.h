@@ -98,7 +98,7 @@ public:
 protected:
   void moveIntoCore() override final;
   void runCore() override final;
-  void moveOutCore() override final {}
+  void moveOutCore() override final;
 private:
   void cycleActiveSetting(Button2& btn);
   void registerButtonCallbacks();
@@ -119,7 +119,7 @@ protected:
   void moveOutCore() override final {}
 private:
   int secondsOffset = 0;
-  std::unique_ptr<ClockFace> clockface;
+  std::unique_ptr<TextScroller> textscroller;
   enum class TimeSegment {
     hour,
     minute,
@@ -139,14 +139,6 @@ protected:
   void runCore() override final {}
   void moveOutCore() override final {}
 };
-
-// class MenuPage
-// {
-// public:
-//   MenuPage(String name) : name(name) {}
-// private:
-//   String name;
-// };
 
 class ModeManager
 {

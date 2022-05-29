@@ -109,6 +109,7 @@ constexpr float approxRollingAverage(float avg, float newSample, int N)
 std::unique_ptr<GameOfLife> golTrainer;
 std::shared_ptr<GameOfLife> golActual;
 
+
 void setup() {
   delay(1000);
   Serial.begin(250000);
@@ -120,9 +121,6 @@ void setup() {
   modeManager = std::make_unique<ModeManager>(display, buttonSelect, buttonLeft, buttonRight);
 
   initialiseTime();
-  delay(1000);
-
-
 
   FastLED.addLeds<WS2812, matrixLEDPin, RGB>(ledsDummyRGBW, dummyLEDCount);
   display.setLEDStrip(ledsDummyRGBW);
@@ -151,9 +149,6 @@ void setup() {
 
   Serial.println("Pregenerating GoL seeds...");
   uint32_t startTime = millis();
-
-
-
 
   // start time tracking for main loop
   lastLoopTime = millis();

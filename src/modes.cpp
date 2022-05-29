@@ -24,10 +24,15 @@ Mode_SettingsMenu::Mode_SettingsMenu(PixelDisplay& display, Button2& selectButto
 
 void Mode_SettingsMenu::moveIntoCore()
 {
+  menuIndex = 0;
   menuTextScroller->setText(menuPages[menuIndex]->getName());
   menuTextScroller->reset();
-  menuIndex = 0;
   registerButtonCallbacks();
+}
+
+void Mode_SettingsMenu::moveOutCore()
+{
+  menuPages[menuIndex]->moveOut(); // todo. Need to have some better way of moving up and down (particularly with de/re-registering button callbacks.)
 }
 
 void Mode_SettingsMenu::cycleActiveSetting(Button2& btn)
@@ -86,10 +91,7 @@ void Mode_SettingsMenu::runCore()
 Mode_SettingsMenu_SetTime::Mode_SettingsMenu_SetTime(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton) 
   : MainModeFunction("Set Time", display, selectButton, leftButton, rightButton)
 {
-  auto modifiedTimeCallback = [this]()->ClockFaceTimeStruct {
-    return timeCallbackFunction(now() + this->secondsOffset);
-  };
-  clockface = std::make_unique<ClockFace>(_display, modifiedTimeCallback);
+  textscroller = std::make_unique<TextScroller>(_display, "12:34:56", CRGB::White, 100, 1000, 1);
 }
 
 bool Mode_SettingsMenu_SetTime::finished() const
@@ -131,7 +133,11 @@ void Mode_SettingsMenu_SetTime::moveIntoCore()
     }
   };
   leftButton.setTapHandler(changeTimeCallback);
+  leftButton.setLongClickDetectedHandler(changeTimeCallback);
+  leftButton.setLongClickDetectedRetriggerable(true);
   rightButton.setTapHandler(changeTimeCallback);
+  rightButton.setLongClickDetectedHandler(changeTimeCallback);
+  rightButton.setLongClickDetectedRetriggerable(true);
 
   auto advanceTimeSegment = [this](Button2& btn) {
     Serial.println("Moving to next time segment...");
@@ -150,6 +156,7 @@ void Mode_SettingsMenu_SetTime::moveIntoCore()
       case TimeSegment::second:
       {
         currentlySettingTimeSegment = TimeSegment::done;
+        setTimeGlobally(now() + this->secondsOffset);
         break;
       }
     }
@@ -162,7 +169,32 @@ void Mode_SettingsMenu_SetTime::moveIntoCore()
 
 void Mode_SettingsMenu_SetTime::runCore()
 {
-  clockface->run();
+  switch (currentlySettingTimeSegment) {
+    case TimeSegment::hour:
+    {
+      textscroller->setTargetOffset(0);
+      break;
+    }
+    case TimeSegment::minute:
+    {
+      textscroller->setTargetOffset(0);
+      break;
+    }
+    case TimeSegment::second:
+    {
+      textscroller->setTargetOffset(3);
+      break;
+    }
+  }
+
+  constexpr uint8_t bufSize = 9;
+  char c_buf[bufSize];
+  auto times = timeCallbackFunction(now() + this->secondsOffset);
+  snprintf(c_buf, bufSize, "%02d:%02d:%02d", times.hour24, times.minute, times.second);
+  textscroller->setText(c_buf);
+  textscroller->run();
+  //_display.fill(0);
+  //_display.showCharacters(String(c_buf), CRGB::White, 0, 1);
 }
 
 Mode_ClockFace::Mode_ClockFace(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton) : 

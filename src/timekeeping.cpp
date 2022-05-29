@@ -79,3 +79,13 @@ ClockFaceTimeStruct timeCallbackFunction()
 {
   return timeCallbackFunction(now());
 }
+
+void setTimeGlobally(uint32_t timeToSet)
+{
+  Serial.println("Setting time...");
+  if (rtc) { 
+    Serial.println("Setting RTC time...");
+    rtc->adjust(timeToSet); 
+  }
+  setTime(timeToSet);
+}

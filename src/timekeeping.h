@@ -24,5 +24,8 @@ bool initialiseTime();
 
 bool initialiseRTC();
 
+// Sets the time to the RTC (if available) and time library
+void setTimeGlobally(uint32_t timeToSet);
+
 
 #endif
