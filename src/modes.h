@@ -73,6 +73,7 @@ private:
   uint8_t filterIndex = 0;
   uint32_t lastFilterChangeTime = 0;
   uint32_t filterChangePeriod = 10000;
+  ClockFaceTimeStruct timePrev;
 };
 
 class Mode_SettingsMenu : public MainModeFunction

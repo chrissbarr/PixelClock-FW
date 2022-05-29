@@ -59,6 +59,7 @@ Mode_ClockFace::Mode_ClockFace(PixelDisplay& display, Button2& selectButton, But
   faces.push_back(std::make_unique<ClockFace>(_display, timeCallbackFunction));
   filters.push_back(std::make_unique<RainbowWave>(1, 30, RainbowWave::Direction::horizontal, false));
   filters.push_back(std::make_unique<RainbowWave>(1, 30, RainbowWave::Direction::vertical, false));
+  timePrev = timeCallbackFunction();
 }
 
 void Mode_ClockFace::runCore()
@@ -68,13 +69,15 @@ void Mode_ClockFace::runCore()
     faces[clockfaceIndex]->reset();
   }
 
-  if (millis() - lastFilterChangeTime > filterChangePeriod) {
+  auto timeNow = timeCallbackFunction();
+  if (timeNow.minute != timePrev.minute) {
     filterIndex++;
     if (filterIndex == filters.size()) {
       filterIndex = 0;
     }
     lastFilterChangeTime = millis();
   }
+  timePrev = timeNow;
   _display.applyFilter(*filters[filterIndex]);
 }
 
