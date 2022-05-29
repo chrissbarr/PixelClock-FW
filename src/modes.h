@@ -76,6 +76,20 @@ private:
   ClockFaceTimeStruct timePrev;
 };
 
+class Mode_Effects : public MainModeFunction
+{
+public:
+  Mode_Effects(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton);
+protected:
+  void moveIntoCore() override final;
+  void runCore() override final;
+  void moveOutCore() override final {}
+private:
+  std::vector<std::unique_ptr<DisplayEffect>> effects;
+  uint8_t effectIndex = 0;
+};
+
+
 class Mode_SettingsMenu : public MainModeFunction
 {
 public:

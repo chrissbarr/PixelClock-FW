@@ -1,4 +1,5 @@
   #include "modes.h"
+  #include "display/gameOfLife.h"
 
 void MainModeFunction::clearAllButtonCallbacks(Button2& button)
 {
@@ -81,9 +82,56 @@ void Mode_ClockFace::runCore()
   _display.applyFilter(*filters[filterIndex]);
 }
 
+Mode_Effects::Mode_Effects(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton) : 
+  MainModeFunction("Effects", display, selectButton, leftButton, rightButton) {
+  effects.push_back(std::make_unique<RandomFill>(_display, 100, colourGenerator_randomHSV));
+  effects.push_back(std::make_unique<BouncingBall>(_display, 100, colourGenerator_cycleHSV));
+  effects.push_back(std::make_unique<GameOfLife>(_display, 100, 50, colourGenerator_cycleHSV, _display.getFullDisplayRegion(), false));
+}
+
+void Mode_Effects::moveIntoCore()
+{
+  effects[effectIndex]->reset();
+
+  auto cycleHandler = [this](Button2& btn) {
+    Serial.println("Switching to next effect...");
+    Serial.print("Current Effect Index: "); Serial.println(effectIndex);
+    if (btn == leftButton) {
+      if (effectIndex == 0) {
+        effectIndex = effects.size() - 1;
+      } else {
+        effectIndex--;
+      }
+    } else {
+      if (effectIndex == effects.size() - 1) {
+        effectIndex = 0;
+      } else {
+        effectIndex++;
+      }
+    }
+    Serial.print("New Effect Index: "); Serial.println(effectIndex);
+  };
+
+  leftButton.setTapHandler(cycleHandler);
+  rightButton.setTapHandler(cycleHandler);
+}
+
+void Mode_Effects::runCore()
+{
+  effects[effectIndex]->run();
+  if (effects[effectIndex]->finished()) {
+    // effectIndex++;
+    // if (effectIndex == effects.size()) {
+    //   effectIndex = 0;
+    // }
+    effects[effectIndex]->reset();
+  }
+}
+
 ModeManager::ModeManager(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton)
 {
   modes.push_back(std::make_unique<Mode_ClockFace>(display, selectButton, leftButton, rightButton));
+  modes.push_back(std::make_unique<Mode_Effects>(display, selectButton, leftButton, rightButton));
   modes.push_back(std::make_unique<Mode_SettingsMenu>(display, selectButton, leftButton, rightButton));
 }
 

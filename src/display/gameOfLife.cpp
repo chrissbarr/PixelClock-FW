@@ -51,7 +51,7 @@ void GameOfLife::seedDisplay()
   readBuffer = 0;
   writeBuffer = 1;
 
-  if (!_seeding) {
+  if (!_seeding && bestScores.size() >= bestScoresToKeep) {
     Serial.println("Using seed from best scores...");
     int randomIndex = random(bestScores.size());
     auto randomScoreToRepeat = (*std::next(bestScores.begin(), randomIndex));
