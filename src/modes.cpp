@@ -193,8 +193,6 @@ void Mode_SettingsMenu_SetTime::runCore()
   snprintf(c_buf, bufSize, "%02d:%02d:%02d", times.hour24, times.minute, times.second);
   textscroller->setText(c_buf);
   textscroller->run();
-  //_display.fill(0);
-  //_display.showCharacters(String(c_buf), CRGB::White, 0, 1);
 }
 
 Mode_ClockFace::Mode_ClockFace(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton) : 
@@ -228,7 +226,33 @@ Mode_Effects::Mode_Effects(PixelDisplay& display, Button2& selectButton, Button2
   MainModeFunction("Effects", display, selectButton, leftButton, rightButton) {
   effects.push_back(std::make_unique<RandomFill>(_display, 100, colourGenerator_randomHSV));
   effects.push_back(std::make_unique<BouncingBall>(_display, 100, colourGenerator_cycleHSV));
-  effects.push_back(std::make_unique<GameOfLife>(_display, 100, 50, colourGenerator_cycleHSV, _display.getFullDisplayRegion(), false));
+
+  Serial.println("Pregenerating GoL seeds...");
+  uint32_t startTime = millis();
+  golTrainer = std::make_unique<GameOfLife>(display, 0, 0, colourGenerator_white, display.getFullDisplayRegion(), false);
+  golTrainer->setFadeOnDeath(false);
+  golTrainer->setSeedingMode(true);
+
+  // run until we have a few initial states
+  while (golTrainer->getSeededCount() < 3) {
+    while (!golTrainer->finished()) {
+      golTrainer->run();
+      // catch any infinite-running seeds
+      if (golTrainer->getLifespan() > 500) { break; }
+    }
+    golTrainer->reset();
+  }
+  Serial.println("GoL scores: ");
+  for (const auto& score : golTrainer->getScores()) {
+    Serial.print(score.lifespan); Serial.print("\t"); Serial.println(score.seed);
+  }
+  uint32_t stopTime = millis();
+  Serial.print("Seeding duration: "); Serial.println(stopTime - startTime);
+
+  golActual = std::make_shared<GameOfLife>(display, 250, 50, colourGenerator_cycleHSV, display.getFullDisplayRegion(), false);
+  golActual->setScores(golTrainer->getScores());
+
+  effects.push_back(golActual);
 }
 
 void Mode_Effects::moveIntoCore()
@@ -262,11 +286,21 @@ void Mode_Effects::runCore()
 {
   effects[effectIndex]->run();
   if (effects[effectIndex]->finished()) {
-    // effectIndex++;
-    // if (effectIndex == effects.size()) {
-    //   effectIndex = 0;
-    // }
     effects[effectIndex]->reset();
+  }
+
+  if (effects[effectIndex] == golActual) {
+    golTrainer->run();
+    if (golTrainer->finished()) {
+      golTrainer->reset();
+      if (golTrainer->getIterations() % 100 == 0) {
+        golActual->setScores(golTrainer->getScores());
+        Serial.println("GoL scores: ");
+        for (const auto& score : golActual->getScores()) {
+          Serial.print(score.lifespan); Serial.print("\t"); Serial.println(score.seed);
+        }
+      }
+    }
   }
 }
 

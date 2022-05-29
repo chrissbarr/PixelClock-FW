@@ -106,10 +106,6 @@ constexpr float approxRollingAverage(float avg, float newSample, int N)
   return avg;
 }
 
-std::unique_ptr<GameOfLife> golTrainer;
-std::shared_ptr<GameOfLife> golActual;
-
-
 void setup() {
   delay(1000);
   Serial.begin(250000);
