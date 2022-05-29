@@ -214,7 +214,7 @@ bool GameOfLife::run()
 std::size_t GameOfLife::hashBuffer(const std::vector<CRGB>& vec) const
 {
   std::size_t seed = vec.size();
-  for(const CRGB& i : vec) {
+  for (const CRGB& i : vec) {
     uint8_t val = 1;
     if (i == CRGB(0)) { val = 0; }
     seed ^= val + 0x9e3779b9 + (seed << 6) + (seed >> 2);

@@ -6,10 +6,7 @@
 
 // Libraries
 #include <SPI.h>
-
 #include <Button2.h>
-
-
 #include <melody_player.h>
 #include <melody_factory.h>
 
@@ -64,8 +61,6 @@ std::vector<BrightnessMode> brightnessModes = {
 };
 uint8_t brightnessModeIndex = 0;
 
-
-
 void brightnessButton_callback(Button2& btn) 
 {
   Serial.println("Brightness button callback...");
@@ -86,8 +81,6 @@ void brightnessButton_callback(Button2& btn)
 void modeButton_callback(Button2& btn) {
   modeManager->cycleMode();
 }
-
-
 
 // Main loop timing
 uint32_t lastLoopTime = 0;
@@ -152,7 +145,6 @@ void setup() {
 
 void loop()
 {
-
   // update buttons
   buttonMode.loop();
   buttonBrightness.loop();
