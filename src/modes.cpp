@@ -285,7 +285,7 @@ void Mode_SettingsMenu_SetTime::runCore()
 Mode_ClockFace::Mode_ClockFace(PixelDisplay& display, ButtonReferences buttons) : 
   MainModeFunction("Clockface", display, buttons) 
 {
-  faces.push_back(std::make_unique<ClockFace>(_display, [](){ return timeCallbackFunction(now()); }));
+  faces.push_back(std::make_unique<ClockFace_Gravity>(_display, [](){ return timeCallbackFunction(now()); }));
   filters.push_back(std::make_unique<RainbowWave>(1, 30, RainbowWave::Direction::horizontal, false));
   filters.push_back(std::make_unique<RainbowWave>(1, 30, RainbowWave::Direction::vertical, false));
   timePrev = timeCallbackFunction();

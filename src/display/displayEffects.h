@@ -147,19 +147,6 @@ private:
     bool _finished;
 };
 
-class ClockFace : public DisplayEffect {
-public:
-    ClockFace(PixelDisplay& display, std::function<ClockFaceTimeStruct(void)> timeCallbackFunction) : _display(display), timeCallbackFunction(timeCallbackFunction) {}
-    bool run() override final;
-    bool finished() const override final { return false; }
-    void reset() override final { };
-
-private:
-    PixelDisplay& _display;
-    //ClockFaceTimeStruct (*timeCallbackFunction)();
-    std::function<ClockFaceTimeStruct(void)> timeCallbackFunction;
-};
-
 class Gravity : public DisplayEffect {
 public:
 
@@ -177,6 +164,8 @@ public:
 
     Direction getDirection() const { return _direction; }
     void setDirection(Direction direction) { _direction = direction; }
+
+    void setFallOutOfScreen(bool enabled) { _empty = enabled; }
 private:
     PixelDisplay& _display;
     DisplayRegion _displayRegion;
@@ -185,6 +174,43 @@ private:
     uint32_t _lastMoveTime = 0;
     bool _empty;
     Direction _direction;
+};
+
+class ClockFace_Base : public DisplayEffect {
+public:
+    ClockFace_Base(PixelDisplay& display, std::function<ClockFaceTimeStruct(void)> timeCallbackFunction) : _display(display), timeCallbackFunction(timeCallbackFunction) {}
+    virtual bool run() override = 0;
+    virtual bool finished() const override = 0;
+    virtual void reset() override = 0;
+protected:
+    PixelDisplay& _display;
+    std::function<ClockFaceTimeStruct(void)> timeCallbackFunction;
+};
+
+class ClockFace_Simple : public ClockFace_Base {
+public:
+    ClockFace_Simple(PixelDisplay& display, std::function<ClockFaceTimeStruct(void)> timeCallbackFunction) : ClockFace_Base(display, timeCallbackFunction) {}
+    bool run() override final;
+    bool finished() const override final { return false; }
+    void reset() override final { };
+};
+
+class ClockFace_Gravity : public ClockFace_Base {
+public:
+    ClockFace_Gravity(PixelDisplay& display, std::function<ClockFaceTimeStruct(void)> timeCallbackFunction);
+    bool run() override final;
+    bool finished() const override final { return false; }
+    void reset() override final;
+private:
+    std::unique_ptr<ClockFace_Simple> clockFace;
+    std::unique_ptr<Gravity> gravityEffect;
+    ClockFaceTimeStruct timePrev;
+    enum class State {
+        stable,
+        fallToBottom,
+        fallOut
+    };
+    State currentState = State::stable;
 };
 
 // bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)(), DisplayRegion displayRegion);

@@ -87,13 +87,13 @@ void setup() {
   delay(1000);
   Serial.begin(250000);
   Serial.println("Serial begin!");
-
   Wire.begin();
+  initialiseTime();
 
   brightnessSensor = std::make_unique<BrightnessSensor>();
   modeManager = std::make_unique<ModeManager>(display, ButtonReferences{buttonMode, buttonSelect, buttonLeft, buttonRight});
 
-  initialiseTime();
+  
 
   FastLED.addLeds<WS2812, matrixLEDPin, RGB>(ledsDummyRGBW, dummyLEDCount);
   display.setLEDStrip(ledsDummyRGBW);

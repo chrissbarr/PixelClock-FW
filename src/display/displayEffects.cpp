@@ -280,9 +280,6 @@ bool Gravity::run()
       }
     }
 
-
-
-
     if (!anyPixelsMovedThisUpdate) { _finished = true; }
     _lastMoveTime = timenow;
   }  
@@ -383,7 +380,7 @@ bool Gravity::run()
 //   }
 // }
 
-bool ClockFace::run()
+bool ClockFace_Simple::run()
 {
   constexpr uint8_t bufSize = 6;
   char c_buf[bufSize];
@@ -391,6 +388,55 @@ bool ClockFace::run()
   snprintf(c_buf, bufSize, "%2d:%02d", times.hour12, times.minute);
   _display.fill(0);
   _display.showCharacters(String(c_buf), {CRGB::White}, 0, 1);
+  return false;
+}
+
+ClockFace_Gravity::ClockFace_Gravity(PixelDisplay& display, std::function<ClockFaceTimeStruct(void)> timeCallbackFunction) : 
+  ClockFace_Base(display, timeCallbackFunction) 
+{
+  gravityEffect = std::make_unique<Gravity>(display, 500, false, Gravity::Direction::down);
+  clockFace = std::make_unique<ClockFace_Simple>(display, timeCallbackFunction);
+}
+
+void ClockFace_Gravity::reset()
+{
+  gravityEffect->reset();
+  clockFace->reset();
+  timePrev = timeCallbackFunction();
+  currentState = State::stable;
+}
+
+bool ClockFace_Gravity::run()
+{
+  auto timeNow = timeCallbackFunction();
+
+  switch (currentState) {
+    case State::stable:
+      if (timePrev.minute != timeNow.minute) {
+        currentState = State::fallToBottom;
+        gravityEffect->reset();
+        gravityEffect->setFallOutOfScreen(false);
+      } else {
+        clockFace->run();
+      }
+      break;
+    case State::fallToBottom:
+      gravityEffect->run();
+      if (gravityEffect->finished()) {
+        currentState = State::fallOut;
+        gravityEffect->setFallOutOfScreen(true);
+        gravityEffect->reset();
+      }
+      break;
+    case State::fallOut:
+      gravityEffect->run();
+      if (gravityEffect->finished()) {
+        currentState = State::stable;
+      }
+      break;
+  }
+
+  timePrev = timeNow;
   return false;
 }
 
