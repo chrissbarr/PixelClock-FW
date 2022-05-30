@@ -72,17 +72,18 @@ private:
 
 class TextScroller : public DisplayEffect {
 public:
-    TextScroller(PixelDisplay& display, String textString, CRGB colour, uint16_t stepDelay = 100, uint16_t timeToHoldAtEnd = 1000, uint8_t characterSpacing = 1);
+    TextScroller(PixelDisplay& display, String textString, std::vector<CRGB> colours, uint16_t stepDelay = 100, uint16_t timeToHoldAtEnd = 1000, uint8_t characterSpacing = 1);
     virtual bool run() override;
     virtual bool finished() const override { return _finished; }
     virtual void reset() override { _finished = false; currentOffset = 0; setTargetOffset(0); arrivedAtEndTime = 0; }
 
     void setText(const String& textIn) { text = textIn; }
     void setTargetOffset(int targetCharacterIndex = -1);
+    void setColours(std::vector<CRGB> colours) { this->colours = colours; }
 private:
     PixelDisplay& display;
     String text;
-    CRGB colour;
+    std::vector<CRGB> colours;
     uint16_t timeToHoldAtEnd;
     uint8_t charSpacing;
 
@@ -98,7 +99,7 @@ private:
 
 class RepeatingTextScroller : public TextScroller {
 public:
-    RepeatingTextScroller(PixelDisplay& display, String textString, CRGB colour, uint16_t stepDelay = 100, uint16_t timeToHoldAtEnd = 1000, uint8_t characterSpacing = 1);
+    RepeatingTextScroller(PixelDisplay& display, String textString, std::vector<CRGB> colours, uint16_t stepDelay = 100, uint16_t timeToHoldAtEnd = 1000, uint8_t characterSpacing = 1);
     bool run() override;
     bool finished() const override { return cycles >= 2; }
     void reset() override { TextScroller::reset(); forward = true; TextScroller::setTargetOffset(-1); cycles = 0; }

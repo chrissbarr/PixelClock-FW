@@ -40,7 +40,7 @@ public:
     void fill(CRGB colour, const DisplayRegion& region);
     void fill(CRGB colour);
 
-    void showCharacters(const String& string, CRGB colour, int xOffset, uint8_t spacing = 0);
+    void showCharacters(const String& string, const std::vector<CRGB>& colours, int xOffset, uint8_t spacing = 0);
     void showCharacter(char character, CRGB colour, int xOffset);
     void showCharacter(const FontGlyph& character, CRGB colour, int xOffset);
 

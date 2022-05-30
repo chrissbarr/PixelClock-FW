@@ -95,7 +95,7 @@ void setup() {
   Wire.begin();
 
   brightnessSensor = std::make_unique<BrightnessSensor>();
-  modeManager = std::make_unique<ModeManager>(display, buttonSelect, buttonLeft, buttonRight);
+  modeManager = std::make_unique<ModeManager>(display, ButtonReferences{buttonMode, buttonSelect, buttonLeft, buttonRight});
 
   initialiseTime();
 

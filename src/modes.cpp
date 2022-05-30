@@ -1,5 +1,5 @@
-  #include "modes.h"
-  #include "display/gameOfLife.h"
+#include "modes.h"
+#include "display/gameOfLife.h"
 
 void MainModeFunction::clearAllButtonCallbacks(Button2& button)
 {
@@ -14,12 +14,12 @@ void MainModeFunction::clearAllButtonCallbacks(Button2& button)
   button.setTripleClickHandler(nullptr);
 }
 
-Mode_SettingsMenu::Mode_SettingsMenu(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton) 
-  : MainModeFunction("Settings Menu", display, selectButton, leftButton, rightButton) 
+Mode_SettingsMenu::Mode_SettingsMenu(PixelDisplay& display, ButtonReferences buttons) 
+  : MainModeFunction("Settings Menu", display, buttons) 
 {
-  menuTextScroller = std::make_unique<RepeatingTextScroller>(_display, "Placeholder", CRGB::Red, 50, 2000, 1);
-  menuPages.push_back(std::make_unique<Mode_SettingsMenu_SetTime>(display, selectButton, leftButton, rightButton));
-  menuPages.push_back(std::make_unique<Mode_SettingsMenu_SetBrightness>(display, selectButton, leftButton, rightButton));
+  menuTextScroller = std::make_unique<RepeatingTextScroller>(_display, "Placeholder", std::vector<CRGB>{CRGB::Red}, 50, 2000, 1);
+  menuPages.push_back(std::make_unique<Mode_SettingsMenu_SetTime>(display, buttons));
+  menuPages.push_back(std::make_unique<Mode_SettingsMenu_SetBrightness>(display, buttons));
 }
 
 void Mode_SettingsMenu::moveIntoCore()
@@ -41,7 +41,7 @@ void Mode_SettingsMenu::cycleActiveSetting(Button2& btn)
   Serial.print("Current Setting Index: "); Serial.println(menuIndex);
   Serial.print("Current Setting Name: "); Serial.println(menuPages[menuIndex]->getName());
 
-  if (btn == leftButton) {
+  if (btn == buttons.left) {
     if (menuIndex == 0) {
       menuIndex = menuPages.size() - 1;
     } else {
@@ -63,14 +63,14 @@ void Mode_SettingsMenu::cycleActiveSetting(Button2& btn)
 
 void Mode_SettingsMenu::registerButtonCallbacks()
 {
-  leftButton.setTapHandler([this](Button2& btn) { cycleActiveSetting(btn); });
-  rightButton.setTapHandler([this](Button2& btn) { cycleActiveSetting(btn); });
+  buttons.left.setTapHandler([this](Button2& btn) { cycleActiveSetting(btn); });
+  buttons.right.setTapHandler([this](Button2& btn) { cycleActiveSetting(btn); });
 
   auto moveIntoSetting = [this](Button2& btn) {
     activeMenuPage = menuPages[menuIndex];
     activeMenuPage->moveInto();
   };
-  selectButton.setTapHandler(moveIntoSetting);
+  buttons.select.setTapHandler(moveIntoSetting);
   Serial.println("Registered settings button callbacks");
 }
 
@@ -88,10 +88,10 @@ void Mode_SettingsMenu::runCore()
   }
 }
 
-Mode_SettingsMenu_SetTime::Mode_SettingsMenu_SetTime(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton) 
-  : MainModeFunction("Set Time", display, selectButton, leftButton, rightButton)
+Mode_SettingsMenu_SetTime::Mode_SettingsMenu_SetTime(PixelDisplay& display, ButtonReferences buttons) 
+  : MainModeFunction("Set Time", display, buttons)
 {
-  textscroller = std::make_unique<TextScroller>(_display, "12:34:56", CRGB::White, 100, 1000, 1);
+  textscroller = std::make_unique<TextScroller>(_display, "12:34:56", std::vector<CRGB>{CRGB::White}, 10, 1000, 1);
 }
 
 bool Mode_SettingsMenu_SetTime::finished() const
@@ -104,7 +104,7 @@ void Mode_SettingsMenu_SetTime::moveIntoCore()
   auto changeTimeCallback = [this](Button2& btn) {
     Serial.println("Inc/Dec Current Time");
     int changeDir = 1;
-    if (btn == leftButton) {
+    if (btn == buttons.left) {
       changeDir = -1;
     } 
 
@@ -132,12 +132,12 @@ void Mode_SettingsMenu_SetTime::moveIntoCore()
       }
     }
   };
-  leftButton.setTapHandler(changeTimeCallback);
-  leftButton.setLongClickDetectedHandler(changeTimeCallback);
-  leftButton.setLongClickDetectedRetriggerable(true);
-  rightButton.setTapHandler(changeTimeCallback);
-  rightButton.setLongClickDetectedHandler(changeTimeCallback);
-  rightButton.setLongClickDetectedRetriggerable(true);
+  buttons.left.setTapHandler(changeTimeCallback);
+  buttons.left.setLongClickDetectedHandler(changeTimeCallback);
+  buttons.left.setLongClickDetectedRetriggerable(true);
+  buttons.right.setTapHandler(changeTimeCallback);
+  buttons.right.setLongClickDetectedHandler(changeTimeCallback);
+  buttons.right.setLongClickDetectedRetriggerable(true);
 
   auto advanceTimeSegment = [this](Button2& btn) {
     Serial.println("Moving to next time segment...");
@@ -161,10 +161,10 @@ void Mode_SettingsMenu_SetTime::moveIntoCore()
       }
     }
   };
-  selectButton.setTapHandler(advanceTimeSegment);
+  buttons.select.setTapHandler(advanceTimeSegment);
   currentlySettingTimeSegment = TimeSegment::hour;
-
   secondsOffset = 0;
+  textscroller->reset();
 }
 
 void Mode_SettingsMenu_SetTime::runCore()
@@ -173,16 +173,19 @@ void Mode_SettingsMenu_SetTime::runCore()
     case TimeSegment::hour:
     {
       textscroller->setTargetOffset(0);
+      textscroller->setColours({CRGB::Red, CRGB::Red, CRGB::White, CRGB::White, CRGB::White, CRGB::White, CRGB::White, CRGB::White});
       break;
     }
     case TimeSegment::minute:
     {
       textscroller->setTargetOffset(0);
+      textscroller->setColours({CRGB::White, CRGB::White, CRGB::White, CRGB::Red, CRGB::Red, CRGB::White, CRGB::White, CRGB::White});
       break;
     }
     case TimeSegment::second:
     {
       textscroller->setTargetOffset(3);
+      textscroller->setColours({CRGB::White, CRGB::White, CRGB::White, CRGB::White, CRGB::White, CRGB::White, CRGB::Red, CRGB::Red, });
       break;
     }
   }
@@ -195,8 +198,9 @@ void Mode_SettingsMenu_SetTime::runCore()
   textscroller->run();
 }
 
-Mode_ClockFace::Mode_ClockFace(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton) : 
-  MainModeFunction("Clockface", display, selectButton, leftButton, rightButton) {
+Mode_ClockFace::Mode_ClockFace(PixelDisplay& display, ButtonReferences buttons) : 
+  MainModeFunction("Clockface", display, buttons) 
+{
   faces.push_back(std::make_unique<ClockFace>(_display, [](){ return timeCallbackFunction(now()); }));
   filters.push_back(std::make_unique<RainbowWave>(1, 30, RainbowWave::Direction::horizontal, false));
   filters.push_back(std::make_unique<RainbowWave>(1, 30, RainbowWave::Direction::vertical, false));
@@ -222,8 +226,8 @@ void Mode_ClockFace::runCore()
   _display.applyFilter(*filters[filterIndex]);
 }
 
-Mode_Effects::Mode_Effects(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton) : 
-  MainModeFunction("Effects", display, selectButton, leftButton, rightButton) {
+Mode_Effects::Mode_Effects(PixelDisplay& display, ButtonReferences buttons) : 
+  MainModeFunction("Effects", display, buttons) {
   effects.push_back(std::make_unique<RandomFill>(_display, 100, colourGenerator_randomHSV));
   effects.push_back(std::make_unique<BouncingBall>(_display, 100, colourGenerator_cycleHSV));
 
@@ -262,7 +266,7 @@ void Mode_Effects::moveIntoCore()
   auto cycleHandler = [this](Button2& btn) {
     Serial.println("Switching to next effect...");
     Serial.print("Current Effect Index: "); Serial.println(effectIndex);
-    if (btn == leftButton) {
+    if (btn == buttons.left) {
       if (effectIndex == 0) {
         effectIndex = effects.size() - 1;
       } else {
@@ -278,8 +282,8 @@ void Mode_Effects::moveIntoCore()
     Serial.print("New Effect Index: "); Serial.println(effectIndex);
   };
 
-  leftButton.setTapHandler(cycleHandler);
-  rightButton.setTapHandler(cycleHandler);
+  buttons.left.setTapHandler(cycleHandler);
+  buttons.right.setTapHandler(cycleHandler);
 }
 
 void Mode_Effects::runCore()
@@ -304,11 +308,11 @@ void Mode_Effects::runCore()
   }
 }
 
-ModeManager::ModeManager(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton)
+ModeManager::ModeManager(PixelDisplay& display, ButtonReferences buttons)
 {
-  modes.push_back(std::make_unique<Mode_ClockFace>(display, selectButton, leftButton, rightButton));
-  modes.push_back(std::make_unique<Mode_Effects>(display, selectButton, leftButton, rightButton));
-  modes.push_back(std::make_unique<Mode_SettingsMenu>(display, selectButton, leftButton, rightButton));
+  modes.push_back(std::make_unique<Mode_ClockFace>(display, buttons));
+  modes.push_back(std::make_unique<Mode_Effects>(display, buttons));
+  modes.push_back(std::make_unique<Mode_SettingsMenu>(display, buttons));
 }
 
 void ModeManager::run()

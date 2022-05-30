@@ -13,6 +13,13 @@
 
 class GameOfLife;
 
+struct ButtonReferences {
+  Button2& mode;
+  Button2& select;
+  Button2& left;
+  Button2& right;
+};
+
 class MainModeFunction
 {
 private:
@@ -22,19 +29,19 @@ protected:
   virtual void moveOutCore() = 0;
   virtual void runCore() = 0;
 public:
-  MainModeFunction(String name, PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton) : 
+  MainModeFunction(String name, PixelDisplay& display, ButtonReferences buttons) : 
   _name(name),
   _display(display),
-  selectButton(selectButton),
-  leftButton(leftButton),
-  rightButton(rightButton)
+  buttons(buttons)
   {}
 
   void moveInto()
   {
-    clearAllButtonCallbacks(selectButton);
-    clearAllButtonCallbacks(leftButton);
-    clearAllButtonCallbacks(rightButton);
+    //clearAllButtonCallbacks(buttons.mode);
+    clearAllButtonCallbacks(buttons.select);
+    clearAllButtonCallbacks(buttons.left);
+    clearAllButtonCallbacks(buttons.right);
+
     this->moveIntoCore();
   }
 
@@ -54,16 +61,14 @@ public:
 
 protected:
   PixelDisplay& _display;
-  Button2& selectButton;
-  Button2& leftButton;
-  Button2& rightButton;
+  ButtonReferences buttons;
   String _name;
 };
 
 class Mode_ClockFace : public MainModeFunction
 {
 public:
-  Mode_ClockFace(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton);
+  Mode_ClockFace(PixelDisplay& display, ButtonReferences buttons);
 protected:
   void moveIntoCore() override final {
     faces[clockfaceIndex]->reset();
@@ -83,7 +88,7 @@ private:
 class Mode_Effects : public MainModeFunction
 {
 public:
-  Mode_Effects(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton);
+  Mode_Effects(PixelDisplay& display, ButtonReferences buttons);
 protected:
   void moveIntoCore() override final;
   void runCore() override final;
@@ -99,7 +104,7 @@ private:
 class Mode_SettingsMenu : public MainModeFunction
 {
 public:
-  Mode_SettingsMenu(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton);
+  Mode_SettingsMenu(PixelDisplay& display, ButtonReferences buttons);
 protected:
   void moveIntoCore() override final;
   void runCore() override final;
@@ -116,7 +121,7 @@ private:
 class Mode_SettingsMenu_SetTime : public MainModeFunction
 {
 public:
-  Mode_SettingsMenu_SetTime(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton);
+  Mode_SettingsMenu_SetTime(PixelDisplay& display, ButtonReferences buttons);
   bool finished() const override;
 protected:
   void moveIntoCore() override final;
@@ -137,8 +142,8 @@ private:
 class Mode_SettingsMenu_SetBrightness : public MainModeFunction
 {
 public:
-  Mode_SettingsMenu_SetBrightness(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton) 
-  : MainModeFunction("Set Brightness", display, selectButton, leftButton, rightButton) {}
+  Mode_SettingsMenu_SetBrightness(PixelDisplay& display, ButtonReferences buttons) 
+  : MainModeFunction("Set Brightness", display, buttons) {}
 protected:
   void moveIntoCore() override final {}
   void runCore() override final {}
@@ -148,7 +153,7 @@ protected:
 class ModeManager
 {
 public:
-  ModeManager(PixelDisplay& display, Button2& selectButton, Button2& leftButton, Button2& rightButton);
+  ModeManager(PixelDisplay& display, ButtonReferences buttons);
   void cycleMode();
   void run();
 

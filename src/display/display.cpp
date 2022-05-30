@@ -75,13 +75,18 @@ void PixelDisplay::update()
   filterApplied = false;
 }
 
-void PixelDisplay::showCharacters(const String& string, CRGB colour, int xOffset, uint8_t spacing)
+void PixelDisplay::showCharacters(const String& string, const std::vector<CRGB>& colours, int xOffset, uint8_t spacing)
 {
     int xOffsetLocal = 0;
+    int colourIndex = 0;
     for (const auto& character : string) {
         FontGlyph g = characterFontArray[charToIndex(character)];
-        showCharacter(g, colour, xOffset + xOffsetLocal);
+        showCharacter(g, colours[colourIndex], xOffset + xOffsetLocal);
         xOffsetLocal += g.width + spacing;
+        colourIndex++;
+        if (colourIndex >= colours.size()) {
+          colourIndex = 0;
+        }
         if (xOffset + xOffsetLocal > getWidth()) { break; }
     }
 }

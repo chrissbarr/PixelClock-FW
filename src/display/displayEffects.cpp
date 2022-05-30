@@ -6,13 +6,13 @@
 TextScroller::TextScroller(
   PixelDisplay& display,
   String textString,
-  CRGB colour,
+  std::vector<CRGB> colours,
   uint16_t stepDelay,
   uint16_t timeToHoldAtEnd, 
   uint8_t characterSpacing) :
   display(display),
   text(textString),
-  colour(colour),
+  colours(colours),
   stepDelay(stepDelay),
   timeToHoldAtEnd(timeToHoldAtEnd),
   charSpacing(characterSpacing)
@@ -44,7 +44,7 @@ bool TextScroller::run()
     }
   }
   display.fill(CRGB::Black);
-  display.showCharacters(text, colour, -currentOffset, charSpacing);
+  display.showCharacters(text, colours, -currentOffset, charSpacing);
   return _finished;
 }
 
@@ -69,11 +69,11 @@ void TextScroller::setTargetOffset(int targetCharacterIndex)
 RepeatingTextScroller::RepeatingTextScroller(
 PixelDisplay& display,
 String textString,
-CRGB colour,
+std::vector<CRGB> colours,
 uint16_t stepDelay,
 uint16_t timeToHoldAtEnd, 
 uint8_t characterSpacing) :
-TextScroller(display, textString, colour, stepDelay, timeToHoldAtEnd, characterSpacing)
+TextScroller(display, textString, colours, stepDelay, timeToHoldAtEnd, characterSpacing)
 {
   TextScroller::setTargetOffset(-1);
 }
@@ -378,7 +378,7 @@ bool ClockFace::run()
   auto times = timeCallbackFunction();
   snprintf(c_buf, bufSize, "%2d:%02d", times.hour12, times.minute);
   _display.fill(0);
-  _display.showCharacters(String(c_buf), CRGB::White, 0, 1);
+  _display.showCharacters(String(c_buf), {CRGB::White}, 0, 1);
   return false;
 }
 
@@ -421,7 +421,7 @@ void displayDiagnostic(PixelDisplay& display)
   auto textScrollTest1 = RepeatingTextScroller(
     display,
     "Hello - Testing!",
-    CRGB(0, 0, 255),
+    std::vector<CRGB>{CRGB(0, 0, 255)},
     50,
     500,
     1
@@ -438,7 +438,7 @@ void displayDiagnostic(PixelDisplay& display)
   auto textScrollTest = RepeatingTextScroller(
     display,
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 !\"#$%&'()*+'-./:;<=>?@",
-    CRGB(0, 255, 0),
+    std::vector<CRGB>{CRGB(0, 255, 0)},
     50,
     500,
     1
