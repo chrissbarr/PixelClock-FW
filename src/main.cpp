@@ -78,10 +78,6 @@ void brightnessButton_callback(Button2& btn)
   Serial.print("New Brightness Name: "); Serial.println(brightnessModes[brightnessModeIndex].name);
 }
 
-void modeButton_callback(Button2& btn) {
-  modeManager->cycleMode();
-}
-
 // Main loop timing
 constexpr uint32_t loopTargetTime = 15;     // Constant loop update rate to target (milliseconds)
 constexpr uint32_t reportInterval = 10000;  // Statistics on loop timing will be reported this often (milliseconds)
@@ -115,7 +111,6 @@ void setup() {
   //player.play(melody);
   Serial.println("Melody ends!");
 
-  buttonMode.setTapHandler(modeButton_callback);
   buttonBrightness.setTapHandler(brightnessButton_callback);
 
   display.fill(0);

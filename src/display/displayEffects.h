@@ -79,6 +79,7 @@ public:
 
     void setText(const String& textIn) { text = textIn; }
     void setTargetOffset(int targetCharacterIndex = -1);
+    void setCurrentOffset(int targetCharacterIndex = -1);
     void setColours(std::vector<CRGB> colours) { this->colours = colours; }
 private:
     PixelDisplay& display;
@@ -93,6 +94,8 @@ private:
 
     uint32_t stepDelay;
     uint32_t arrivedAtEndTime = 0;
+
+    uint32_t calculateOffset(int charIdx) const;
 
     bool _finished = false;
 };

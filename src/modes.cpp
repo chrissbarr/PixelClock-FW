@@ -71,6 +71,7 @@ void Mode_SettingsMenu::registerButtonCallbacks()
     activeMenuPage->moveInto();
   };
   buttons.select.setTapHandler(moveIntoSetting);
+  buttons.mode.setTapHandler([this](Button2& btn) { this->_finished = true; });
   Serial.println("Registered settings button callbacks");
 }
 
@@ -82,6 +83,7 @@ void Mode_SettingsMenu::runCore()
       activeMenuPage->moveOut();
       activeMenuPage.reset();
       registerButtonCallbacks();
+      menuTextScroller->reset();
     }
   } else {
     menuTextScroller->run();
@@ -142,59 +144,141 @@ void Mode_SettingsMenu_SetTime::moveIntoCore()
   auto advanceTimeSegment = [this](Button2& btn) {
     Serial.println("Moving to next time segment...");
 
+    bool forward = (btn == buttons.select);
+
     switch (currentlySettingTimeSegment) {
+      case TimeSegment::cancel:
+      {
+        if (forward) {
+          currentlySettingTimeSegment = TimeSegment::hour;
+        } else {
+          currentlySettingTimeSegment = TimeSegment::done;
+        }
+        break;
+      }
       case TimeSegment::hour:
       {
-        currentlySettingTimeSegment = TimeSegment::minute;
+        if (forward) {
+          currentlySettingTimeSegment = TimeSegment::minute;
+        } else {
+          currentlySettingTimeSegment = TimeSegment::cancel;
+        }
         break;
       }
       case TimeSegment::minute:
       {
-        currentlySettingTimeSegment = TimeSegment::second;
+        if (forward) {
+          currentlySettingTimeSegment = TimeSegment::second;
+        } else {
+          currentlySettingTimeSegment = TimeSegment::hour;
+        }
         break;
       }
       case TimeSegment::second:
       {
-        currentlySettingTimeSegment = TimeSegment::done;
-        setTimeGlobally(now() + this->secondsOffset);
+        if (forward) {
+          currentlySettingTimeSegment = TimeSegment::confirm;
+        } else {
+          currentlySettingTimeSegment = TimeSegment::minute;
+        }
+        break;
+      }
+      case TimeSegment::confirm:
+      {
+        if (forward) {
+          currentlySettingTimeSegment = TimeSegment::done;
+          setTimeGlobally(now() + this->secondsOffset);
+        } else {
+          currentlySettingTimeSegment = TimeSegment::second;
+        }
         break;
       }
     }
   };
   buttons.select.setTapHandler(advanceTimeSegment);
+  buttons.mode.setTapHandler(advanceTimeSegment);
   currentlySettingTimeSegment = TimeSegment::hour;
   secondsOffset = 0;
   textscroller->reset();
+  textscroller->setCurrentOffset(5);
+  textscroller->setTargetOffset(5);
 }
 
 void Mode_SettingsMenu_SetTime::runCore()
 {
+  // update the scroller text
+  constexpr uint8_t bufSize = 30;
+  char c_buf[bufSize];
+  auto times = timeCallbackFunction(now() + this->secondsOffset);
+  snprintf(c_buf, bufSize, "back %02d:%02d:%02d ok", times.hour24, times.minute, times.second);
+  textscroller->setText(c_buf);
+
+  // move to and highlight the active part of the time
+  CRGB colourSel = CRGB(CRGB::Red).fadeLightBy(scale8(sin8(millis()/5), 200));
+  // 255 - scale8(sin8(millis()/5), 128), 0, 0);
+  CRGB colourIdle = CRGB(100, 100, 100);
   switch (currentlySettingTimeSegment) {
-    case TimeSegment::hour:
+    case TimeSegment::cancel:
     {
       textscroller->setTargetOffset(0);
-      textscroller->setColours({CRGB::Red, CRGB::Red, CRGB::White, CRGB::White, CRGB::White, CRGB::White, CRGB::White, CRGB::White});
+      textscroller->setColours({
+        colourSel, colourSel, colourSel, colourSel, colourSel, // back + space
+        colourIdle, colourIdle, colourIdle,  //HH:
+        colourIdle, colourIdle, colourIdle,  //MM:
+        colourIdle, colourIdle,               //SS
+        colourIdle, colourIdle, colourIdle,  // space + ok
+      });
+      break;
+    }
+    case TimeSegment::hour:
+    {
+      textscroller->setTargetOffset(5);
+      textscroller->setColours({
+        colourIdle, colourIdle, colourIdle, colourIdle, colourIdle, // back + space
+        colourSel, colourSel, colourIdle,  //HH:
+        colourIdle, colourIdle, colourIdle,  //MM:
+        colourIdle, colourIdle,               //SS
+        colourIdle, colourIdle, colourIdle,  // space + ok
+      });
       break;
     }
     case TimeSegment::minute:
     {
-      textscroller->setTargetOffset(0);
-      textscroller->setColours({CRGB::White, CRGB::White, CRGB::White, CRGB::Red, CRGB::Red, CRGB::White, CRGB::White, CRGB::White});
+      textscroller->setTargetOffset(8);
+      textscroller->setColours({
+        colourIdle, colourIdle, colourIdle, colourIdle, colourIdle, // back + space
+        colourIdle, colourIdle, colourIdle,  //HH:
+        colourSel, colourSel, colourIdle,  //MM:
+        colourIdle, colourIdle,               //SS
+        colourIdle, colourIdle, colourIdle,  // space + ok
+      });
       break;
     }
     case TimeSegment::second:
     {
-      textscroller->setTargetOffset(3);
-      textscroller->setColours({CRGB::White, CRGB::White, CRGB::White, CRGB::White, CRGB::White, CRGB::White, CRGB::Red, CRGB::Red, });
+      textscroller->setTargetOffset(11);
+      textscroller->setColours({
+        colourIdle, colourIdle, colourIdle, colourIdle, colourIdle, // back + space
+        colourIdle, colourIdle, colourIdle,  //HH:
+        colourIdle, colourIdle, colourIdle,  //MM:
+        colourSel, colourSel,               //SS
+        colourIdle, colourIdle, colourIdle,  // space + ok
+      });
+      break;
+    }
+    case TimeSegment::confirm:
+    {
+      textscroller->setTargetOffset(14);
+      textscroller->setColours({
+        colourIdle, colourIdle, colourIdle, colourIdle, colourIdle, // back + space
+        colourIdle, colourIdle, colourIdle,  //HH:
+        colourIdle, colourIdle, colourIdle,  //MM:
+        colourIdle, colourIdle,               //SS
+        colourIdle, colourSel, colourSel,  // space + ok
+      });
       break;
     }
   }
-
-  constexpr uint8_t bufSize = 9;
-  char c_buf[bufSize];
-  auto times = timeCallbackFunction(now() + this->secondsOffset);
-  snprintf(c_buf, bufSize, "%02d:%02d:%02d", times.hour24, times.minute, times.second);
-  textscroller->setText(c_buf);
   textscroller->run();
 }
 
@@ -205,6 +289,12 @@ Mode_ClockFace::Mode_ClockFace(PixelDisplay& display, ButtonReferences buttons) 
   filters.push_back(std::make_unique<RainbowWave>(1, 30, RainbowWave::Direction::horizontal, false));
   filters.push_back(std::make_unique<RainbowWave>(1, 30, RainbowWave::Direction::vertical, false));
   timePrev = timeCallbackFunction();
+}
+
+void Mode_ClockFace::moveIntoCore() 
+{
+  faces[clockfaceIndex]->reset();
+  buttons.mode.setTapHandler([this](Button2& btn) { this->_finished = true; });
 }
 
 void Mode_ClockFace::runCore()
@@ -284,6 +374,7 @@ void Mode_Effects::moveIntoCore()
 
   buttons.left.setTapHandler(cycleHandler);
   buttons.right.setTapHandler(cycleHandler);
+  buttons.mode.setTapHandler([this](Button2& btn) { this->_finished = true; });
 }
 
 void Mode_Effects::runCore()
@@ -313,11 +404,15 @@ ModeManager::ModeManager(PixelDisplay& display, ButtonReferences buttons)
   modes.push_back(std::make_unique<Mode_ClockFace>(display, buttons));
   modes.push_back(std::make_unique<Mode_Effects>(display, buttons));
   modes.push_back(std::make_unique<Mode_SettingsMenu>(display, buttons));
+  modes[modeIndex]->moveInto();
 }
 
 void ModeManager::run()
 {
   modes[modeIndex]->run();
+  if (modes[modeIndex]->finished()) {
+    cycleMode();
+  }
 }
 
 void ModeManager::cycleMode()

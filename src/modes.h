@@ -28,6 +28,7 @@ protected:
   virtual void moveIntoCore() = 0;
   virtual void moveOutCore() = 0;
   virtual void runCore() = 0;
+  bool _finished = false;
 public:
   MainModeFunction(String name, PixelDisplay& display, ButtonReferences buttons) : 
   _name(name),
@@ -35,27 +36,31 @@ public:
   buttons(buttons)
   {}
 
+  // should be called by the parent when moving into this mode
   void moveInto()
   {
-    //clearAllButtonCallbacks(buttons.mode);
+    clearAllButtonCallbacks(buttons.mode);
     clearAllButtonCallbacks(buttons.select);
     clearAllButtonCallbacks(buttons.left);
     clearAllButtonCallbacks(buttons.right);
-
+    _finished = false;
     this->moveIntoCore();
   }
 
+  // should be called by the parent when this mode is active
   void run() 
   {
     this->runCore();
   }
 
+  // should be called by the parent when moving out of this mode
   void moveOut()
   {
     this->moveOutCore();
   }
 
-  virtual bool finished() const { return false; }
+  // indicates that this mode is ready to exit/return
+  virtual bool finished() const { return _finished; }
 
   String getName() const { return _name; }
 
@@ -70,9 +75,7 @@ class Mode_ClockFace : public MainModeFunction
 public:
   Mode_ClockFace(PixelDisplay& display, ButtonReferences buttons);
 protected:
-  void moveIntoCore() override final {
-    faces[clockfaceIndex]->reset();
-  }
+  void moveIntoCore() override final;
   void runCore() override final;
   void moveOutCore() override final {}
 private:
@@ -131,9 +134,11 @@ private:
   int secondsOffset = 0;
   std::unique_ptr<TextScroller> textscroller;
   enum class TimeSegment {
+    cancel,
     hour,
     minute,
     second,
+    confirm,
     done
   };
   TimeSegment currentlySettingTimeSegment = TimeSegment::hour;

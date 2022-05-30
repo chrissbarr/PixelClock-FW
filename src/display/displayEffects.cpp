@@ -50,21 +50,33 @@ bool TextScroller::run()
 
 void TextScroller::setTargetOffset(int targetCharacterIndex)
 {
+  targetOffset = calculateOffset(targetCharacterIndex);
+  _finished = false;
+}
+
+void TextScroller::setCurrentOffset(int targetCharacterIndex)
+{
+  currentOffset = calculateOffset(targetCharacterIndex);
+  _finished = false;
+}
+
+uint32_t TextScroller::calculateOffset(int targetCharIndex) const
+{
   int end = 0;
   int charIndex = 0;
   for (const char& character : text) {
-    if (targetCharacterIndex != -1 && charIndex == targetCharacterIndex) {
+    if (targetCharIndex != -1 && charIndex == targetCharIndex) {
       break;
     }
     end += characterFontArray[charToIndex(character)].width + charSpacing;
     charIndex++;
   }
-  targetOffset = end;
-  if (targetCharacterIndex == -1) {
-    targetOffset -= (charSpacing + display.getWidth());
+  if (targetCharIndex == -1) {
+    end -= (charSpacing + display.getWidth());
   }
-  _finished = false;
+  return end;
 }
+
 
 RepeatingTextScroller::RepeatingTextScroller(
 PixelDisplay& display,
