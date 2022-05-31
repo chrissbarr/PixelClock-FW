@@ -83,6 +83,12 @@ constexpr uint32_t loopTargetTime = 15;     // Constant loop update rate to targ
 constexpr uint32_t reportInterval = 10000;  // Statistics on loop timing will be reported this often (milliseconds)
 LoopTimeManager loopTimeManager(loopTargetTime, reportInterval);
 
+std::vector<String> melodies = {
+  "mario:d=4,o=5,b=100:16e6,16e6,32p,8e6,16c6,8e6,8g6,8p,8g,8p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,16p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,8p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16g#,16a,16c6,16p,16a,16c6,16d6,8p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16c7,16p,16c7,16c7,p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16g#,16a,16c6,16p,16a,16c6,16d6,8p,16d#6,8p,16d6,8p,16c6",
+  "tetris:d=4,o=5,b=160:e6,8b,8c6,8d6,16e6,16d6,8c6,8b,a,8a,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,2a,8p,d6,8f6,a6,8g6,8f6,e6,8e6,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,a",
+};
+//std::unique_ptr<Melody> melodyPlayer;
+
 void setup() {
   delay(1000);
   Serial.begin(250000);
@@ -93,23 +99,8 @@ void setup() {
   brightnessSensor = std::make_unique<BrightnessSensor>();
   modeManager = std::make_unique<ModeManager>(display, ButtonReferences{buttonMode, buttonSelect, buttonLeft, buttonRight});
 
-  
-
   FastLED.addLeds<WS2812, matrixLEDPin, RGB>(ledsDummyRGBW, dummyLEDCount);
   display.setLEDStrip(ledsDummyRGBW);
-
-  Serial.println("Loading melody...");
-  const char melodyString[] = "tetris:d=4,o=5,b=160:e6,8b,8c6,8d6,16e6,16d6,8c6,8b,a,8a,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,2a,8p,d6,8f6,a6,8g6,8f6,e6,8e6,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,a";
-  // create a melody
-  Melody melody = MelodyFactory.loadRtttlString(melodyString);
-
-  // get basic info about the melody
-  Serial.println(String(" Title:") + melody.getTitle());
-  Serial.println(String(" Time unit:") + melody.getTimeUnit());
-
-  Serial.print("Start playing in blocking mode... ");
-  //player.play(melody);
-  Serial.println("Melody ends!");
 
   buttonBrightness.setTapHandler(brightnessButton_callback);
 
@@ -136,6 +127,14 @@ void loop()
   display.update();
 
   brightnessSensor->update();
+
+  // if (!player.isPlaying()) {
+  //   int melodyIdx = random(0, melodies.size());
+  //   auto melody = MelodyFactory.loadRtttlString(melodies[melodyIdx].c_str());
+  //   player.playAsync(melody);
+  //   Serial.println(String(" Title:") + melody.getTitle());
+  //   Serial.println(String(" Time unit:") + melody.getTimeUnit());
+  // }
 
   loopTimeManager.idle();
 }
