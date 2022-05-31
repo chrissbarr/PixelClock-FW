@@ -324,6 +324,14 @@ Mode_ClockFace::Mode_ClockFace(PixelDisplay& display, ButtonReferences buttons) 
 void Mode_ClockFace::moveIntoCore() 
 {
   faces[clockfaceIndex]->reset();
+
+  auto cycleClockface = [this](Button2& btn) {
+    clockfaceIndex++;
+    if (clockfaceIndex == faces.size()) {
+      clockfaceIndex = 0;
+    }
+  };
+  buttons.select.setTapHandler(cycleClockface);
   buttons.mode.setTapHandler([this](Button2& btn) { this->_finished = true; });
 }
 
