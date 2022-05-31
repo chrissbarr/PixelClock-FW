@@ -22,52 +22,34 @@ struct ButtonReferences {
 
 class MainModeFunction
 {
-private:
-  void clearAllButtonCallbacks(Button2& button);
-protected:
-  virtual void moveIntoCore() = 0;
-  virtual void moveOutCore() = 0;
-  virtual void runCore() = 0;
-  bool _finished = false;
 public:
   MainModeFunction(String name, PixelDisplay& display, ButtonReferences buttons) : 
   _name(name),
   _display(display),
   buttons(buttons)
   {}
-
   // should be called by the parent when moving into this mode
-  void moveInto()
-  {
-    clearAllButtonCallbacks(buttons.mode);
-    clearAllButtonCallbacks(buttons.select);
-    clearAllButtonCallbacks(buttons.left);
-    clearAllButtonCallbacks(buttons.right);
-    _finished = false;
-    this->moveIntoCore();
-  }
-
+  void moveInto();
   // should be called by the parent when this mode is active
-  void run() 
-  {
-    this->runCore();
-  }
-
+  void run();
   // should be called by the parent when moving out of this mode
-  void moveOut()
-  {
-    this->moveOutCore();
-  }
-
+  void moveOut();
   // indicates that this mode is ready to exit/return
   virtual bool finished() const { return _finished; }
-
+  // get the name of this mode
   String getName() const { return _name; }
 
 protected:
+  virtual void moveIntoCore();
+  virtual void moveOutCore() = 0;
+  virtual void runCore() = 0;
+  bool _finished = false;
   PixelDisplay& _display;
   ButtonReferences buttons;
   String _name;
+
+private:
+  void clearAllButtonCallbacks(Button2& button);
 };
 
 class Mode_ClockFace : public MainModeFunction

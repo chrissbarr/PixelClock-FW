@@ -14,6 +14,35 @@ void MainModeFunction::clearAllButtonCallbacks(Button2& button)
   button.setTripleClickHandler(nullptr);
 }
 
+void MainModeFunction::moveInto()
+{
+  clearAllButtonCallbacks(buttons.mode);
+  clearAllButtonCallbacks(buttons.select);
+  clearAllButtonCallbacks(buttons.left);
+  clearAllButtonCallbacks(buttons.right);
+  _finished = false;
+  this->moveIntoCore();
+}
+
+void MainModeFunction::moveIntoCore()
+{
+  buttons.mode.setTapHandler([this](Button2& btn){ _finished = true; });
+}
+
+void MainModeFunction::run() 
+{
+  this->runCore();
+}
+
+void MainModeFunction::moveOut()
+{
+  clearAllButtonCallbacks(buttons.mode);
+  clearAllButtonCallbacks(buttons.select);
+  clearAllButtonCallbacks(buttons.left);
+  clearAllButtonCallbacks(buttons.right);
+  this->moveOutCore();
+}
+
 Mode_SettingsMenu::Mode_SettingsMenu(PixelDisplay& display, ButtonReferences buttons) 
   : MainModeFunction("Settings Menu", display, buttons) 
 {
@@ -286,6 +315,7 @@ Mode_ClockFace::Mode_ClockFace(PixelDisplay& display, ButtonReferences buttons) 
   MainModeFunction("Clockface", display, buttons) 
 {
   faces.push_back(std::make_unique<ClockFace_Gravity>(_display, [](){ return timeCallbackFunction(now()); }));
+  faces.push_back(std::make_unique<ClockFace_Simple>(_display, [](){ return timeCallbackFunction(now()); }));
   filters.push_back(std::make_unique<RainbowWave>(1, 30, RainbowWave::Direction::horizontal, false));
   filters.push_back(std::make_unique<RainbowWave>(1, 30, RainbowWave::Direction::vertical, false));
   timePrev = timeCallbackFunction();
