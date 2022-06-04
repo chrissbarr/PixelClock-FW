@@ -108,10 +108,7 @@ void LoopTimeManager::idle()
 
   if (millis() - lastStatReportTime > statReportInterval) {
     // print timing stats
-    Serial.println("Loop Timing Statistics");
-    Serial.print("Avg time:" ); Serial.println(loopTimeAvg);
-    Serial.print("Min time:" ); Serial.println(loopTimeMin);
-    Serial.print("Max time:" ); Serial.println(loopTimeMax);
+    Serial.printf("Loop Timing Statistics (Min - Max - Avg): %d - %d - %f \n", loopTimeMin, loopTimeMax, loopTimeAvg);
     //Serial.print("FastLED FPS:" ); Serial.println(FastLED.getFPS());
 
     // print heap stats
