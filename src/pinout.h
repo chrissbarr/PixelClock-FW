@@ -12,4 +12,12 @@ constexpr int16_t buttonPin4 = 32;
 constexpr int16_t buttonPin5 = 14;
 constexpr int16_t buzzerPin = 26;
 
+constexpr int16_t amplifierPowerPin = 25;
+constexpr int16_t amplifierResetPin = 12;
+constexpr int16_t amplifierPowerdownPin = 13;
+
+constexpr int bclk = 21;
+constexpr int dout = 5;
+constexpr int wclk = 19;
+
 #endif // pinout_h

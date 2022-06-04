@@ -7,8 +7,12 @@
 // Libraries
 #include <SPI.h>
 #include <Button2.h>
-#include <melody_player.h>
-#include <melody_factory.h>
+#include <LittleFS.h>
+
+#include <AudioOutputI2S.h>
+#include <AudioGeneratorMP3.h>
+#include <AudioFileSourceLittleFS.h>
+#include "AudioFileSourceID3.h"
 
 // Project Scope
 #include "pinout.h"
@@ -20,6 +24,13 @@
 #include "brightnessSensor.h"
 #include "modes.h"
 
+
+AudioFileSourceLittleFS *file;
+AudioOutputI2S *dac;
+AudioGeneratorMP3 *mp3;
+AudioFileSourceID3 *id3;
+
+
 // LED Panel Configuration
 constexpr uint8_t matrixWidth = 17;
 constexpr uint8_t matrixHeight = 5;
@@ -27,8 +38,6 @@ constexpr uint8_t matrixSize = matrixWidth * matrixHeight;
 constexpr uint16_t dummyLEDCount = getRGBWsize(matrixSize);
 CRGB ledsDummyRGBW[dummyLEDCount];
 PixelDisplay display(matrixWidth, matrixHeight, false, false);
-
-MelodyPlayer player(buzzerPin, HIGH);
 
 // Buttons
 Button2 buttonMode(buttonPin1, INPUT_PULLUP);
@@ -83,11 +92,26 @@ constexpr uint32_t loopTargetTime = 15;     // Constant loop update rate to targ
 constexpr uint32_t reportInterval = 10000;  // Statistics on loop timing will be reported this often (milliseconds)
 LoopTimeManager loopTimeManager(loopTargetTime, reportInterval);
 
-std::vector<String> melodies = {
-  "mario:d=4,o=5,b=100:16e6,16e6,32p,8e6,16c6,8e6,8g6,8p,8g,8p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,16p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,8p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16g#,16a,16c6,16p,16a,16c6,16d6,8p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16c7,16p,16c7,16c7,p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16g#,16a,16c6,16p,16a,16c6,16d6,8p,16d#6,8p,16d6,8p,16c6",
-  "tetris:d=4,o=5,b=160:e6,8b,8c6,8d6,16e6,16d6,8c6,8b,a,8a,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,2a,8p,d6,8f6,a6,8g6,8f6,e6,8e6,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,a",
-};
-//std::unique_ptr<Melody> melodyPlayer;
+// Called when a metadata event occurs (i.e. an ID3 tag, an ICY block, etc.
+void MDCallback(void *cbData, const char *type, bool isUnicode, const char *string)
+{
+  (void)cbData;
+  Serial.printf("ID3 callback for: %s = '", type);
+
+  if (isUnicode) {
+    string += 2;
+  }
+  
+  while (*string) {
+    char a = *(string++);
+    if (isUnicode) {
+      string++;
+    }
+    Serial.printf("%c", a);
+  }
+  Serial.printf("'\n");
+  Serial.flush();
+}
 
 void setup() {
   delay(1000);
@@ -95,6 +119,12 @@ void setup() {
   Serial.println("Serial begin!");
   Wire.begin();
   initialiseTime();
+
+  Serial.print("LittleFS: "); Serial.println(LittleFS.begin());
+  Serial.print("LittleFS Total Bytes: "); Serial.println(LittleFS.totalBytes());
+  Serial.print("LittleFS Used Bytes: "); Serial.println(LittleFS.usedBytes());
+  Serial.println(LittleFS.exists("/pno-cs.mp3"));
+
 
   brightnessSensor = std::make_unique<BrightnessSensor>();
   modeManager = std::make_unique<ModeManager>(display, ButtonReferences{buttonMode, buttonSelect, buttonLeft, buttonRight});
@@ -108,7 +138,18 @@ void setup() {
   display.update();
   delay(100); 
 
-  //displayDiagnostic(display);
+  displayDiagnostic(display);
+
+  // audioLogger = &Serial;
+  // file = new AudioFileSourceLittleFS("/tetris.mp3");
+  // id3 = new AudioFileSourceID3(file);
+  // id3->RegisterMetadataCB(MDCallback, (void*)"ID3TAG");
+  // dac = new AudioOutputI2S(0, 0, 8, AudioOutputI2S::APLL_ENABLE);
+  // dac->SetPinout(bclk, wclk, dout);
+  // dac->SetGain(0.2);
+  // mp3 = new AudioGeneratorMP3();
+  // Serial.printf("BEGIN...\n");
+  // mp3->begin(id3, dac);
 }
 
 void loop()
@@ -128,15 +169,14 @@ void loop()
 
   brightnessSensor->update();
 
-  // if (!player.isPlaying()) {
-  //   int melodyIdx = random(0, melodies.size());
-  //   auto melody = MelodyFactory.loadRtttlString(melodies[melodyIdx].c_str());
-  //   player.playAsync(melody);
-  //   Serial.println(String(" Title:") + melody.getTitle());
-  //   Serial.println(String(" Time unit:") + melody.getTimeUnit());
-  // }
-
   loopTimeManager.idle();
+
+  // if (mp3->isRunning()) {
+  //   if (!mp3->loop()) mp3->stop();
+  // } else {
+  //   Serial.printf("MP3 done\n");
+  //   delay(1000);
+  // }
 }
 
 
