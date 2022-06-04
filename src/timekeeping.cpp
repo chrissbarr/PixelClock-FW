@@ -107,11 +107,39 @@ void LoopTimeManager::idle()
   if (loopTime < loopTimeMin) { loopTimeMin = loopTime; }
 
   if (millis() - lastStatReportTime > statReportInterval) {
+    // print timing stats
     Serial.println("Loop Timing Statistics");
     Serial.print("Avg time:" ); Serial.println(loopTimeAvg);
     Serial.print("Min time:" ); Serial.println(loopTimeMin);
     Serial.print("Max time:" ); Serial.println(loopTimeMax);
     //Serial.print("FastLED FPS:" ); Serial.println(FastLED.getFPS());
+
+    // print heap stats
+    float usedHeapPercentage = 100 * (float(ESP.getHeapSize() - ESP.getFreeHeap()) / ESP.getHeapSize());
+    Serial.print("Heap (free / total / used / minfree / maxalloc): "); 
+    Serial.print(ESP.getFreeHeap()); 
+    Serial.print(" / "); 
+    Serial.print(ESP.getHeapSize()); 
+    Serial.print(" / "); 
+    Serial.print(usedHeapPercentage);
+    Serial.print("% / ");
+    Serial.print(ESP.getMinFreeHeap());
+    Serial.print(" / ");
+    Serial.println(ESP.getMaxAllocHeap());
+
+    // print psram stats
+    float usedPsramPercentage = 100 * (float(ESP.getPsramSize() - ESP.getFreePsram()) / ESP.getPsramSize());
+    Serial.print("PSRAM (free / total / used / minfree / maxalloc): "); 
+    Serial.print(ESP.getFreePsram()); 
+    Serial.print(" / "); 
+    Serial.print(ESP.getPsramSize()); 
+    Serial.print(" / "); 
+    Serial.print(usedPsramPercentage);
+    Serial.print("% / ");
+    Serial.print(ESP.getMinFreePsram());
+    Serial.print(" / ");
+    Serial.println(ESP.getMaxAllocPsram());
+
     lastStatReportTime = millis();
     loopTimeMin = std::numeric_limits<uint16_t>::max();
     loopTimeMax = 0;

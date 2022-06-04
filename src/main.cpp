@@ -24,12 +24,10 @@
 #include "brightnessSensor.h"
 #include "modes.h"
 
-
 AudioFileSourceLittleFS *file;
 AudioOutputI2S *dac;
 AudioGeneratorMP3 *mp3;
 AudioFileSourceID3 *id3;
-
 
 // LED Panel Configuration
 constexpr uint8_t matrixWidth = 17;
@@ -117,14 +115,25 @@ void setup() {
   delay(1000);
   Serial.begin(250000);
   Serial.println("Serial begin!");
+  Serial.print("ESP Chip Model:  "); Serial.println(ESP.getChipModel());
+  Serial.print("ESP Chip Rev:    "); Serial.println(ESP.getChipRevision());
+  Serial.print("ESP Chip Cores:  "); Serial.println(ESP.getChipCores());
+  Serial.print("ESP CPU Freq:    "); Serial.println(ESP.getCpuFreqMHz());
+  Serial.print("ESP Flash Mode:  "); Serial.println(ESP.getFlashChipMode());
+  Serial.print("ESP Flash Size:  "); Serial.println(ESP.getFlashChipSize());
+  Serial.print("ESP Flash Speed: "); Serial.println(ESP.getFlashChipSpeed());
+  Serial.print("ESP SDK Version: "); Serial.println(ESP.getSdkVersion());
+  Serial.print("Firmware MD5:    "); Serial.println(ESP.getSketchMD5());
+  Serial.print("F/W size:        "); Serial.println(ESP.getSketchSize());
+  Serial.print("F/W free space:  "); Serial.println(ESP.getFreeSketchSpace());
+
   Wire.begin();
   initialiseTime();
 
   Serial.print("LittleFS: "); Serial.println(LittleFS.begin());
   Serial.print("LittleFS Total Bytes: "); Serial.println(LittleFS.totalBytes());
   Serial.print("LittleFS Used Bytes: "); Serial.println(LittleFS.usedBytes());
-  Serial.println(LittleFS.exists("/pno-cs.mp3"));
-
+  Serial.println(LittleFS.exists("/tetris.mp3"));
 
   brightnessSensor = std::make_unique<BrightnessSensor>();
   modeManager = std::make_unique<ModeManager>(display, ButtonReferences{buttonMode, buttonSelect, buttonLeft, buttonRight});
@@ -138,18 +147,18 @@ void setup() {
   display.update();
   delay(100); 
 
-  displayDiagnostic(display);
+  //displayDiagnostic(display);
 
-  // audioLogger = &Serial;
-  // file = new AudioFileSourceLittleFS("/tetris.mp3");
-  // id3 = new AudioFileSourceID3(file);
-  // id3->RegisterMetadataCB(MDCallback, (void*)"ID3TAG");
-  // dac = new AudioOutputI2S(0, 0, 8, AudioOutputI2S::APLL_ENABLE);
-  // dac->SetPinout(bclk, wclk, dout);
-  // dac->SetGain(0.2);
-  // mp3 = new AudioGeneratorMP3();
-  // Serial.printf("BEGIN...\n");
-  // mp3->begin(id3, dac);
+  audioLogger = &Serial;
+  file = new AudioFileSourceLittleFS("/tetris.mp3");
+  id3 = new AudioFileSourceID3(file);
+  id3->RegisterMetadataCB(MDCallback, (void*)"ID3TAG");
+  dac = new AudioOutputI2S(0, 0, 8, AudioOutputI2S::APLL_ENABLE);
+  dac->SetPinout(bclk, wclk, dout);
+  dac->SetGain(0.1);
+  mp3 = new AudioGeneratorMP3();
+  Serial.printf("BEGIN...\n");
+  mp3->begin(id3, dac);
 }
 
 void loop()
@@ -171,12 +180,12 @@ void loop()
 
   loopTimeManager.idle();
 
-  // if (mp3->isRunning()) {
-  //   if (!mp3->loop()) mp3->stop();
-  // } else {
-  //   Serial.printf("MP3 done\n");
-  //   delay(1000);
-  // }
+  if (mp3->isRunning()) {
+    if (!mp3->loop()) mp3->stop();
+  } else {
+    Serial.printf("MP3 done\n");
+    delay(1000);
+  }
 }
 
 
