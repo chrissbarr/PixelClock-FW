@@ -108,34 +108,38 @@ void LoopTimeManager::idle()
 
   if (millis() - lastStatReportTime > statReportInterval) {
     // print timing stats
-    Serial.printf("Loop Timing Statistics (Min - Max - Avg): %d - %d - %f \n", loopTimeMin, loopTimeMax, loopTimeAvg);
+    Serial.printf("Loop Timing Statistics (Min - Max - Avg): %d - %d - %.2f \n", loopTimeMin, loopTimeMax, loopTimeAvg);
     //Serial.print("FastLED FPS:" ); Serial.println(FastLED.getFPS());
 
-    // print heap stats
+    // print memory usage stats
     float usedHeapPercentage = 100 * (float(ESP.getHeapSize() - ESP.getFreeHeap()) / ESP.getHeapSize());
-    Serial.print("Heap (free / total / used / minfree / maxalloc): "); 
-    Serial.print(ESP.getFreeHeap()); 
-    Serial.print(" / "); 
-    Serial.print(ESP.getHeapSize()); 
-    Serial.print(" / "); 
-    Serial.print(usedHeapPercentage);
-    Serial.print("% / ");
-    Serial.print(ESP.getMinFreeHeap());
-    Serial.print(" / ");
-    Serial.println(ESP.getMaxAllocHeap());
+    uint8_t fieldWidth = 15;
+    Serial.printf("%-*s", fieldWidth, "Memory");
+    Serial.printf("%-*s", fieldWidth, "free (kB)");
+    Serial.printf("%-*s", fieldWidth, "total (kB)");
+    Serial.printf("%-*s", fieldWidth, "used (%)");
+    Serial.printf("%-*s", fieldWidth, "minfree (kB)");
+    Serial.printf("%-*s", fieldWidth, "maxalloc (kB)");
+    Serial.printf("\n");
+
+    // print heap stats
+    Serial.printf("%-*s", fieldWidth, "Heap");
+    Serial.printf("%-*d", fieldWidth, ESP.getFreeHeap() / 1024);
+    Serial.printf("%-*d", fieldWidth, ESP.getHeapSize() / 1024);
+    Serial.printf("%-*.2f", fieldWidth, usedHeapPercentage);
+    Serial.printf("%-*d", fieldWidth, ESP.getMinFreeHeap() / 1024);
+    Serial.printf("%-*d", fieldWidth, ESP.getMaxAllocHeap() / 1024);
+    Serial.printf("\n");
 
     // print psram stats
     float usedPsramPercentage = 100 * (float(ESP.getPsramSize() - ESP.getFreePsram()) / ESP.getPsramSize());
-    Serial.print("PSRAM (free / total / used / minfree / maxalloc): "); 
-    Serial.print(ESP.getFreePsram()); 
-    Serial.print(" / "); 
-    Serial.print(ESP.getPsramSize()); 
-    Serial.print(" / "); 
-    Serial.print(usedPsramPercentage);
-    Serial.print("% / ");
-    Serial.print(ESP.getMinFreePsram());
-    Serial.print(" / ");
-    Serial.println(ESP.getMaxAllocPsram());
+    Serial.printf("%-*s", fieldWidth, "PSRAM");
+    Serial.printf("%-*d", fieldWidth, ESP.getFreePsram() / 1024);
+    Serial.printf("%-*d", fieldWidth, ESP.getPsramSize() / 1024);
+    Serial.printf("%-*.2f", fieldWidth, usedPsramPercentage);
+    Serial.printf("%-*d", fieldWidth, ESP.getMinFreePsram() / 1024);
+    Serial.printf("%-*d", fieldWidth, ESP.getMaxAllocPsram() / 1024);
+    Serial.printf("\n");
 
     lastStatReportTime = millis();
     loopTimeMin = std::numeric_limits<uint16_t>::max();

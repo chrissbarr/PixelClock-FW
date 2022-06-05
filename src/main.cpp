@@ -141,7 +141,7 @@ void setup() {
   Serial.printf("%-*s %dKB\n", textPadding, "Size:", ESP.getSketchSize() / 1024);
   Serial.printf("%-*s %dKB\n", textPadding, "Available space:", ESP.getFreeSketchSpace() / 1024);
   
-  // i2c
+  // I2C
   printTextCentred("Initialising I2C", headingWidth);
   bool i2cInitialised = Wire.begin();
   Serial.printf("%-*s %s\n", textPadding, "I2C Initialisation:", i2cInitialised ? "success" : "failed");
