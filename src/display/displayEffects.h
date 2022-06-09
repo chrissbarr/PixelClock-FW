@@ -183,14 +183,15 @@ public:
     bool finished() const override final { return _finished; }
     void reset() override final;
 
-    void supplyData(std::vector<uint8_t> data);
+    void supplyData(std::vector<float> data);
 private:
     PixelDisplay& _display;
     uint8_t _width;
 
     float calculateBarHeight(float val, float valMax, float barMax) const;
 
-    std::vector<uint8_t> _data;
+    std::vector<float> _data;
+    float maxScale = 5000;
 
     bool _finished = false;
     uint32_t _decayRate;

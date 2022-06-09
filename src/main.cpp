@@ -94,8 +94,11 @@ void avrc_metadata_callback(uint8_t id, const uint8_t *text) {
 
 std::unique_ptr<SpectrumDisplay> specDis;
 
-constexpr int fftSamples = 512;
-constexpr int fftSampleFreq = 44100;
+#define FFT_SPEED_OVER_PRECISION
+#define FFT_SQRT_APPROXIMATION
+
+constexpr int fftSamples = 2048;
+constexpr int fftSampleFreq = 44100 * 1;
 constexpr int binWidthHertz = fftSampleFreq / fftSamples;
 float vReal[fftSamples];
 float vImag[fftSamples];
@@ -107,8 +110,9 @@ void read_data_stream(const uint8_t *data, uint32_t length)
 {
   int16_t *samples = (int16_t*) data;
   uint32_t sample_count = length/2;
+  //Serial.printf("Sample count: %d\n", sample_count);
   for (uint32_t i = 0; i < fftSamples; i++) {
-    //Serial.println(samples[i]);
+    
     if (i >= sample_count) { continue; }
     vReal[i] = samples[i];
     vImag[i] = 0;
@@ -122,16 +126,40 @@ void read_data_stream(const uint8_t *data, uint32_t length)
   FFT.compute(FFTDirection::Forward); /* Compute FFT */
   FFT.complexToMagnitude(); /* Compute magnitudes */
 
-  // Analyse FFT results
-  for (int i = 2; i < (fftSamples/2); i++) {
-    //Serial.printf("%f\n", vReal[i]);
-    // for (int j = 0; j < vReal[i] / 10000; j++) {
-    //   Serial.print("=");
-    // }
-    // Serial.println();
-  }
-  //Serial.println("Output--------");
+  constexpr int reducedBins = 15;
+  auto binnedData = std::vector<float>(reducedBins, 0);
+  constexpr int binSize = (fftSamples / 32) / reducedBins;
 
+  // Analyse FFT results
+  for (int i = 2; i < (fftSamples/4); i++) {
+    int binIdx = i / binSize;
+    if (binIdx < binnedData.size()) {
+      binnedData[binIdx] += vReal[i] / binSize;
+    }
+  }
+
+  static float maxSeenSoFar = 1.0;
+  float maxThisTime = *std::max_element(binnedData.begin(), binnedData.end());
+  if (maxThisTime > maxSeenSoFar) { maxSeenSoFar = maxThisTime; }
+
+  float maxScale = 5000;
+  float scaleFactor = maxScale / maxSeenSoFar;
+  //Serial.printf("Scale factor: %f\n", scaleFactor);
+
+  std::transform(binnedData.begin(), binnedData.end(), binnedData.begin(),
+    std::bind(std::multiplies<float>(), std::placeholders::_1, scaleFactor));
+
+  // for (const auto& d : binnedData) {
+  //   for (int j = 0; j < d / (maxScale * 10); j++) {
+  //     Serial.printf("=");
+  //   }
+  //   Serial.println();
+  // }
+  // Serial.println("--------");
+
+
+
+  specDis->supplyData(binnedData);
 }
 
 void setup() {
@@ -243,43 +271,51 @@ void loop()
   buttonLeft.loop();
   buttonRight.loop();
 
-  modeManager->run();
+  //modeManager->run();
 
   FastLED.setBrightness(brightnessModes[brightnessModeIndex].function());
   FastLED.setDither(1);
 
 
 
-  int reducedBins = 20;
-  auto data = std::vector<float>(reducedBins, 0);
-  int binSize = (fftSamples / 2) / reducedBins;
+  //int reducedBins = 20;
+  //auto data = std::vector<float>(reducedBins, 0);
+  //int binSize = (fftSamples / 2) / reducedBins;
 
-  // // Analyse FFT results
-  for (int i = 2; i < (fftSamples/2); i++) {
-    int binIdx = i / binSize;
-    if (binIdx < data.size()) {
-      data[binIdx] += vReal[i];
-    }
-  }
+  // // // Analyse FFT results
+  // for (int i = 2; i < (fftSamples/2); i++) {
+  //   int binIdx = i / binSize;
+  //   if (binIdx < data.size()) {
+  //     data[binIdx] += vReal[i];
+  //   }
+  // }
 
-  for (const auto& d : data) {
-    for (int j = 0; j < d / 100000 * binSize; j++) {
-      Serial.printf("=");
-    }
-    Serial.println();
-  }
-  Serial.println("--------");
+  // for (const auto& d : data) {
+  //   for (int j = 0; j < d / 100000 * binSize; j++) {
+  //     Serial.printf("=");
+  //   }
+  //   Serial.println();
+  // }
+  // Serial.println("--------");
 
   // std::vector<uint8_t> dataInt = std::vector<uint8_t>(16, 0);
   // for (int i = 0; i < 16; i++) {
   //   dataInt[i] = uint8_t(data[i] / 1000);
   // }
 
-  // for (int i = 0; i < 30; i++) {
-  //   data.push_back(dist(simple_rand));
+  // std::vector<float> data;
+  // float maxVal = 5000;
+  // float t = float(millis()) / 5000.0;
+  // for (int i = 0; i < display.getWidth(); i++) {
+
+  //   data.push_back((sin(t - float(i) / 2) * maxVal / 2) + maxVal/2);
   // }
-  //specDis->supplyData(dataInt);
-  //specDis->run();
+
+  //std::vector<float> data = {0, 1, 2, 3, 4, 5, 400, 500, 600, 700, 800, 900};
+  //data.push_back(millis() / 10);
+  //specDis->supplyData(data);
+  specDis->run();
+
   display.update();
 
   brightnessSensor->update();
