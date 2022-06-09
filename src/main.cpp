@@ -3,16 +3,16 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <random>
 
 // Libraries
 #include <SPI.h>
 #include <Button2.h>
 #include <LittleFS.h>
 
-#include <AudioOutputI2S.h>
-#include <AudioGeneratorMP3.h>
-#include <AudioFileSourceLittleFS.h>
-#include "AudioFileSourceID3.h"
+#include "BluetoothA2DPSink.h"
+#include <arduinoFFT.h>
+
 
 // Project Scope
 #include "pinout.h"
@@ -25,10 +25,7 @@
 #include "modes.h"
 #include "utility.h"
 
-AudioFileSourceLittleFS *file;
-AudioOutputI2S *dac;
-AudioGeneratorMP3 *mp3;
-AudioFileSourceID3 *id3;
+BluetoothA2DPSink a2dp_sink;
 
 // LED Panel Configuration
 constexpr uint8_t matrixWidth = 17;
@@ -91,32 +88,55 @@ constexpr uint32_t loopTargetTime = 15;     // Constant loop update rate to targ
 constexpr uint32_t reportInterval = 10000;  // Statistics on loop timing will be reported this often (milliseconds)
 LoopTimeManager loopTimeManager(loopTargetTime, reportInterval);
 
-// Called when a metadata event occurs (i.e. an ID3 tag, an ICY block, etc.
-void MDCallback(void *cbData, const char *type, bool isUnicode, const char *string)
-{
-  (void)cbData;
-  Serial.printf("ID3 callback for: %s = '", type);
-
-  if (isUnicode) {
-    string += 2;
-  }
-  
-  while (*string) {
-    char a = *(string++);
-    if (isUnicode) {
-      string++;
-    }
-    Serial.printf("%c", a);
-  }
-  Serial.printf("'\n");
-  Serial.flush();
+void avrc_metadata_callback(uint8_t id, const uint8_t *text) {
+  Serial.printf("==> AVRC metadata rsp: attribute id 0x%x, %s\n", id, text);
 }
 
+std::unique_ptr<SpectrumDisplay> specDis;
 
+constexpr int fftSamples = 512;
+constexpr int fftSampleFreq = 44100;
+constexpr int binWidthHertz = fftSampleFreq / fftSamples;
+float vReal[fftSamples];
+float vImag[fftSamples];
+float weighingFactors[fftSamples];
+
+ArduinoFFT<float> FFT = ArduinoFFT<float>(vReal, vImag, fftSamples, fftSampleFreq, weighingFactors);
+
+void read_data_stream(const uint8_t *data, uint32_t length)
+{
+  int16_t *samples = (int16_t*) data;
+  uint32_t sample_count = length/2;
+  for (uint32_t i = 0; i < fftSamples; i++) {
+    //Serial.println(samples[i]);
+    if (i >= sample_count) { continue; }
+    vReal[i] = samples[i];
+    vImag[i] = 0;
+    //Serial.println(vReal[i] / 1000);
+  }
+  //Serial.println("Input--------");
+
+
+  FFT.dcRemoval();
+  FFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);	/* Weigh data */
+  FFT.compute(FFTDirection::Forward); /* Compute FFT */
+  FFT.complexToMagnitude(); /* Compute magnitudes */
+
+  // Analyse FFT results
+  for (int i = 2; i < (fftSamples/2); i++) {
+    //Serial.printf("%f\n", vReal[i]);
+    // for (int j = 0; j < vReal[i] / 10000; j++) {
+    //   Serial.print("=");
+    // }
+    // Serial.println();
+  }
+  //Serial.println("Output--------");
+
+}
 
 void setup() {
   delay(1000);
-  Serial.begin(250000);
+  Serial.begin(500000);
 
   using namespace utility::printFormatting;
 
@@ -179,21 +199,39 @@ void setup() {
   buttonBrightness.setTapHandler(brightnessButton_callback);
 
   printTextCentred("Initialising Audio", headingWidth);
-  audioLogger = &Serial;
-  file = new AudioFileSourceLittleFS("/tetris.mp3");
-  id3 = new AudioFileSourceID3(file);
-  id3->RegisterMetadataCB(MDCallback, (void*)"ID3TAG");
-  dac = new AudioOutputI2S(0, 0, 8, AudioOutputI2S::APLL_ENABLE);
-  dac->SetPinout(bclk, wclk, dout);
-  dac->SetGain(0.02);
-  mp3 = new AudioGeneratorMP3();
-  Serial.printf("BEGIN...\n");
-  //mp3->begin(id3, dac);
+
+  i2s_pin_config_t my_pin_config = {
+    .bck_io_num = bclk,
+    .ws_io_num = wclk,
+    .data_out_num = dout,
+    .data_in_num = I2S_PIN_NO_CHANGE
+  };
+
+  i2s_config_t i2s_config = {
+      .mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_TX),
+      .sample_rate = 44100,
+      .bits_per_sample = (i2s_bits_per_sample_t)16,
+      .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
+      .communication_format = (i2s_comm_format_t) (I2S_COMM_FORMAT_STAND_I2S),
+      .intr_alloc_flags = 0, // default interrupt priority
+      .dma_buf_count = 8,
+      .dma_buf_len = 1024,
+      .use_apll = false,
+      .tx_desc_auto_clear = true // avoiding noise in case of data unavailability
+  };
+  a2dp_sink.set_pin_config(my_pin_config);
+  a2dp_sink.set_i2s_config(i2s_config);
+  a2dp_sink.set_avrc_metadata_callback(avrc_metadata_callback);
+  a2dp_sink.set_stream_reader(read_data_stream);
+  a2dp_sink.start("MyMusic");
 
   Serial.printf("%-*s %dms\n", textPadding, "Runtime:", millis());
   printSolidLine(headingWidth);
   printTextCentred("Initialisation Completed", headingWidth);
   printSolidLine(headingWidth);
+
+  specDis = std::make_unique<SpectrumDisplay>(display, display.getWidth(), 0);
+  specDis->reset();
 }
 
 void loop()
@@ -209,15 +247,45 @@ void loop()
 
   FastLED.setBrightness(brightnessModes[brightnessModeIndex].function());
   FastLED.setDither(1);
+
+
+
+  int reducedBins = 20;
+  auto data = std::vector<float>(reducedBins, 0);
+  int binSize = (fftSamples / 2) / reducedBins;
+
+  // // Analyse FFT results
+  for (int i = 2; i < (fftSamples/2); i++) {
+    int binIdx = i / binSize;
+    if (binIdx < data.size()) {
+      data[binIdx] += vReal[i];
+    }
+  }
+
+  for (const auto& d : data) {
+    for (int j = 0; j < d / 100000 * binSize; j++) {
+      Serial.printf("=");
+    }
+    Serial.println();
+  }
+  Serial.println("--------");
+
+  // std::vector<uint8_t> dataInt = std::vector<uint8_t>(16, 0);
+  // for (int i = 0; i < 16; i++) {
+  //   dataInt[i] = uint8_t(data[i] / 1000);
+  // }
+
+  // for (int i = 0; i < 30; i++) {
+  //   data.push_back(dist(simple_rand));
+  // }
+  //specDis->supplyData(dataInt);
+  //specDis->run();
   display.update();
 
   brightnessSensor->update();
 
   loopTimeManager.idle();
 
-  if (mp3->isRunning()) {
-    if (!mp3->loop()) mp3->stop();
-  } 
 }
 
 

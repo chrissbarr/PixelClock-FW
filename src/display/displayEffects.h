@@ -176,6 +176,27 @@ private:
     Direction _direction;
 };
 
+class SpectrumDisplay : public DisplayEffect {
+public:
+    SpectrumDisplay(PixelDisplay& display, uint8_t width, uint32_t decayRate);
+    bool run() override final;
+    bool finished() const override final { return _finished; }
+    void reset() override final;
+
+    void supplyData(std::vector<uint8_t> data);
+private:
+    PixelDisplay& _display;
+    uint8_t _width;
+
+    float calculateBarHeight(float val, float valMax, float barMax) const;
+
+    std::vector<uint8_t> _data;
+
+    bool _finished = false;
+    uint32_t _decayRate;
+    uint32_t _lastDecayedTime = 0;
+};
+
 class ClockFace_Base : public DisplayEffect {
 public:
     ClockFace_Base(PixelDisplay& display, std::function<ClockFaceTimeStruct(void)> timeCallbackFunction) : _display(display), timeCallbackFunction(timeCallbackFunction) {}

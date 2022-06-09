@@ -286,6 +286,61 @@ bool Gravity::run()
   return _finished;
 }
 
+SpectrumDisplay::SpectrumDisplay(PixelDisplay& display, uint8_t width, uint32_t decayRate) :
+  _display(display), _width(width), _decayRate(_decayRate)
+{
+}
+
+void SpectrumDisplay::reset()
+{
+  _data = std::vector<uint8_t>(_width, 0);
+  _finished = false;
+}
+
+bool SpectrumDisplay::run()
+{
+
+  auto scale = [](int input, int min, int max)
+  {
+    // assuming max is always greater than min
+    float range = (float)max - (float)min;
+    int output = min + int((range / 255.f) * (float)input);
+    return output;
+  };
+  
+  uint8_t vertMax = _display.getHeight();
+  if (!_data.empty())
+  {
+    for (uint8_t x = 0; x < _data.size(); x++) {
+      if (x >= _display.getWidth()) { break; }
+      // we need to scale the value from 0 - 255 to 0 - vertMax
+      uint8_t valScaled = scale(_data[x], 0, vertMax);
+      for (int y = 0; y < _display.getHeight(); y++) {
+        CRGB colour = CRGB::Black;
+        if (y <= valScaled) {
+          colour = CRGB::Red;
+        }
+        _display.setXY(x, _display.getHeight() - 1 - y, colour);
+      }
+    }
+  }
+  return finished();
+}
+
+void SpectrumDisplay::supplyData(std::vector<uint8_t> data)
+{
+  _data = data;
+}
+
+float SpectrumDisplay::calculateBarHeight(float val, float valMax, float barMax) const
+{
+  float valMin = 0;
+  float barMin = 0;
+  float height = (val - valMin) * (barMax - barMin) / (valMax - valMin) + barMin;
+  return height;
+}
+
+
 
 // bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)(), DisplayRegion displayRegion)
 // {
