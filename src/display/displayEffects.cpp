@@ -291,8 +291,8 @@ bool Gravity::run()
 SpectrumDisplay::SpectrumDisplay(PixelDisplay& display, uint8_t width, uint32_t decayRate) :
   _display(display), _width(width), _decayRate(_decayRate)
 {
-  colMin = CRGB::DarkBlue;
-  colMax = CRGB::Blue;
+  colMin = CRGB::Blue;
+  colMax = CRGB::Purple;
 }
 
 void SpectrumDisplay::reset()
