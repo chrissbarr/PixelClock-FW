@@ -10,7 +10,7 @@
 #include <deque>
 #include <vector>
 
-constexpr int fftSamples = 2048;
+constexpr int fftSamples = 512;
 constexpr int fftSampleFreq = 44100 * 1;
 constexpr int binWidthHertz = fftSampleFreq / fftSamples;
 extern float vReal[fftSamples];
@@ -18,8 +18,9 @@ extern float vImag[fftSamples];
 extern float weighingFactors[fftSamples];
 
 constexpr int audioSpectrumBins = 17;
+constexpr int audioSpectrumHistorySize = 10;
 constexpr int audioSpectrumBinSize = (fftSamples / 32) / audioSpectrumBins;
-extern std::vector<float> audioSpectrum;
+extern std::deque<std::vector<float>> audioSpectrum;
 extern SemaphoreHandle_t audioSpectrumSemaphore;
 
 extern std::unique_ptr<ArduinoFFT<float>> FFT;

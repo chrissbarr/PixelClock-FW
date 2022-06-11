@@ -5,11 +5,13 @@
 float vReal[fftSamples];
 float vImag[fftSamples];
 float weighingFactors[fftSamples];
-std::vector<float> audioSpectrum;
+std::deque<std::vector<float>> audioSpectrum;
 SemaphoreHandle_t audioSpectrumSemaphore;
 
 std::unique_ptr<ArduinoFFT<float>> FFT;
 std::deque<float> prevMaxes;
+
+float prevMax = 0.0;
 
 void initialiseFFT()
 {
@@ -20,16 +22,19 @@ void read_data_stream(const uint8_t *data, uint32_t length)
 {
   int16_t *samples = (int16_t*) data;
   uint32_t sample_count = length/2;
-  Serial.printf("Sample count: %d\n", sample_count);
+  //Serial.printf("Sample count: %d\n", sample_count);
+  int sourceIdx = 0;
   for (uint32_t i = 0; i < fftSamples; i++) {
     
-    if (i < sample_count) { 
-      vReal[i] = samples[i];
+    if (sourceIdx < sample_count) { 
+      vReal[i] = samples[sourceIdx];
     } else {
       vReal[i] = 0;
     }
     
     vImag[i] = 0;
+
+    sourceIdx += 2;
     //Serial.println(vReal[i] / 1000);
   }
   //Serial.println("Input--------");
@@ -42,26 +47,34 @@ void read_data_stream(const uint8_t *data, uint32_t length)
 
   // Fill the audioSpectrum vector with data. 
   xSemaphoreTake(audioSpectrumSemaphore, portMAX_DELAY);
-  audioSpectrum = std::vector<float>(audioSpectrumBins, 0);
+  audioSpectrum.push_back(std::vector<float>(audioSpectrumBins, 0));
+  if (audioSpectrum.size() > audioSpectrumHistorySize) { audioSpectrum.pop_front(); }
 
   // Analyse FFT results
-  for (int i = 2; i < (fftSamples/4); i++) {
-    int binIdx = i / audioSpectrumBinSize;
-    if (binIdx < audioSpectrum.size()) {
-      audioSpectrum[binIdx] += vReal[i] / audioSpectrumBinSize;
+  for (int i = 0; i < (fftSamples/2); i++) {
+    Serial.printf("%d - %f\n", i, vReal[i]);
+    int binIdx = i;// / audioSpectrumBinSize;
+    if (binIdx < audioSpectrum.back().size()) {
+      float val = vReal[i] / audioSpectrumBinSize;
+
+      // basic noise filter
+      if (val > prevMax * 0.1) {
+        audioSpectrum.back()[binIdx] += val;
+      }
     }
   }
 
-  float maxThisTime = *std::max_element(audioSpectrum.begin(), audioSpectrum.end());
+  float maxThisTime = *std::max_element(audioSpectrum.back().begin(), audioSpectrum.back().end());
   prevMaxes.push_back(maxThisTime);
   if (prevMaxes.size() > prevMaxesToKeep) { prevMaxes.pop_front(); }
   float avgMax = std::accumulate(prevMaxes.begin(), prevMaxes.end(), 0.0) / prevMaxes.size();
+  prevMax = avgMax;
 
   float maxScale = 4000;
   float scaleFactor = maxScale / avgMax;
-  Serial.printf("Scale factor: %f\n", scaleFactor);
+  //Serial.printf("Scale factor: %f\n", scaleFactor);
 
-  std::transform(audioSpectrum.begin(), audioSpectrum.end(), audioSpectrum.begin(),
+  std::transform(audioSpectrum.back().begin(), audioSpectrum.back().end(), audioSpectrum.back().begin(),
     std::bind(std::multiplies<float>(), std::placeholders::_1, scaleFactor));
   
   xSemaphoreGive(audioSpectrumSemaphore);

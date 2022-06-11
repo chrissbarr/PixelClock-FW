@@ -94,7 +94,7 @@ void avrc_metadata_callback(uint8_t id, const uint8_t *text) {
 
 void setup() {
   delay(100);
-  Serial.begin(500000);
+  Serial.begin(921600);
 
   using namespace utility::printFormatting;
 

@@ -190,6 +190,9 @@ private:
 
     float calculateBarHeight(float val, float valMax, float barMax) const;
 
+    CRGB colMin;
+    CRGB colMax;
+
     std::vector<float> _data;
     float maxScale = 5000;
 

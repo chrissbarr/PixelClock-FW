@@ -1,6 +1,8 @@
 #include "display/displayEffects.h"
 #include "display/display.h"
 
+#include "audiofft.h"
+
 #include <random>
 
 TextScroller::TextScroller(
@@ -289,6 +291,8 @@ bool Gravity::run()
 SpectrumDisplay::SpectrumDisplay(PixelDisplay& display, uint8_t width, uint32_t decayRate) :
   _display(display), _width(width), _decayRate(_decayRate)
 {
+  colMin = CRGB::DarkBlue;
+  colMax = CRGB::Blue;
 }
 
 void SpectrumDisplay::reset()
@@ -299,6 +303,24 @@ void SpectrumDisplay::reset()
 
 bool SpectrumDisplay::run()
 {  
+  xSemaphoreTake(audioSpectrumSemaphore, portMAX_DELAY);
+  if (!audioSpectrum.empty()) {
+    //supplyData(audioSpectrum.back());
+
+    std::vector<float> totals = std::vector<float>(audioSpectrum.back().size(), 0);
+    for (const auto& spectrum : audioSpectrum) {
+      for (int i = 0; i < spectrum.size(); i++) {
+        totals[i] += spectrum[i];
+      }
+    }
+    std::transform(totals.begin(), totals.end(), totals.begin(),
+      std::bind(std::multiplies<float>(), std::placeholders::_1, 1.0 / audioSpectrum.size()));
+    supplyData(totals);
+  }
+  xSemaphoreGive(audioSpectrumSemaphore);
+
+  //Serial.printf("data size: %d\n", _data.size());
+
   uint8_t vertMax = _display.getHeight();
   if (!_data.empty()) {
     for (uint8_t x = 0; x < _data.size(); x++) {
@@ -308,7 +330,7 @@ bool SpectrumDisplay::run()
       for (int y = 0; y < _display.getHeight(); y++) {
         CRGB colour = CRGB::Black;
         if (y <= barHeight) {
-          colour = CRGB(CRGB::Green).lerp16(CRGB::Red, fract16((barHeight / float(vertMax)) * 65535));
+          colour = CRGB(colMin).lerp16(colMax, fract16((barHeight / float(vertMax)) * 65535));
         }
         if (y == std::floor(barHeight)) {
           float remainder = barHeight - std::floor(barHeight);
