@@ -303,7 +303,7 @@ void SpectrumDisplay::reset()
 
 bool SpectrumDisplay::run()
 {  
-  auto spectrum = audio->getAudioSpectrum();
+  auto spectrum = Audio::get().getAudioSpectrum();
   if (!spectrum.empty()) {
     //supplyData(audioSpectrum.back());
 

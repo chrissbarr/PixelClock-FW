@@ -12,7 +12,7 @@
 
 void read_data_stream(const uint8_t *data, uint32_t length)
 {
-  audio->a2dp_callback(data, length);
+  Audio::get().a2dp_callback(data, length);
 }
 
 void Audio::a2dp_callback(const uint8_t *data, uint32_t length)
@@ -22,58 +22,62 @@ void Audio::a2dp_callback(const uint8_t *data, uint32_t length)
 
   i2sOutput->write(data, length);
 
-  int sourceIdx = 0;
-  for (uint32_t i = 0; i < fftSamples; i++) {
+  // int sourceIdx = 0;
+  // for (uint32_t i = 0; i < fftSamples; i++) {
     
-    if (sourceIdx < sample_count) { 
-      vReal[i] = samples[sourceIdx];
-    } else {
-      vReal[i] = 0;
-    }
-    vImag[i] = 0;
-    sourceIdx += 2;
-  }
+  //   if (sourceIdx < sample_count) { 
+  //     vReal[i] = samples[sourceIdx];
+  //   } else {
+  //     vReal[i] = 0;
+  //   }
+  //   vImag[i] = 0;
+  //   sourceIdx += 2;
+  // }
 
-  FFT->dcRemoval();
-  FFT->windowing(FFTWindow::Hamming, FFTDirection::Forward);	/* Weigh data */
-  FFT->compute(FFTDirection::Forward); /* Compute FFT */
-  FFT->complexToMagnitude(); /* Compute magnitudes */
+  // FFT->dcRemoval();
+  // FFT->windowing(FFTWindow::Hamming, FFTDirection::Forward);	/* Weigh data */
+  // FFT->compute(FFTDirection::Forward); /* Compute FFT */
+  // FFT->complexToMagnitude(); /* Compute magnitudes */
 
-  // Fill the audioSpectrum vector with data. 
-  audioSpectrum.push_back(std::vector<float>(audioSpectrumBins, 0));
-  if (audioSpectrum.size() > audioSpectrumHistorySize) { audioSpectrum.pop_front(); }
+  // // Fill the audioSpectrum vector with data. 
+  // auto spectrum = std::vector<float>(audioSpectrumBins, 0);
 
-  // Bin FFT results
-  for (int i = 5; i < (fftSamples / 2) - 1; i++) {
-    float freq = i * fftFrequencyResolution;
-    int binIdx = std::floor(freq / audioSpectrumBinWidth);
-    //Serial.printf("%d\t%f\n", i, vReal[i]);
-    //int binIdx = i / audioSpectrumBinSize;
-    if (binIdx < audioSpectrum.back().size()) {
-      float val = vReal[i] / audioSpectrumBinSize;
+  // float prevMax = 0.0;
+  // if (!prevMaxes.empty()) {
+  //   prevMax = prevMaxes.back();
+  // }
 
-      // basic noise filter
-      float prevMax = 0.0;
-      if (prevMaxes.empty()) {
-        prevMax = prevMaxes.back();
-      }
-      if (val > prevMax * 0.02) {
-        audioSpectrum.back()[binIdx] += val;
-      }
-    }
-  }
+  // // Bin FFT results
+  // for (int i = 5; i < (fftSamples / 2) - 1; i++) {
+  //   float freq = i * fftFrequencyResolution;
+  //   int binIdx = std::floor(freq / audioSpectrumBinWidth);
+  //   //Serial.printf("%d\t%f\n", i, vReal[i]);
+  //   //int binIdx = i / audioSpectrumBinSize;
+  //   if (binIdx < spectrum.size()) {
+  //     float val = vReal[i] / audioSpectrumBinSize;
 
-  float maxThisTime = *std::max_element(audioSpectrum.back().begin(), audioSpectrum.back().end());
-  prevMaxes.push_back(maxThisTime);
-  if (prevMaxes.size() > prevMaxesToKeep) { prevMaxes.pop_front(); }
-  float avgMax = std::accumulate(prevMaxes.begin(), prevMaxes.end(), 0.0) / prevMaxes.size();
+  //     // basic noise filter
+  //     if (val > prevMax * 0.02) {
+  //       spectrum[binIdx] += val;
+  //     }
+  //   }
+  // }
 
-  float maxScale = 6000;
-  float scaleFactor = maxScale / avgMax;
-  //Serial.printf("Scale factor: %f\n", scaleFactor);
+  // float maxThisTime = *std::max_element(spectrum.begin(), spectrum.end());
+  // prevMaxes.push_back(maxThisTime);
+  // if (prevMaxes.size() > prevMaxesToKeep) { prevMaxes.pop_front(); }
+  // float avgMax = std::accumulate(prevMaxes.begin(), prevMaxes.end(), 0.0) / prevMaxes.size();
 
-  std::transform(audioSpectrum.back().begin(), audioSpectrum.back().end(), audioSpectrum.back().begin(),
-    std::bind(std::multiplies<float>(), std::placeholders::_1, scaleFactor));
+  // float maxScale = 6000;
+  // float scaleFactor = maxScale / avgMax;
+  // //Serial.printf("Scale factor: %f\n", scaleFactor);
+
+  // std::transform(spectrum.begin(), spectrum.end(), spectrum.begin(),
+  //   std::bind(std::multiplies<float>(), std::placeholders::_1, scaleFactor));
+  // xSemaphoreTake(audioSpectrumSemaphore, portMAX_DELAY);
+  // audioSpectrum.push_back(spectrum);
+  // if (audioSpectrum.size() > audioSpectrumHistorySize) { audioSpectrum.pop_front(); }
+  // xSemaphoreGive(audioSpectrumSemaphore);
 }
 
 Audio::Audio() {}
@@ -91,11 +95,16 @@ void Audio::begin()
   cfg.pin_data = dout;
   cfg.pin_bck = bclk;
   cfg.pin_ws = wclk;
-  cfg.buffer_count = 8;
+  cfg.buffer_count = 10;
   cfg.buffer_size = 1024;
-  cfg.sample_rate = a2dpSink->sample_rate();
+  //cfg.sample_rate = a2dpSink->sample_rate();
   cfg.channels = 2;
   cfg.bits_per_sample = 16;
+  cfg.use_apll = false;
+  cfg.rx_tx_mode = audio_tools::RxTxMode::TX_MODE,
+  cfg.sample_rate = 44100,
+  cfg.i2s_format = audio_tools::I2SFormat::I2S_STD_FORMAT,
+  cfg.auto_clear = true;
   i2sOutput->begin(cfg);
 
   Serial.println("after i2s");
@@ -109,4 +118,5 @@ void Audio::begin()
 
   FFT = std::make_unique<ArduinoFFT<float>>(vReal, vImag, fftSamples, fftSampleFreq, weighingFactors);
 
+  audioSpectrumSemaphore = xSemaphoreCreateMutex();
 }

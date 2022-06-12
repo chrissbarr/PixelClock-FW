@@ -84,7 +84,7 @@ constexpr uint32_t reportInterval = 10000;  // Statistics on loop timing will be
 LoopTimeManager loopTimeManager(loopTargetTime, reportInterval);
 
 // Audio
-std::unique_ptr<Audio> audio;
+//std::unique_ptr<Audio> audio;
 
 
 void setup() {
@@ -153,8 +153,8 @@ void setup() {
 
   printTextCentred("Initialising Audio", headingWidth);
 
-  audio = std::make_unique<Audio>();
-  audio->begin();
+  //audio = std::make_unique<Audio>();
+  Audio::get().begin();
 
 
   Serial.printf("%-*s %dms\n", textPadding, "Runtime:", millis());
