@@ -35,6 +35,31 @@ extern std::deque<float> prevMaxes;
 
 void initialiseFFT();
 
+//void read_data_stream(const uint8_t *data, uint32_t length);
+
+inline void avrc_metadata_callback(uint8_t id, const uint8_t *text) {
+  Serial.printf("==> AVRC metadata rsp: attribute id 0x%x, %s\n", id, text);
+}
+
+class BluetoothA2DPSink;
+namespace audio_tools {
+class I2SStream;
+}
+
 void read_data_stream(const uint8_t *data, uint32_t length);
+
+class Audio {
+public:
+  Audio();
+  ~Audio();
+  void begin();
+
+  void update();
+
+  std::unique_ptr<BluetoothA2DPSink> a2dpSink;
+  std::unique_ptr<audio_tools::I2SStream> i2sOutput;
+private:
+
+};
 
 #endif // audiofft_h

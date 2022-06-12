@@ -10,8 +10,6 @@
 #include <Button2.h>
 #include <LittleFS.h>
 
-#include "BluetoothA2DPSink.h"
-
 // Project Scope
 #include "pinout.h"
 #include "display/display.h"
@@ -22,9 +20,7 @@
 #include "brightnessSensor.h"
 #include "modes.h"
 #include "utility.h"
-#include "audiofft.h"
-
-BluetoothA2DPSink a2dp_sink;
+#include "audio.h"
 
 // LED Panel Configuration
 constexpr uint8_t matrixWidth = 17;
@@ -87,9 +83,8 @@ constexpr uint32_t loopTargetTime = 15;     // Constant loop update rate to targ
 constexpr uint32_t reportInterval = 10000;  // Statistics on loop timing will be reported this often (milliseconds)
 LoopTimeManager loopTimeManager(loopTargetTime, reportInterval);
 
-void avrc_metadata_callback(uint8_t id, const uint8_t *text) {
-  Serial.printf("==> AVRC metadata rsp: attribute id 0x%x, %s\n", id, text);
-}
+// Audio
+std::unique_ptr<Audio> audio;
 
 
 void setup() {
@@ -158,30 +153,9 @@ void setup() {
 
   printTextCentred("Initialising Audio", headingWidth);
 
-  i2s_pin_config_t my_pin_config = {
-    .bck_io_num = bclk,
-    .ws_io_num = wclk,
-    .data_out_num = dout,
-    .data_in_num = I2S_PIN_NO_CHANGE
-  };
+  audio = std::make_unique<Audio>();
+  audio->begin();
 
-  i2s_config_t i2s_config = {
-      .mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_TX),
-      .sample_rate = 44100,
-      .bits_per_sample = (i2s_bits_per_sample_t)16,
-      .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
-      .communication_format = (i2s_comm_format_t) (I2S_COMM_FORMAT_STAND_I2S),
-      .intr_alloc_flags = 0, // default interrupt priority
-      .dma_buf_count = 8,
-      .dma_buf_len = 1024,
-      .use_apll = false,
-      .tx_desc_auto_clear = true // avoiding noise in case of data unavailability
-  };
-  a2dp_sink.set_pin_config(my_pin_config);
-  a2dp_sink.set_i2s_config(i2s_config);
-  a2dp_sink.set_avrc_metadata_callback(avrc_metadata_callback);
-  a2dp_sink.set_stream_reader(read_data_stream);
-  a2dp_sink.start("MyMusic");
 
   Serial.printf("%-*s %dms\n", textPadding, "Runtime:", millis());
   printSolidLine(headingWidth);
