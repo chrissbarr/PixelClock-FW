@@ -161,11 +161,6 @@ void setup() {
   printSolidLine(headingWidth);
   printTextCentred("Initialisation Completed", headingWidth);
   printSolidLine(headingWidth);
-
-  audioSpectrumSemaphore = xSemaphoreCreateMutex();
-
-  initialiseFFT();
-
 }
 
 void loop()

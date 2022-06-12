@@ -4,32 +4,23 @@
 #include "BluetoothA2DPSink.h"
 #include "AudioTools.h"
 
+// #define FFT_SPEED_OVER_PRECISION
+// #define FFT_SQRT_APPROXIMATION
+#include <arduinoFFT.h>
+
 #include <numeric>
 
-float vReal[fftSamples];
-float vImag[fftSamples];
-float weighingFactors[fftSamples];
-std::deque<std::vector<float>> audioSpectrum;
-SemaphoreHandle_t audioSpectrumSemaphore;
-
-std::unique_ptr<ArduinoFFT<float>> FFT;
-std::deque<float> prevMaxes;
-
-float prevMax = 0.0;
-
-void initialiseFFT()
+void read_data_stream(const uint8_t *data, uint32_t length)
 {
-  FFT = std::make_unique<ArduinoFFT<float>>(vReal, vImag, fftSamples, fftSampleFreq, weighingFactors);
+  audio->a2dp_callback(data, length);
 }
 
-extern std::unique_ptr<Audio> audio;
-
-void read_data_stream(const uint8_t *data, uint32_t length)
+void Audio::a2dp_callback(const uint8_t *data, uint32_t length)
 {
   int16_t *samples = (int16_t*) data;
   uint32_t sample_count = length/2;
 
-  audio->i2sOutput->write(data, length);
+  i2sOutput->write(data, length);
 
   int sourceIdx = 0;
   for (uint32_t i = 0; i < fftSamples; i++) {
@@ -49,7 +40,6 @@ void read_data_stream(const uint8_t *data, uint32_t length)
   FFT->complexToMagnitude(); /* Compute magnitudes */
 
   // Fill the audioSpectrum vector with data. 
-  xSemaphoreTake(audioSpectrumSemaphore, portMAX_DELAY);
   audioSpectrum.push_back(std::vector<float>(audioSpectrumBins, 0));
   if (audioSpectrum.size() > audioSpectrumHistorySize) { audioSpectrum.pop_front(); }
 
@@ -63,6 +53,10 @@ void read_data_stream(const uint8_t *data, uint32_t length)
       float val = vReal[i] / audioSpectrumBinSize;
 
       // basic noise filter
+      float prevMax = 0.0;
+      if (prevMaxes.empty()) {
+        prevMax = prevMaxes.back();
+      }
       if (val > prevMax * 0.02) {
         audioSpectrum.back()[binIdx] += val;
       }
@@ -73,7 +67,6 @@ void read_data_stream(const uint8_t *data, uint32_t length)
   prevMaxes.push_back(maxThisTime);
   if (prevMaxes.size() > prevMaxesToKeep) { prevMaxes.pop_front(); }
   float avgMax = std::accumulate(prevMaxes.begin(), prevMaxes.end(), 0.0) / prevMaxes.size();
-  prevMax = avgMax;
 
   float maxScale = 6000;
   float scaleFactor = maxScale / avgMax;
@@ -81,8 +74,6 @@ void read_data_stream(const uint8_t *data, uint32_t length)
 
   std::transform(audioSpectrum.back().begin(), audioSpectrum.back().end(), audioSpectrum.back().begin(),
     std::bind(std::multiplies<float>(), std::placeholders::_1, scaleFactor));
-  
-  xSemaphoreGive(audioSpectrumSemaphore);
 }
 
 Audio::Audio() {}
@@ -116,5 +107,6 @@ void Audio::begin()
 
   Serial.println("after a2dp");
 
+  FFT = std::make_unique<ArduinoFFT<float>>(vReal, vImag, fftSamples, fftSampleFreq, weighingFactors);
 
 }

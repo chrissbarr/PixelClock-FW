@@ -1,7 +1,7 @@
 #include "display/displayEffects.h"
 #include "display/display.h"
 
-#include "audiofft.h"
+#include "audio.h"
 
 #include <random>
 
@@ -303,21 +303,20 @@ void SpectrumDisplay::reset()
 
 bool SpectrumDisplay::run()
 {  
-  xSemaphoreTake(audioSpectrumSemaphore, portMAX_DELAY);
-  if (!audioSpectrum.empty()) {
+  auto spectrum = audio->getAudioSpectrum();
+  if (!spectrum.empty()) {
     //supplyData(audioSpectrum.back());
 
-    std::vector<float> totals = std::vector<float>(audioSpectrum.back().size(), 0);
-    for (const auto& spectrum : audioSpectrum) {
+    std::vector<float> totals = std::vector<float>(spectrum.back().size(), 0);
+    for (const auto& spectrum : spectrum) {
       for (int i = 0; i < spectrum.size(); i++) {
         totals[i] += spectrum[i];
       }
     }
     std::transform(totals.begin(), totals.end(), totals.begin(),
-      std::bind(std::multiplies<float>(), std::placeholders::_1, 1.0 / audioSpectrum.size()));
+      std::bind(std::multiplies<float>(), std::placeholders::_1, 1.0 / spectrum.size()));
     supplyData(totals);
   }
-  xSemaphoreGive(audioSpectrumSemaphore);
 
   //Serial.printf("data size: %d\n", _data.size());
 
