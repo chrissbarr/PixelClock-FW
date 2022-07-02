@@ -36,6 +36,7 @@ void read_data_stream(const uint8_t *data, uint32_t length);
 struct CallbackDiagnostic {
   uint32_t callbackDuration;
   uint32_t fftDuration;
+  uint32_t sampleCount;
 };
 
 class Audio {

@@ -4,8 +4,8 @@
 #include "BluetoothA2DPSink.h"
 #include "AudioTools.h"
 
-#define FFT_SPEED_OVER_PRECISION
-#define FFT_SQRT_APPROXIMATION
+//#define FFT_SPEED_OVER_PRECISION
+//#define FFT_SQRT_APPROXIMATION
 #include <arduinoFFT.h>
 
 #include <numeric>
@@ -30,7 +30,8 @@ void Audio::a2dp_callback(const uint8_t *data, uint32_t length)
   for (uint32_t i = 0; i < fftSamples; i++) {
     
     if (sourceIdx < sample_count) { 
-      vReal[i] = samples[sourceIdx];
+      // convert stereo samples to mono
+      vReal[i] = (uint32_t(samples[sourceIdx]) + samples[sourceIdx + 1]) / 2;
     } else {
       vReal[i] = 0;
     }
@@ -89,7 +90,7 @@ void Audio::a2dp_callback(const uint8_t *data, uint32_t length)
   uint32_t callbackDuration = callbackEnd - callbackStart;
   uint32_t fftDuration = fftEnd - fftStart;
 
-  callbackDiagnostics.push_back({callbackDuration, fftDuration});
+  callbackDiagnostics.push_back({callbackDuration, fftDuration, sample_count});
 }
 
 Audio::Audio() {}
@@ -146,6 +147,10 @@ void Audio::update()
     uint16_t fftMin = std::numeric_limits<uint16_t>::max();
     uint16_t fftMax = 0;
 
+    float samplesAvg = 0;
+    uint16_t samplesMin = std::numeric_limits<uint16_t>::max();
+    uint16_t samplesMax = 0;
+
     for (const auto& stats : callbackDiagnostics) {
       callbackAvg += stats.callbackDuration;
       if (stats.callbackDuration > callbackMax) { callbackMax = stats.callbackDuration; }
@@ -154,13 +159,20 @@ void Audio::update()
       fftAvg += stats.fftDuration;
       if (stats.fftDuration > fftMax) { fftMax = stats.fftDuration; }
       if (stats.fftDuration < fftMin) { fftMin = stats.fftDuration; }
+
+      samplesAvg += stats.sampleCount;
+      if (stats.sampleCount > samplesMax) { samplesMax = stats.sampleCount; }
+      if (stats.sampleCount < samplesMin) { samplesMin = stats.sampleCount; }
     }
     callbackAvg = callbackAvg / callbackDiagnostics.size();
     fftAvg = fftAvg / callbackDiagnostics.size();
+    samplesAvg = samplesAvg / callbackDiagnostics.size();
     callbackDiagnostics.clear();
 
     Serial.printf("A2DP Callback Statistics (Min - Max - Avg): %d - %d - %.2f \n", callbackMin, callbackMax, callbackAvg);
-    Serial.printf("A2DP FFT Statistics      (Min - Max - Avg): %d - %d - %.2f \n", fftMin, fftMax, fftAvg);
+    Serial.printf("A2DP FFT Statistics      (Min - Max - Avg): %d - %d - %.2f \n", fftMin, fftMax, fftAvg);    
+    Serial.printf("A2DP Sample Count        (Min - Max - Avg): %d - %d - %.2f \n", samplesMin, samplesMax, samplesAvg);
+
 
     statReportLastTime = millis();
   }
