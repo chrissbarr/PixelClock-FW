@@ -303,20 +303,21 @@ void SpectrumDisplay::reset()
 
 bool SpectrumDisplay::run()
 {  
-  auto spectrum = Audio::get().getAudioSpectrum();
-  if (!spectrum.empty()) {
+  xSemaphoreTake(Audio::get().getAudioSpectrumSemaphore(), portMAX_DELAY);
+  if (!Audio::get().getAudioSpectrum().empty()) {
     //supplyData(audioSpectrum.back());
 
-    std::vector<float> totals = std::vector<float>(spectrum.back().size(), 0);
-    for (const auto& spectrum : spectrum) {
+    std::vector<float> totals = std::vector<float>(Audio::get().getAudioSpectrum().back().size(), 0);
+    for (const auto& spectrum : Audio::get().getAudioSpectrum()) {
       for (int i = 0; i < spectrum.size(); i++) {
         totals[i] += spectrum[i];
       }
     }
     std::transform(totals.begin(), totals.end(), totals.begin(),
-      std::bind(std::multiplies<float>(), std::placeholders::_1, 1.0 / spectrum.size()));
+      std::bind(std::multiplies<float>(), std::placeholders::_1, 1.0 / Audio::get().getAudioSpectrum().size()));
     supplyData(totals);
   }
+  xSemaphoreGive(Audio::get().getAudioSpectrumSemaphore());
 
   //Serial.printf("data size: %d\n", _data.size());
 

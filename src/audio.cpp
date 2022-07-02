@@ -4,8 +4,8 @@
 #include "BluetoothA2DPSink.h"
 #include "AudioTools.h"
 
-// #define FFT_SPEED_OVER_PRECISION
-// #define FFT_SQRT_APPROXIMATION
+#define FFT_SPEED_OVER_PRECISION
+#define FFT_SQRT_APPROXIMATION
 #include <arduinoFFT.h>
 
 #include <numeric>
@@ -17,67 +17,79 @@ void read_data_stream(const uint8_t *data, uint32_t length)
 
 void Audio::a2dp_callback(const uint8_t *data, uint32_t length)
 {
+  uint32_t callbackStart = micros();
+
   int16_t *samples = (int16_t*) data;
   uint32_t sample_count = length/2;
 
   i2sOutput->write(data, length);
 
-  // int sourceIdx = 0;
-  // for (uint32_t i = 0; i < fftSamples; i++) {
+  uint32_t fftStart = micros();
+
+  int sourceIdx = 0;
+  for (uint32_t i = 0; i < fftSamples; i++) {
     
-  //   if (sourceIdx < sample_count) { 
-  //     vReal[i] = samples[sourceIdx];
-  //   } else {
-  //     vReal[i] = 0;
-  //   }
-  //   vImag[i] = 0;
-  //   sourceIdx += 2;
-  // }
+    if (sourceIdx < sample_count) { 
+      vReal[i] = samples[sourceIdx];
+    } else {
+      vReal[i] = 0;
+    }
+    vImag[i] = 0;
+    sourceIdx += 2;
+  }
 
-  // FFT->dcRemoval();
-  // FFT->windowing(FFTWindow::Hamming, FFTDirection::Forward);	/* Weigh data */
-  // FFT->compute(FFTDirection::Forward); /* Compute FFT */
-  // FFT->complexToMagnitude(); /* Compute magnitudes */
+  FFT->dcRemoval();
+  FFT->windowing(FFTWindow::Hamming, FFTDirection::Forward);	/* Weigh data */
+  FFT->compute(FFTDirection::Forward); /* Compute FFT */
+  FFT->complexToMagnitude(); /* Compute magnitudes */
 
-  // // Fill the audioSpectrum vector with data. 
-  // auto spectrum = std::vector<float>(audioSpectrumBins, 0);
+  // Fill the audioSpectrum vector with data. 
+  auto spectrum = std::vector<float>(audioSpectrumBins, 0);
 
-  // float prevMax = 0.0;
-  // if (!prevMaxes.empty()) {
-  //   prevMax = prevMaxes.back();
-  // }
+  float prevMax = 0.0;
+  if (!prevMaxes.empty()) {
+    prevMax = prevMaxes.back();
+  }
 
-  // // Bin FFT results
-  // for (int i = 5; i < (fftSamples / 2) - 1; i++) {
-  //   float freq = i * fftFrequencyResolution;
-  //   int binIdx = std::floor(freq / audioSpectrumBinWidth);
-  //   //Serial.printf("%d\t%f\n", i, vReal[i]);
-  //   //int binIdx = i / audioSpectrumBinSize;
-  //   if (binIdx < spectrum.size()) {
-  //     float val = vReal[i] / audioSpectrumBinSize;
+  // Bin FFT results
+  for (int i = 5; i < (fftSamples / 2) - 1; i++) {
+    float freq = i * fftFrequencyResolution;
+    int binIdx = std::floor(freq / audioSpectrumBinWidth);
+    //Serial.printf("%d\t%f\n", i, vReal[i]);
+    //int binIdx = i / audioSpectrumBinSize;
+    if (binIdx < spectrum.size()) {
+      float val = vReal[i] / audioSpectrumBinSize;
 
-  //     // basic noise filter
-  //     if (val > prevMax * 0.02) {
-  //       spectrum[binIdx] += val;
-  //     }
-  //   }
-  // }
+      // basic noise filter
+      if (val > prevMax * 0.02) {
+        spectrum[binIdx] += val;
+      }
+    }
+  }
 
-  // float maxThisTime = *std::max_element(spectrum.begin(), spectrum.end());
-  // prevMaxes.push_back(maxThisTime);
-  // if (prevMaxes.size() > prevMaxesToKeep) { prevMaxes.pop_front(); }
-  // float avgMax = std::accumulate(prevMaxes.begin(), prevMaxes.end(), 0.0) / prevMaxes.size();
+  float maxThisTime = *std::max_element(spectrum.begin(), spectrum.end());
+  prevMaxes.push_back(maxThisTime);
+  if (prevMaxes.size() > prevMaxesToKeep) { prevMaxes.pop_front(); }
+  float avgMax = std::accumulate(prevMaxes.begin(), prevMaxes.end(), 0.0) / prevMaxes.size();
 
-  // float maxScale = 6000;
-  // float scaleFactor = maxScale / avgMax;
-  // //Serial.printf("Scale factor: %f\n", scaleFactor);
+  float maxScale = 6000;
+  float scaleFactor = maxScale / avgMax;
+  //Serial.printf("Scale factor: %f\n", scaleFactor);
 
-  // std::transform(spectrum.begin(), spectrum.end(), spectrum.begin(),
-  //   std::bind(std::multiplies<float>(), std::placeholders::_1, scaleFactor));
-  // xSemaphoreTake(audioSpectrumSemaphore, portMAX_DELAY);
-  // audioSpectrum.push_back(spectrum);
-  // if (audioSpectrum.size() > audioSpectrumHistorySize) { audioSpectrum.pop_front(); }
-  // xSemaphoreGive(audioSpectrumSemaphore);
+  std::transform(spectrum.begin(), spectrum.end(), spectrum.begin(),
+    std::bind(std::multiplies<float>(), std::placeholders::_1, scaleFactor));
+  xSemaphoreTake(audioSpectrumSemaphore, portMAX_DELAY);
+  audioSpectrum.push_back(spectrum);
+  if (audioSpectrum.size() > audioSpectrumHistorySize) { audioSpectrum.pop_front(); }
+  xSemaphoreGive(audioSpectrumSemaphore);
+
+  uint32_t fftEnd = micros();
+  uint32_t callbackEnd = micros();
+
+  uint32_t callbackDuration = callbackEnd - callbackStart;
+  uint32_t fftDuration = fftEnd - fftStart;
+
+  callbackDiagnostics.push_back({callbackDuration, fftDuration});
 }
 
 Audio::Audio() {}
@@ -119,4 +131,37 @@ void Audio::begin()
   FFT = std::make_unique<ArduinoFFT<float>>(vReal, vImag, fftSamples, fftSampleFreq, weighingFactors);
 
   audioSpectrumSemaphore = xSemaphoreCreateMutex();
+}
+
+void Audio::update()
+{
+
+  if (millis() - statReportLastTime > statReportInterval) {
+
+    float callbackAvg = 0;
+    uint16_t callbackMin = std::numeric_limits<uint16_t>::max();
+    uint16_t callbackMax = 0;
+
+    float fftAvg = 0;
+    uint16_t fftMin = std::numeric_limits<uint16_t>::max();
+    uint16_t fftMax = 0;
+
+    for (const auto& stats : callbackDiagnostics) {
+      callbackAvg += stats.callbackDuration;
+      if (stats.callbackDuration > callbackMax) { callbackMax = stats.callbackDuration; }
+      if (stats.callbackDuration < callbackMin) { callbackMin = stats.callbackDuration; }
+
+      fftAvg += stats.fftDuration;
+      if (stats.fftDuration > fftMax) { fftMax = stats.fftDuration; }
+      if (stats.fftDuration < fftMin) { fftMin = stats.fftDuration; }
+    }
+    callbackAvg = callbackAvg / callbackDiagnostics.size();
+    fftAvg = fftAvg / callbackDiagnostics.size();
+    callbackDiagnostics.clear();
+
+    Serial.printf("A2DP Callback Statistics (Min - Max - Avg): %d - %d - %.2f \n", callbackMin, callbackMax, callbackAvg);
+    Serial.printf("A2DP FFT Statistics      (Min - Max - Avg): %d - %d - %.2f \n", fftMin, fftMax, fftAvg);
+
+    statReportLastTime = millis();
+  }
 }

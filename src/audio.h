@@ -17,7 +17,7 @@ namespace audio_tools {
 class I2SStream;
 }
 
-constexpr int fftSamples = 4;
+constexpr int fftSamples = 2048;
 constexpr int fftSampleFreq = 44100;
 constexpr int fftBandwidth = fftSampleFreq / 2;                 // Bandwidth / Nyquist Freq
 constexpr int fftPeriod = 1000 * fftSamples / fftSampleFreq;    // Duration / period of FFT (ms)
@@ -32,6 +32,11 @@ constexpr int audioSpectrumBinSize = (fftSamples / 4) / audioSpectrumBins;
 constexpr int prevMaxesToKeep = 200;
 
 void read_data_stream(const uint8_t *data, uint32_t length);
+
+struct CallbackDiagnostic {
+  uint32_t callbackDuration;
+  uint32_t fftDuration;
+};
 
 class Audio {
 public:
@@ -50,12 +55,10 @@ public:
 
   void a2dp_callback(const uint8_t *data, uint32_t length);
 
-  std::deque<std::vector<float>> getAudioSpectrum() { 
-    // xSemaphoreTake(audioSpectrumSemaphore, portMAX_DELAY);
-    // auto copy = audioSpectrum;
-    // xSemaphoreGive(audioSpectrumSemaphore);
-    return {};//std::move(copy); 
-  }
+  std::deque<std::vector<float>>& getAudioSpectrum() { return audioSpectrum; }
+  SemaphoreHandle_t getAudioSpectrumSemaphore() { return audioSpectrumSemaphore; }
+
+
 
 
 private:
@@ -73,6 +76,10 @@ private:
   std::deque<std::vector<float>> audioSpectrum;
 
   std::deque<float> prevMaxes;
+
+  std::deque<CallbackDiagnostic> callbackDiagnostics;
+  uint32_t statReportInterval = 5000;
+  uint32_t statReportLastTime = 0;
 };
 
 #endif // audiofft_h

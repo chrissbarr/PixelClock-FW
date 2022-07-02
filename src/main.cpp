@@ -178,6 +178,8 @@ void loop()
 
   display.update();
 
+  Audio::get().update();
+
   brightnessSensor->update();
 
   loopTimeManager.idle();
