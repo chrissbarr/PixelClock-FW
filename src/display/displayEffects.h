@@ -188,7 +188,7 @@ private:
     PixelDisplay& _display;
     uint8_t _width;
 
-    float calculateBarHeight(float val, float valMax, float barMax) const;
+    // float calculateBarHeight(float val, float valMax, float barMax) const;
 
     CRGB colMin;
     CRGB colMax;
@@ -199,6 +199,24 @@ private:
     bool _finished = false;
     uint32_t _decayRate;
     uint32_t _lastDecayedTime = 0;
+};
+
+class VolumeDisplay : public DisplayEffect {
+public:
+    VolumeDisplay(PixelDisplay& display);
+    bool run() override final;
+    bool finished() const override final { return _finished; }
+    void reset() override final;
+private:
+    PixelDisplay& _display;
+    uint8_t _width;
+
+    // float calculateBarHeight(float val, float valMax, float barMax) const;
+
+    CRGB colMin;
+    CRGB colMax;
+
+    bool _finished = false;
 };
 
 class ClockFace_Base : public DisplayEffect {

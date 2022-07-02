@@ -39,6 +39,11 @@ struct CallbackDiagnostic {
   uint32_t sampleCount;
 };
 
+struct Volume {
+  float left;
+  float right;
+};
+
 class Audio {
 public:
   static Audio& get()
@@ -58,6 +63,8 @@ public:
 
   std::deque<std::vector<float>>& getAudioSpectrum() { return audioSpectrum; }
   SemaphoreHandle_t getAudioSpectrumSemaphore() { return audioSpectrumSemaphore; }
+
+  std::deque<Volume>& getVolumeHistory() { return volumeHistory; }
 
 
 
@@ -81,6 +88,9 @@ private:
   std::deque<CallbackDiagnostic> callbackDiagnostics;
   uint32_t statReportInterval = 5000;
   uint32_t statReportLastTime = 0;
+
+  int16_t volumeHistorySize = 100;
+  std::deque<Volume> volumeHistory;
 };
 
 #endif // audiofft_h

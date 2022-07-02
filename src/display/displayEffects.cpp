@@ -301,6 +301,14 @@ void SpectrumDisplay::reset()
   _finished = false;
 }
 
+
+float calculateBarHeight(float val, float valMin, float valMax, float barMax)
+{
+  float barMin = 0;
+  float height = std::clamp((val - valMin) * (barMax - barMin) / (valMax - valMin) + barMin, barMin, barMax);
+  return height;
+}
+
 bool SpectrumDisplay::run()
 {  
   xSemaphoreTake(Audio::get().getAudioSpectrumSemaphore(), portMAX_DELAY);
@@ -326,7 +334,7 @@ bool SpectrumDisplay::run()
     for (uint8_t x = 0; x < _data.size(); x++) {
       if (x >= _display.getWidth()) { break; }
       // we need to scale the value from 0 - valMax to 0 - vertMax
-      auto barHeight = calculateBarHeight(_data[x], maxScale, vertMax);
+      auto barHeight = calculateBarHeight(_data[x], 0, maxScale, vertMax);
       for (int y = 0; y < _display.getHeight(); y++) {
         CRGB colour = CRGB::Black;
         if (y <= barHeight) {
@@ -348,12 +356,54 @@ void SpectrumDisplay::supplyData(std::vector<float> data)
   _data = data;
 }
 
-float SpectrumDisplay::calculateBarHeight(float val, float valMax, float barMax) const
+VolumeDisplay::VolumeDisplay(PixelDisplay& display) :
+  _display(display)
 {
-  float valMin = 0;
-  float barMin = 0;
-  float height = std::clamp((val - valMin) * (barMax - barMin) / (valMax - valMin) + barMin, barMin, barMax);
-  return height;
+  colMin = CRGB::Green;
+  colMax = CRGB::Red;
+}
+
+void VolumeDisplay::reset()
+{
+  _finished = false;
+}
+
+bool VolumeDisplay::run()
+{  
+
+  auto volHist = Audio::get().getVolumeHistory();
+
+  float vLeft = 0;
+  float vRight = 0;
+
+  if (!volHist.empty()) {
+    vLeft = volHist.back().left / 100;
+    vRight = volHist.back().right / 100;
+  }
+
+  uint8_t horMax = _display.getWidth();
+
+  float leftBarHeight = calculateBarHeight(vLeft, 0.3, 1.0, horMax);
+  float rightBarHeight = calculateBarHeight(vRight, 0.3, 1.0, horMax);
+
+  auto drawBar = [&](float barHeight, int y) {
+      for (int x = 0; x < _display.getWidth(); x++) {
+        CRGB colour = CRGB::Black;
+        if (x <= barHeight) {
+          colour = CRGB(colMin).lerp16(colMax, fract16((barHeight / float(horMax)) * 65535));
+        }
+        if (x == std::floor(barHeight)) {
+          float remainder = barHeight - std::floor(barHeight);
+          colour = colour.scale8(uint8_t(remainder * 255));
+        }
+        _display.setXY(x, y, colour);
+      }
+    };
+
+  drawBar(leftBarHeight, 1);
+  drawBar(rightBarHeight, 3);
+
+  return finished();
 }
 
 

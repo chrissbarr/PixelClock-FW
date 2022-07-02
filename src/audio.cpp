@@ -24,6 +24,28 @@ void Audio::a2dp_callback(const uint8_t *data, uint32_t length)
 
   i2sOutput->write(data, length);
 
+  float vLeftAvg = 0;
+  float vRightAvg = 0;
+
+  // calculate average RMS magnitude for L/R channels
+  for (uint32_t i = 0; i < sample_count; i+=2) {
+    vLeftAvg += samples[i] * samples[i];
+    vRightAvg += samples[i + 1] * samples[i + 1];
+  }
+  int lrSamples = sample_count / 2;
+  vLeftAvg = std::sqrt(vLeftAvg / lrSamples);
+  vRightAvg = std::sqrt(vRightAvg / lrSamples);
+
+  // convert to decibels
+  vLeftAvg = 20 * std::log10(vLeftAvg);
+  vRightAvg = 20 * std::log10(vRightAvg);
+
+  // store avg volume in history
+  volumeHistory.push_back({vLeftAvg, vRightAvg});
+  if (volumeHistory.size() > volumeHistorySize) {
+    volumeHistory.pop_front();
+  }
+
   uint32_t fftStart = micros();
 
   int sourceIdx = 0;
@@ -137,7 +159,7 @@ void Audio::begin()
 void Audio::update()
 {
 
-  if (millis() - statReportLastTime > statReportInterval) {
+  if (millis() - statReportLastTime > statReportInterval && !callbackDiagnostics.empty()) {
 
     float callbackAvg = 0;
     uint16_t callbackMin = std::numeric_limits<uint16_t>::max();

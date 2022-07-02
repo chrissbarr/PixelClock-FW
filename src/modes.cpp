@@ -356,6 +356,7 @@ void Mode_ClockFace::runCore()
 
 Mode_Effects::Mode_Effects(PixelDisplay& display, ButtonReferences buttons) : 
   MainModeFunction("Effects", display, buttons) {
+  effects.push_back(std::make_unique<VolumeDisplay>(_display));
   effects.push_back(std::make_unique<SpectrumDisplay>(_display, _display.getWidth(), 0));
   effects.push_back(std::make_unique<RandomFill>(_display, 100, colourGenerator_randomHSV));
   effects.push_back(std::make_unique<BouncingBall>(_display, 100, colourGenerator_cycleHSV));
