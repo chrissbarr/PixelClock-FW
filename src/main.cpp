@@ -7,7 +7,6 @@
 
 // Libraries
 #include <SPI.h>
-#include <Button2.h>
 #include <LittleFS.h>
 
 // Project Scope
@@ -21,6 +20,7 @@
 #include "modes.h"
 #include "utility.h"
 #include "audio.h"
+#include "input.h"
 
 // LED Panel Configuration
 constexpr uint8_t matrixWidth = 17;
@@ -31,11 +31,7 @@ CRGB ledsDummyRGBW[dummyLEDCount];
 PixelDisplay display(matrixWidth, matrixHeight, false, false);
 
 // Buttons
-Button2 buttonMode(pins::button1, INPUT_PULLUP);
-Button2 buttonSelect(pins::button2, INPUT_PULLUP);
-Button2 buttonLeft(pins::button3, INPUT_PULLUP);
-Button2 buttonRight(pins::button4, INPUT_PULLUP);
-Button2 buttonBrightness(pins::button5, INPUT_PULLUP);
+Input input;
 
 // Modes
 std::unique_ptr<ModeManager> modeManager;
@@ -138,7 +134,7 @@ void setup() {
   brightnessSensor = std::make_unique<BrightnessSensor>();
 
   printTextCentred("Initialising System Modes", headingWidth);
-  modeManager = std::make_unique<ModeManager>(display, ButtonReferences{buttonMode, buttonSelect, buttonLeft, buttonRight});
+  //modeManager = std::make_unique<ModeManager>(display, ButtonReferences{buttonMode, buttonSelect, buttonLeft, buttonRight});
 
   printTextCentred("Initialising Display", headingWidth);
   FastLED.addLeds<WS2812, pins::matrixLED, RGB>(ledsDummyRGBW, dummyLEDCount);
@@ -149,7 +145,7 @@ void setup() {
   //displayDiagnostic(display);
 
   printTextCentred("Initialising Input", headingWidth);
-  buttonBrightness.setTapHandler(brightnessButton_callback);
+  //buttonBrightness.setTapHandler(brightnessButton_callback);
 
   printTextCentred("Initialising Audio", headingWidth);
 
@@ -165,13 +161,14 @@ void setup() {
 void loop()
 {
   // update buttons
-  buttonMode.loop();
-  buttonBrightness.loop();
-  buttonSelect.loop();
-  buttonLeft.loop();
-  buttonRight.loop();
+  input.update();
+  // buttonMode.loop();
+  // buttonBrightness.loop();
+  // buttonSelect.loop();
+  // buttonLeft.loop();
+  // buttonRight.loop();
 
-  modeManager->run();
+  //modeManager->run();
 
   FastLED.setBrightness(brightnessModes[brightnessModeIndex].function());
   FastLED.setDither(1);
