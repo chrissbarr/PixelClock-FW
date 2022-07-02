@@ -31,11 +31,11 @@ CRGB ledsDummyRGBW[dummyLEDCount];
 PixelDisplay display(matrixWidth, matrixHeight, false, false);
 
 // Buttons
-Button2 buttonMode(buttonPin1, INPUT_PULLUP);
-Button2 buttonSelect(buttonPin2, INPUT_PULLUP);
-Button2 buttonLeft(buttonPin3, INPUT_PULLUP);
-Button2 buttonRight(buttonPin4, INPUT_PULLUP);
-Button2 buttonBrightness(buttonPin5, INPUT_PULLUP);
+Button2 buttonMode(pins::button1, INPUT_PULLUP);
+Button2 buttonSelect(pins::button2, INPUT_PULLUP);
+Button2 buttonLeft(pins::button3, INPUT_PULLUP);
+Button2 buttonRight(pins::button4, INPUT_PULLUP);
+Button2 buttonBrightness(pins::button5, INPUT_PULLUP);
 
 // Modes
 std::unique_ptr<ModeManager> modeManager;
@@ -141,7 +141,7 @@ void setup() {
   modeManager = std::make_unique<ModeManager>(display, ButtonReferences{buttonMode, buttonSelect, buttonLeft, buttonRight});
 
   printTextCentred("Initialising Display", headingWidth);
-  FastLED.addLeds<WS2812, matrixLEDPin, RGB>(ledsDummyRGBW, dummyLEDCount);
+  FastLED.addLeds<WS2812, pins::matrixLED, RGB>(ledsDummyRGBW, dummyLEDCount);
   display.setLEDStrip(ledsDummyRGBW);
   display.fill(0);
   display.update();
@@ -155,7 +155,6 @@ void setup() {
 
   //audio = std::make_unique<Audio>();
   Audio::get().begin();
-
 
   Serial.printf("%-*s %dms\n", textPadding, "Runtime:", millis());
   printSolidLine(headingWidth);

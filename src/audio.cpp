@@ -92,9 +92,9 @@ void Audio::begin()
   Serial.println("after constructors");
 
   auto cfg = i2sOutput->defaultConfig();
-  cfg.pin_data = dout;
-  cfg.pin_bck = bclk;
-  cfg.pin_ws = wclk;
+  cfg.pin_data = pins::i2sDout;
+  cfg.pin_bck = pins::i2sBclk;
+  cfg.pin_ws = pins::i2sWclk;
   cfg.buffer_count = 10;
   cfg.buffer_size = 1024;
   //cfg.sample_rate = a2dpSink->sample_rate();
