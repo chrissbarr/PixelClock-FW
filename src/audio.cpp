@@ -186,6 +186,7 @@ void Audio::update()
       if (stats.sampleCount > samplesMax) { samplesMax = stats.sampleCount; }
       if (stats.sampleCount < samplesMin) { samplesMin = stats.sampleCount; }
     }
+
     callbackAvg = callbackAvg / callbackDiagnostics.size();
     fftAvg = fftAvg / callbackDiagnostics.size();
     samplesAvg = samplesAvg / callbackDiagnostics.size();
@@ -194,7 +195,6 @@ void Audio::update()
     Serial.printf("A2DP Callback Statistics (Min - Max - Avg): %d - %d - %.2f \n", callbackMin, callbackMax, callbackAvg);
     Serial.printf("A2DP FFT Statistics      (Min - Max - Avg): %d - %d - %.2f \n", fftMin, fftMax, fftAvg);    
     Serial.printf("A2DP Sample Count        (Min - Max - Avg): %d - %d - %.2f \n", samplesMin, samplesMax, samplesAvg);
-
 
     statReportLastTime = millis();
   }

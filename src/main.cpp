@@ -21,6 +21,7 @@
 #include "modes.h"
 #include "utility.h"
 #include "audio.h"
+#include "serialCommands.h"
 
 // LED Panel Configuration
 constexpr uint8_t matrixWidth = 17;
@@ -82,10 +83,6 @@ void brightnessButton_callback(Button2& btn)
 constexpr uint32_t loopTargetTime = 15;     // Constant loop update rate to target (milliseconds)
 constexpr uint32_t reportInterval = 10000;  // Statistics on loop timing will be reported this often (milliseconds)
 LoopTimeManager loopTimeManager(loopTargetTime, reportInterval);
-
-// Audio
-//std::unique_ptr<Audio> audio;
-
 
 void setup() {
   delay(100);
@@ -152,8 +149,6 @@ void setup() {
   buttonBrightness.setTapHandler(brightnessButton_callback);
 
   printTextCentred("Initialising Audio", headingWidth);
-
-  //audio = std::make_unique<Audio>();
   Audio::get().begin();
 
   Serial.printf("%-*s %dms\n", textPadding, "Runtime:", millis());
@@ -182,60 +177,9 @@ void loop()
 
   brightnessSensor->update();
 
+  processSerialCommands();
+
   loopTimeManager.idle();
-
-  if (Serial.available()) {
-    String receivedCommand = "";
-    receivedCommand = Serial.readString();
-
-    std::vector<String> substrings;
-
-    // Split the string into substrings
-    while (receivedCommand.length() > 0)
-    {
-      int index = receivedCommand.indexOf(' ');
-      if (index == -1) // No space found
-      {
-        substrings.push_back(receivedCommand);
-        break;
-      }
-      else
-      {
-        substrings.push_back(receivedCommand.substring(0, index));
-        receivedCommand = receivedCommand.substring(index+1);
-      }
-    }
-
-    if (!substrings.empty()) {
-      Serial.print("Received command: ");
-      for (const auto& str : substrings) {
-        Serial.printf("%s ", str);
-      }
-      Serial.printf("\n");
-
-      if (substrings[0] == "T") {
-        // YYYY MM DD HH MM SS
-        if (substrings.size() == 7) {
-          int year = substrings[1].toInt();
-          int month = substrings[2].toInt();
-          int day = substrings[3].toInt();
-          int hour = substrings[4].toInt();
-          int min = substrings[5].toInt();
-          int sec = substrings[6].toInt();
-
-          TimeElements time;
-          time.Year = uint8_t(CalendarYrToTm(year));
-          time.Month = uint8_t(month);
-          time.Day = uint8_t(day);
-          time.Hour = uint8_t(hour);
-          time.Minute = uint8_t(min);
-          time.Second = uint8_t(sec);
-          setTimeGlobally(makeTime(time));
-        }
-      }
-    }
-  }
-
 }
 
 
