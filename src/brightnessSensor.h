@@ -13,7 +13,7 @@ public:
     ~BrightnessSensor();
 
     float getBrightness() const { return lastBrightness; }
-    
+
     void update();
 
 private:

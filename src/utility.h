@@ -11,7 +11,7 @@ namespace printFormatting {
 constexpr uint8_t headingWidth = 40;
 constexpr uint8_t textPadding = 20;
 
-void printTextCentred(const char *text, uint8_t width);
+void printTextCentred(const char* text, uint8_t width);
 void printSolidLine(uint8_t width);
 
 } // namespace printFormatting

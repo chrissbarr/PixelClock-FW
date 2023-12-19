@@ -23,6 +23,6 @@ constexpr int16_t i2sBclk = 21;
 constexpr int16_t i2sDout = 5;
 constexpr int16_t i2sWclk = 19;
 
-}
+} // namespace pins
 
 #endif // pinout_h

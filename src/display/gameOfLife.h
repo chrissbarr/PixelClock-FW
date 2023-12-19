@@ -11,13 +11,17 @@ struct GoLScore {
     uint16_t lifespan;
 };
 
-constexpr bool operator <(const GoLScore& x, const GoLScore& y) {
-    return x.lifespan < y.lifespan;
-}
+constexpr bool operator<(const GoLScore& x, const GoLScore& y) { return x.lifespan < y.lifespan; }
 
 class GameOfLife : public DisplayEffect {
 public:
-    GameOfLife(PixelDisplay& display, uint32_t updateInterval, uint32_t fadeInterval, CRGB(*colourGenerator)(), const DisplayRegion& displayRegion = defaultFull, bool wrap = true);
+    GameOfLife(
+        PixelDisplay& display,
+        uint32_t updateInterval,
+        uint32_t fadeInterval,
+        CRGB (*colourGenerator)(),
+        const DisplayRegion& displayRegion = defaultFull,
+        bool wrap = true);
     bool run() override final;
     bool finished() const override final { return _finished; }
     void reset() override final;
@@ -60,7 +64,7 @@ private:
     std::vector<std::vector<CRGB>> buffers;
     std::deque<std::size_t> bufferHashes;
 
-    std::size_t hashBuffer(const std::vector<CRGB>& vec) const; 
+    std::size_t hashBuffer(const std::vector<CRGB>& vec) const;
 };
 
-#endif //gameoflife_h
+#endif // gameoflife_h
