@@ -1,9 +1,9 @@
 #ifndef display_h
 #define display_h
 
-#include <Arduino.h>
-#include "display/fastled_rgbw.h"
 #include "display/characters.h"
+#include "display/fastled_rgbw.h"
+#include <Arduino.h>
 
 #include <vector>
 
@@ -14,12 +14,8 @@ struct DisplayRegion {
     uint8_t yMax;
 };
 
-constexpr bool operator==(const DisplayRegion& lhs, const DisplayRegion& rhs)
-{
-    return lhs.xMin == rhs.xMin
-    && lhs.xMax == rhs.xMax
-    && lhs.yMin == rhs.yMin
-    && lhs.yMax == rhs.yMax;
+constexpr bool operator==(const DisplayRegion& lhs, const DisplayRegion& rhs) {
+    return lhs.xMin == rhs.xMin && lhs.xMax == rhs.xMax && lhs.yMin == rhs.yMin && lhs.yMax == rhs.yMax;
 }
 
 // Set DisplayRegion arguments to this value to indicate that the full display should be used
@@ -79,8 +75,6 @@ private:
     bool filterApplied = false;
 
     DisplayRegion fullDisplay;
-
-    
 };
 
 #endif // display_h

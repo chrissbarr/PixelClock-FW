@@ -1,10 +1,10 @@
 #ifndef displayeffects_h
 #define displayeffects_h
 
-#include "timekeeping.h"
 #include "display/display.h"
-#include <Arduino.h>
 #include "display/fastled_rgbw.h"
+#include "timekeeping.h"
+#include <Arduino.h>
 
 #include <deque>
 #include <memory>
@@ -17,13 +17,15 @@ inline CRGB colourGenerator_black() { return 0; }
 inline CRGB colourGenerator_white() { return CRGB::White; }
 
 /**
- * @brief Abstract Base Class for classes that implement an Effect (e.g., a pattern, demo, game, etc. that takes place over time)
- * 
+ * @brief Abstract Base Class for classes that implement an Effect (e.g., a pattern, demo, game, etc. that takes place
+ * over time)
+ *
  * Effects are expected to manage their own state and timing.
- * Effects may run for some period of time. 
- * When an effect has completed one 'cycle' (the definition of which will vary per effect) it will indicate that it is 'finished'.
- * However, the effect should still continue to run (loop, restart, etc.) even if it is 'finished'.
- * The 'finished' flag is intended to be a way to indicate to the caller that this is an appropriate time to move on to another effect.
+ * Effects may run for some period of time.
+ * When an effect has completed one 'cycle' (the definition of which will vary per effect) it will indicate that it is
+ * 'finished'. However, the effect should still continue to run (loop, restart, etc.) even if it is 'finished'. The
+ * 'finished' flag is intended to be a way to indicate to the caller that this is an appropriate time to move on to
+ * another effect.
  */
 class DisplayEffect {
 public:
@@ -38,6 +40,7 @@ public:
 class DisplayEffectDecorator : public DisplayEffect {
 protected:
     std::shared_ptr<DisplayEffect> effect;
+
 public:
     DisplayEffectDecorator(std::shared_ptr<DisplayEffect> effect) : effect(effect) {}
     bool run() { return effect->run(); }
@@ -47,24 +50,22 @@ public:
 
 class EffectDecorator_Timeout : public DisplayEffectDecorator {
 public:
-    EffectDecorator_Timeout(std::shared_ptr<DisplayEffect> effect, uint32_t timeout) : DisplayEffectDecorator(effect), timeoutDuration(timeout) {}
-    bool run() 
-    { 
-        effect->run(); 
+    EffectDecorator_Timeout(std::shared_ptr<DisplayEffect> effect, uint32_t timeout)
+        : DisplayEffectDecorator(effect),
+          timeoutDuration(timeout) {}
+    bool run() {
+        effect->run();
         return finished();
     }
-    bool finished() const 
-    { 
-        if (millis() - lastResetTime > timeoutDuration) {
-            return true;
-        }
-        return effect->finished(); 
+    bool finished() const {
+        if (millis() - lastResetTime > timeoutDuration) { return true; }
+        return effect->finished();
     }
-    void reset() 
-    { 
+    void reset() {
         lastResetTime = millis();
         effect->reset();
     }
+
 private:
     uint32_t lastResetTime = 0;
     uint32_t timeoutDuration;
@@ -72,15 +73,27 @@ private:
 
 class TextScroller : public DisplayEffect {
 public:
-    TextScroller(PixelDisplay& display, String textString, std::vector<CRGB> colours, uint16_t stepDelay = 100, uint16_t timeToHoldAtEnd = 1000, uint8_t characterSpacing = 1);
+    TextScroller(
+        PixelDisplay& display,
+        String textString,
+        std::vector<CRGB> colours,
+        uint16_t stepDelay = 100,
+        uint16_t timeToHoldAtEnd = 1000,
+        uint8_t characterSpacing = 1);
     virtual bool run() override;
     virtual bool finished() const override { return _finished; }
-    virtual void reset() override { _finished = false; currentOffset = 0; setTargetOffset(0); arrivedAtEndTime = 0; }
+    virtual void reset() override {
+        _finished = false;
+        currentOffset = 0;
+        setTargetOffset(0);
+        arrivedAtEndTime = 0;
+    }
 
     void setText(const String& textIn) { text = textIn; }
     void setTargetOffset(int targetCharacterIndex = -1);
     void setCurrentOffset(int targetCharacterIndex = -1);
     void setColours(std::vector<CRGB> colours) { this->colours = colours; }
+
 private:
     PixelDisplay& display;
     String text;
@@ -102,10 +115,22 @@ private:
 
 class RepeatingTextScroller : public TextScroller {
 public:
-    RepeatingTextScroller(PixelDisplay& display, String textString, std::vector<CRGB> colours, uint16_t stepDelay = 100, uint16_t timeToHoldAtEnd = 1000, uint8_t characterSpacing = 1);
+    RepeatingTextScroller(
+        PixelDisplay& display,
+        String textString,
+        std::vector<CRGB> colours,
+        uint16_t stepDelay = 100,
+        uint16_t timeToHoldAtEnd = 1000,
+        uint8_t characterSpacing = 1);
     bool run() override;
     bool finished() const override { return cycles >= 2; }
-    void reset() override { TextScroller::reset(); forward = true; TextScroller::setTargetOffset(-1); cycles = 0; }
+    void reset() override {
+        TextScroller::reset();
+        forward = true;
+        TextScroller::setTargetOffset(-1);
+        cycles = 0;
+    }
+
 private:
     uint32_t cycles = 0;
     bool forward = true;
@@ -113,10 +138,18 @@ private:
 
 class RandomFill : public DisplayEffect {
 public:
-    RandomFill(PixelDisplay& display, uint32_t fillInterval, CRGB(*colourGenerator)(), const DisplayRegion& spawnRegion = defaultFull);
+    RandomFill(
+        PixelDisplay& display,
+        uint32_t fillInterval,
+        CRGB (*colourGenerator)(),
+        const DisplayRegion& spawnRegion = defaultFull);
     bool run() override final;
     bool finished() const override final { return _finished; }
-    void reset() override final { _finished = false; _lastSpawnTime = 0; _display.fill(0, _spawnRegion); };
+    void reset() override final {
+        _finished = false;
+        _lastSpawnTime = 0;
+        _display.fill(0, _spawnRegion);
+    };
 
 private:
     PixelDisplay& _display;
@@ -129,7 +162,11 @@ private:
 
 class BouncingBall : public DisplayEffect {
 public:
-    BouncingBall(PixelDisplay& display, uint32_t updateInterval, CRGB(*colourGenerator)(), const DisplayRegion& displayRegion = defaultFull);
+    BouncingBall(
+        PixelDisplay& display,
+        uint32_t updateInterval,
+        CRGB (*colourGenerator)(),
+        const DisplayRegion& displayRegion = defaultFull);
     bool run() override final;
     bool finished() const override final { return _finished; }
     void reset() override final;
@@ -149,15 +186,14 @@ private:
 
 class Gravity : public DisplayEffect {
 public:
+    enum class Direction { up, down, left, right };
 
-    enum class Direction {
-        up, 
-        down,
-        left,
-        right
-    };
-
-    Gravity(PixelDisplay& display, uint32_t moveInterval, bool empty, Gravity::Direction direction, const DisplayRegion& displayRegion = defaultFull);
+    Gravity(
+        PixelDisplay& display,
+        uint32_t moveInterval,
+        bool empty,
+        Gravity::Direction direction,
+        const DisplayRegion& displayRegion = defaultFull);
     bool run() override final;
     bool finished() const override final { return _finished; }
     void reset() override final;
@@ -166,6 +202,7 @@ public:
     void setDirection(Direction direction) { _direction = direction; }
 
     void setFallOutOfScreen(bool enabled) { _empty = enabled; }
+
 private:
     PixelDisplay& _display;
     DisplayRegion _displayRegion;
@@ -184,6 +221,7 @@ public:
     void reset() override final;
 
     void supplyData(std::vector<float> data);
+
 private:
     PixelDisplay& _display;
     uint8_t _width;
@@ -207,6 +245,7 @@ public:
     bool run() override final;
     bool finished() const override final { return _finished; }
     void reset() override final;
+
 private:
     PixelDisplay& _display;
     uint8_t _width;
@@ -221,10 +260,13 @@ private:
 
 class ClockFace_Base : public DisplayEffect {
 public:
-    ClockFace_Base(PixelDisplay& display, std::function<ClockFaceTimeStruct(void)> timeCallbackFunction) : _display(display), timeCallbackFunction(timeCallbackFunction) {}
+    ClockFace_Base(PixelDisplay& display, std::function<ClockFaceTimeStruct(void)> timeCallbackFunction)
+        : _display(display),
+          timeCallbackFunction(timeCallbackFunction) {}
     virtual bool run() override = 0;
     virtual bool finished() const override = 0;
     virtual void reset() override = 0;
+
 protected:
     PixelDisplay& _display;
     std::function<ClockFaceTimeStruct(void)> timeCallbackFunction;
@@ -232,10 +274,11 @@ protected:
 
 class ClockFace_Simple : public ClockFace_Base {
 public:
-    ClockFace_Simple(PixelDisplay& display, std::function<ClockFaceTimeStruct(void)> timeCallbackFunction) : ClockFace_Base(display, timeCallbackFunction) {}
+    ClockFace_Simple(PixelDisplay& display, std::function<ClockFaceTimeStruct(void)> timeCallbackFunction)
+        : ClockFace_Base(display, timeCallbackFunction) {}
     bool run() override final;
     bool finished() const override final { return false; }
-    void reset() override final { };
+    void reset() override final{};
 };
 
 class ClockFace_Gravity : public ClockFace_Base {
@@ -244,20 +287,18 @@ public:
     bool run() override final;
     bool finished() const override final { return false; }
     void reset() override final;
+
 private:
     std::unique_ptr<ClockFace_Simple> clockFace;
     std::unique_ptr<Gravity> gravityEffect;
     ClockFaceTimeStruct timePrev;
-    enum class State {
-        stable,
-        fallToBottom,
-        fallOut
-    };
+    enum class State { stable, fallToBottom, fallOut };
     State currentState = State::stable;
 };
 
-// bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)(), DisplayRegion displayRegion);
-// inline bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)())
+// bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty,
+// uint32_t(*colourGenerator)(), DisplayRegion displayRegion); inline bool gravityFill(PixelDisplay& display, uint32_t
+// fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)())
 // {
 //   return gravityFill(display, fillInterval, moveInterval, empty, colourGenerator, display.getFullDisplayRegion());
 // }
@@ -273,7 +314,7 @@ public:
 
 class HSVTestPattern : public FilterMethod {
 public:
-    HSVTestPattern() {};
+    HSVTestPattern(){};
     void apply(PixelDisplay& display) const override;
 };
 
@@ -281,6 +322,7 @@ class SolidColour : public FilterMethod {
 public:
     SolidColour(CRGB colour, bool maintainBrightness = true) : colour(colour), maintainBrightness(maintainBrightness) {}
     void apply(PixelDisplay& display) const override;
+
 private:
     CRGB colour;
     bool maintainBrightness;
@@ -288,11 +330,12 @@ private:
 
 class RainbowWave : public FilterMethod {
 public:
-    enum Direction {
-        horizontal,
-        vertical
-    };
-    RainbowWave(float speed, int width, Direction direction = Direction::horizontal, bool maintainBrightness = true) : speed(speed), width(width), direction(direction), maintainBrightness(maintainBrightness) {}
+    enum Direction { horizontal, vertical };
+    RainbowWave(float speed, int width, Direction direction = Direction::horizontal, bool maintainBrightness = true)
+        : speed(speed),
+          width(width),
+          direction(direction),
+          maintainBrightness(maintainBrightness) {}
     void apply(PixelDisplay& display) const override;
 
 private:
@@ -302,4 +345,4 @@ private:
     Direction direction;
 };
 
-#endif //displayeffects_h
+#endif // displayeffects_h

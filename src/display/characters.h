@@ -5,22 +5,18 @@
 
 typedef uint8_t charMapType[5];
 struct FontGlyph {
-  uint8_t glyph[5];
-  uint8_t width;
+    uint8_t glyph[5];
+    uint8_t width;
 };
 
-constexpr uint8_t charToIndex(char character)
-{
-  //Lowercase to uppercase
-  if (character >= 'a' && character <= 'z') {
-    return character - 32 - ' ';
-  } 
-  if (character >= ' ' && character <= 'Z') {
-    return character - ' ';
-  }
-  return 0;
+constexpr uint8_t charToIndex(char character) {
+    // Lowercase to uppercase
+    if (character >= 'a' && character <= 'z') { return character - 32 - ' '; }
+    if (character >= ' ' && character <= 'Z') { return character - ' '; }
+    return 0;
 }
 
+// clang-format off
 constexpr FontGlyph characterFontArray[] = {
   {   // space
     {
@@ -29,7 +25,7 @@ constexpr FontGlyph characterFontArray[] = {
       B000,
       B000,
       B000
-    }, 
+    },
     3
   },
   {   // !
@@ -39,7 +35,7 @@ constexpr FontGlyph characterFontArray[] = {
       B010,
       B000,
       B010
-    }, 
+    },
     3
   },
   {   // "
@@ -613,5 +609,6 @@ constexpr FontGlyph characterFontArray[] = {
     3,
   },
 };
+// clang-format on
 
 #endif // characters_h
