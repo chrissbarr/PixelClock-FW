@@ -9,6 +9,7 @@ BinPackArguments: false
 BinPackParameters: false
 PackConstructorInitializers: CurrentLine
 InsertBraces: true
+InsertTrailingCommas: Wrapped
 QualifierAlignment: Left
 AlignAfterOpenBracket: AlwaysBreak
 AllowShortBlocksOnASingleLine: Always
