@@ -1,4 +1,5 @@
 #include "modes.h"
+#include "audio.h"
 #include "display/gameOfLife.h"
 
 void MainModeFunction::clearAllButtonCallbacks(Button2& button)
@@ -182,6 +183,7 @@ void Mode_SettingsMenu_SetTime::moveIntoCore()
           currentlySettingTimeSegment = TimeSegment::hour;
         } else {
           currentlySettingTimeSegment = TimeSegment::done;
+          Audio::get().playStatusSound(StatusSound::Cancel);
         }
         break;
       }
@@ -192,6 +194,7 @@ void Mode_SettingsMenu_SetTime::moveIntoCore()
         } else {
           currentlySettingTimeSegment = TimeSegment::cancel;
         }
+        Audio::get().playStatusSound(StatusSound::ButtonClick);
         break;
       }
       case TimeSegment::minute:
@@ -201,6 +204,7 @@ void Mode_SettingsMenu_SetTime::moveIntoCore()
         } else {
           currentlySettingTimeSegment = TimeSegment::hour;
         }
+        Audio::get().playStatusSound(StatusSound::ButtonClick);
         break;
       }
       case TimeSegment::second:
@@ -210,6 +214,7 @@ void Mode_SettingsMenu_SetTime::moveIntoCore()
         } else {
           currentlySettingTimeSegment = TimeSegment::minute;
         }
+        Audio::get().playStatusSound(StatusSound::ButtonClick);
         break;
       }
       case TimeSegment::confirm:
@@ -217,6 +222,7 @@ void Mode_SettingsMenu_SetTime::moveIntoCore()
         if (forward) {
           currentlySettingTimeSegment = TimeSegment::done;
           setTimeGlobally(now() + this->secondsOffset);
+          Audio::get().playStatusSound(StatusSound::Confirm);
         } else {
           currentlySettingTimeSegment = TimeSegment::second;
         }

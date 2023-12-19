@@ -3,9 +3,12 @@
 
 #include "arduinoFFT.h"
 
+#include "melody.h"
+
 #include <memory>
 #include <deque>
 #include <vector>
+#include <map>
 
 inline void avrc_metadata_callback(uint8_t id, const uint8_t *text) {
   Serial.printf("==> AVRC metadata rsp: attribute id 0x%x, %s\n", id, text);
@@ -16,6 +19,8 @@ class BluetoothA2DPSink;
 namespace audio_tools {
 class I2SStream;
 }
+
+class MelodyPlayer;
 
 constexpr int fftSamples = 2048;
 constexpr int fftSampleFreq = 44100;
@@ -44,6 +49,12 @@ struct Volume {
   float right;
 };
 
+enum class StatusSound {
+  ButtonClick,
+  Confirm,
+  Cancel
+};
+
 class Audio {
 public:
   static Audio& get()
@@ -66,8 +77,7 @@ public:
 
   std::deque<Volume>& getVolumeHistory() { return volumeHistory; }
 
-
-
+  void playStatusSound(StatusSound sound);
 
 private:
   Audio();
@@ -91,6 +101,10 @@ private:
 
   int16_t volumeHistorySize = 100;
   std::deque<Volume> volumeHistory;
+
+  std::unique_ptr<MelodyPlayer> melodyPlayer;
+
+  std::map<String, Melody> melodies; 
 };
 
 #endif // audiofft_h

@@ -8,6 +8,9 @@
 //#define FFT_SQRT_APPROXIMATION
 #include <arduinoFFT.h>
 
+#include <melody_player.h>
+#include <melody_factory.h>
+
 #include <numeric>
 
 void read_data_stream(const uint8_t *data, uint32_t length)
@@ -154,11 +157,22 @@ void Audio::begin()
   FFT = std::make_unique<ArduinoFFT<float>>(vReal, vImag, fftSamples, fftSampleFreq, weighingFactors);
 
   audioSpectrumSemaphore = xSemaphoreCreateMutex();
+
+  Serial.println("Begin melody library generation...");
+  melodies["status_button"] = MelodyFactory.loadRtttlString("status_button: d=16,o=5,b=112:f");
+  melodies["status_good"] = MelodyFactory.loadRtttlString("status_button: d=16,o=5,b=112:c,f");
+  melodies["status_bad"] = MelodyFactory.loadRtttlString("status_button: d=16,o=5,b=112:f,c");
+
+  melodies["music_pokemon"] = MelodyFactory.loadRtttlString("Pokemon:d=16,o=5,b=112:32p,f,a#,c6,c#6,c6,c#6,d#6,2f6,a#,c6,8c#6,8f6,8d#6,32c#.6,32d#.6,32c#.6,8c6,8g#.,f,a#,c6,c#6,c6,c#6,d#6,2f6,8a#,c#6,8f6,a,d#6,4g#6");
+  melodies["music_tetris"] = MelodyFactory.loadRtttlString("korobyeyniki:d=4,o=5,b=160:e6,8b,8c6,8d6,16e6,16d6,8c6,8b,a,8a,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,2a,8p,d6,8f6,a6,8g6,8f6,e6,8e6,8c6,e6,8d6,8c6,b,8b,8c6,d6,e6,c6,a,a");
+  Serial.println("Completed melody library generation!");
+
+  melodyPlayer = std::make_unique<MelodyPlayer>(pins::buzzer);
+  melodyPlayer->playAsync(melodies["music_tetris"]);
 }
 
 void Audio::update()
 {
-
   if (millis() - statReportLastTime > statReportInterval && !callbackDiagnostics.empty()) {
 
     float callbackAvg = 0;
@@ -198,4 +212,20 @@ void Audio::update()
 
     statReportLastTime = millis();
   }
+}
+
+void Audio::playStatusSound(StatusSound sound)
+{
+  switch (sound) {
+    case StatusSound::ButtonClick:
+      melodyPlayer->playAsync(melodies["status_button"]);
+      break;
+    case StatusSound::Confirm:
+      melodyPlayer->playAsync(melodies["status_good"]);
+      break;
+    case StatusSound::Cancel:
+      melodyPlayer->playAsync(melodies["status_bad"]);
+      break;
+  }
+
 }
