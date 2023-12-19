@@ -1,8 +1,9 @@
+/* Project Scope */
 #include "display/displayEffects.h"
+#include "audio.h"
 #include "display/display.h"
 
-#include "audio.h"
-
+/* C++ Standard Library */
 #include <random>
 
 TextScroller::TextScroller(

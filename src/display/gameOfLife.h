@@ -1,8 +1,10 @@
 #ifndef gameoflife_h
 #define gameoflife_h
 
+/* Project Scope */
 #include "display/displayEffects.h"
 
+/* C++ Standard Library */
 #include <deque>
 #include <set>
 

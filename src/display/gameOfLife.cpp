@@ -1,5 +1,7 @@
+/* Project Scope */
 #include "display/gameOfLife.h"
 
+/* C++ Standard Library */
 #include <random>
 
 GameOfLife::GameOfLife(

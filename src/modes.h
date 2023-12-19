@@ -1,13 +1,17 @@
 #ifndef modes_h
 #define modes_h
 
-#include <Arduino.h>
-
-#include <Button2.h>
-
+/* Project Scope */
 #include "display/display.h"
 #include "display/displayEffects.h"
 
+/* Libraries */
+#include <Button2.h>
+
+/* Arduino Core */
+#include <Arduino.h>
+
+/* C++ Standard Library */
 #include <memory>
 #include <vector>
 

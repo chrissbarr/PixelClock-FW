@@ -1,3 +1,4 @@
+/* Project Scope */
 #include "utility.h"
 
 namespace utility {

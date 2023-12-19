@@ -1,3 +1,4 @@
+/* Project Scope */
 #include "modes.h"
 #include "display/gameOfLife.h"
 

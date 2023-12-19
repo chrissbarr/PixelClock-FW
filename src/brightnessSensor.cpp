@@ -1,5 +1,7 @@
+/* Project Scope */
 #include "brightnessSensor.h"
 
+/* Libraries */
 #include <TSL2591I2C.h>
 
 BrightnessSensor::BrightnessSensor() {

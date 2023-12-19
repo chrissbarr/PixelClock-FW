@@ -1,6 +1,7 @@
-#include "characters.h"
-#include <display/display.h>
-#include <display/displayEffects.h>
+/* Project Scope */
+#include "display/display.h"
+#include "display/characters.h"
+#include "display/displayEffects.h"
 
 PixelDisplay::PixelDisplay(uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset)
     : width(width),

@@ -1,13 +1,15 @@
+/* Project Scope */
 #include "audio.h"
 #include "pinout.h"
 
+/* Libraries */
 #include "AudioTools.h"
 #include "BluetoothA2DPSink.h"
-
 // #define FFT_SPEED_OVER_PRECISION
 // #define FFT_SQRT_APPROXIMATION
 #include <arduinoFFT.h>
 
+/* C++ Standard Library */
 #include <numeric>
 
 void read_data_stream(const uint8_t* data, uint32_t length) { Audio::get().a2dp_callback(data, length); }

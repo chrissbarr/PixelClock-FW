@@ -1,10 +1,14 @@
 #ifndef timekeeping_h
 #define timekeeping_h
 
-#include <Arduino.h>
+/* Libraries */
 #include <RTClib.h>
 #include <TimeLib.h>
 
+/* Arduino Core */
+#include <Arduino.h>
+
+/* C++ Standard Library */
 #include <memory>
 
 struct ClockFaceTimeStruct {

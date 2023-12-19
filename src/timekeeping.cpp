@@ -1,3 +1,4 @@
+/* Project Scope */
 #include "timekeeping.h"
 
 std::unique_ptr<RTC_DS3231> rtc;

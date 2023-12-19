@@ -1,11 +1,15 @@
 #ifndef displayeffects_h
 #define displayeffects_h
 
+/* Project Scope */
 #include "display/display.h"
 #include "display/fastled_rgbw.h"
 #include "timekeeping.h"
+
+/* Arduino Core */
 #include <Arduino.h>
 
+/* C++ Standard Library */
 #include <deque>
 #include <memory>
 #include <set>

@@ -1,10 +1,14 @@
 #ifndef display_h
 #define display_h
 
+/* Project Scope */
 #include "display/characters.h"
 #include "display/fastled_rgbw.h"
+
+/* Arduino Core */
 #include <Arduino.h>
 
+/* C++ Standard Library */
 #include <vector>
 
 struct DisplayRegion {

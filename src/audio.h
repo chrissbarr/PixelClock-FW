@@ -1,8 +1,10 @@
 #ifndef audiofft_h
 #define audiofft_h
 
+/* Libraries */
 #include "arduinoFFT.h"
 
+/* C++ Standard Library */
 #include <deque>
 #include <memory>
 #include <vector>

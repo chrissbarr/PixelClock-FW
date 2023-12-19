@@ -1,5 +1,11 @@
-#include "Arduino.h"
+/* Project Scope */
 #include "timekeeping.h"
+
+/* Arduino Core */
+#include "Arduino.h"
+
+/* C++ Standard Library */
+#include <vector>
 
 void processSerialCommands() {
     if (Serial.available()) {

@@ -1,6 +1,7 @@
 #ifndef utility_h
 #define utility_h
 
+/* Arduino Core */
 #include <Arduino.h>
 #include <Wire.h>
 

@@ -1,16 +1,4 @@
-// C++ Std Library
-#include <functional>
-#include <memory>
-#include <random>
-#include <string>
-#include <vector>
-
-// Libraries
-#include <Button2.h>
-#include <LittleFS.h>
-#include <SPI.h>
-
-// Project Scope
+/* Project Scope */
 #include "audio.h"
 #include "brightnessSensor.h"
 #include "display/display.h"
@@ -22,6 +10,18 @@
 #include "serialCommands.h"
 #include "timekeeping.h"
 #include "utility.h"
+
+/* Libraries */
+#include <Button2.h>
+#include <LittleFS.h>
+#include <SPI.h>
+
+/* C++ Standard Library */
+#include <functional>
+#include <memory>
+#include <random>
+#include <string>
+#include <vector>
 
 // LED Panel Configuration
 constexpr uint8_t matrixWidth = 17;

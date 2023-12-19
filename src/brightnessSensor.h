@@ -1,8 +1,8 @@
 #ifndef brightnessSensor_h
 #define brightnessSensor_h
 
-#include <Arduino.h>
-
+/* C++ Standard Library */
+#include <cstdint>
 #include <memory>
 
 class TSL2591I2C;

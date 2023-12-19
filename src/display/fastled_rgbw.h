@@ -11,8 +11,12 @@
 #define FastLED_RGBW_h
 
 #define FASTLED_INTERNAL
-#include <Arduino.h>
+
+/* Libraries */
 #include <FastLED.h>
+
+/* C++ Standard Library */
+#include <cstdint>
 
 constexpr uint16_t getRGBWsize(uint16_t nleds) {
     uint16_t nbytes = nleds * 4;
