@@ -29,7 +29,7 @@ void MainModeFunction::moveIntoCore()
   buttons.mode.setTapHandler([this](Button2& btn){ _finished = true; });
 }
 
-void MainModeFunction::run() 
+void MainModeFunction::run()
 {
   this->runCore();
 }
@@ -43,8 +43,8 @@ void MainModeFunction::moveOut()
   this->moveOutCore();
 }
 
-Mode_SettingsMenu::Mode_SettingsMenu(PixelDisplay& display, ButtonReferences buttons) 
-  : MainModeFunction("Settings Menu", display, buttons) 
+Mode_SettingsMenu::Mode_SettingsMenu(PixelDisplay& display, ButtonReferences buttons)
+  : MainModeFunction("Settings Menu", display, buttons)
 {
   menuTextScroller = std::make_unique<RepeatingTextScroller>(_display, "Placeholder", std::vector<CRGB>{CRGB::Red}, 50, 2000, 1);
   menuPages.push_back(std::make_unique<Mode_SettingsMenu_SetTime>(display, buttons));
@@ -104,7 +104,7 @@ void Mode_SettingsMenu::registerButtonCallbacks()
   Serial.println("Registered settings button callbacks");
 }
 
-void Mode_SettingsMenu::runCore() 
+void Mode_SettingsMenu::runCore()
 {
   if (activeMenuPage) {
     activeMenuPage->run();
@@ -119,7 +119,7 @@ void Mode_SettingsMenu::runCore()
   }
 }
 
-Mode_SettingsMenu_SetTime::Mode_SettingsMenu_SetTime(PixelDisplay& display, ButtonReferences buttons) 
+Mode_SettingsMenu_SetTime::Mode_SettingsMenu_SetTime(PixelDisplay& display, ButtonReferences buttons)
   : MainModeFunction("Set Time", display, buttons)
 {
   textscroller = std::make_unique<TextScroller>(_display, "12:34:56", std::vector<CRGB>{CRGB::White}, 10, 1000, 1);
@@ -137,7 +137,7 @@ void Mode_SettingsMenu_SetTime::moveIntoCore()
     int changeDir = 1;
     if (btn == buttons.left) {
       changeDir = -1;
-    } 
+    }
 
     switch (currentlySettingTimeSegment) {
       case TimeSegment::hour:
@@ -311,8 +311,8 @@ void Mode_SettingsMenu_SetTime::runCore()
   textscroller->run();
 }
 
-Mode_ClockFace::Mode_ClockFace(PixelDisplay& display, ButtonReferences buttons) : 
-  MainModeFunction("Clockface", display, buttons) 
+Mode_ClockFace::Mode_ClockFace(PixelDisplay& display, ButtonReferences buttons) :
+  MainModeFunction("Clockface", display, buttons)
 {
   faces.push_back(std::make_unique<ClockFace_Gravity>(_display, [](){ return timeCallbackFunction(now()); }));
   faces.push_back(std::make_unique<ClockFace_Simple>(_display, [](){ return timeCallbackFunction(now()); }));
@@ -321,7 +321,7 @@ Mode_ClockFace::Mode_ClockFace(PixelDisplay& display, ButtonReferences buttons) 
   timePrev = timeCallbackFunction();
 }
 
-void Mode_ClockFace::moveIntoCore() 
+void Mode_ClockFace::moveIntoCore()
 {
   faces[clockfaceIndex]->reset();
 
@@ -354,7 +354,7 @@ void Mode_ClockFace::runCore()
   _display.applyFilter(*filters[filterIndex]);
 }
 
-Mode_Effects::Mode_Effects(PixelDisplay& display, ButtonReferences buttons) : 
+Mode_Effects::Mode_Effects(PixelDisplay& display, ButtonReferences buttons) :
   MainModeFunction("Effects", display, buttons) {
   effects.push_back(std::make_unique<VolumeDisplay>(_display));
   effects.push_back(std::make_unique<SpectrumDisplay>(_display, _display.getWidth(), 0));
@@ -441,7 +441,6 @@ void Mode_Effects::runCore()
 
 ModeManager::ModeManager(PixelDisplay& display, ButtonReferences buttons)
 {
-  modeIndex = 1;
   modes.push_back(std::make_unique<Mode_ClockFace>(display, buttons));
   modes.push_back(std::make_unique<Mode_Effects>(display, buttons));
   modes.push_back(std::make_unique<Mode_SettingsMenu>(display, buttons));
