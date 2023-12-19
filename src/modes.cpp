@@ -148,6 +148,9 @@ void Mode_SettingsMenu_SetTime::moveIntoCore() {
             this->secondsOffset += changeAmt;
             break;
         }
+        default: {
+            break;
+        }
         }
     };
     buttons.left.setTapHandler(changeTimeCallback);
@@ -202,6 +205,9 @@ void Mode_SettingsMenu_SetTime::moveIntoCore() {
             } else {
                 currentlySettingTimeSegment = TimeSegment::second;
             }
+            break;
+        }
+        default: {
             break;
         }
         }
@@ -336,6 +342,9 @@ void Mode_SettingsMenu_SetTime::runCore() {
             colourSel,
             colourSel, // space + ok
         });
+        break;
+    }
+    default: {
         break;
     }
     }

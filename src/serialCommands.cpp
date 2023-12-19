@@ -29,7 +29,7 @@ void processSerialCommands() {
 
         if (!substrings.empty()) {
             Serial.print("Received command: ");
-            for (const auto& str : substrings) { Serial.printf("%s ", str); }
+            for (const auto& str : substrings) { Serial.printf("%s ", str.c_str()); }
             Serial.printf("\n");
 
             if (substrings[0] == "T") {

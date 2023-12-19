@@ -49,7 +49,6 @@ struct BrightnessMode {
 };
 
 uint8_t brightnessFromSensor() {
-    float maxBrightness = 1.7;
     return uint8_t(constrain(map(brightnessSensor->getBrightness() * 1000, 0, 1700, 0, 255), 1, 255));
 }
 
@@ -156,7 +155,7 @@ void setup() {
     printTextCentred("Initialising Audio", headingWidth);
     Audio::get().begin();
 
-    Serial.printf("%-*s %dms\n", textPadding, "Runtime:", millis());
+    Serial.printf("%-*s %lums\n", textPadding, "Runtime:", millis());
     printSolidLine(headingWidth);
     printTextCentred("Initialisation Completed", headingWidth);
     printSolidLine(headingWidth);

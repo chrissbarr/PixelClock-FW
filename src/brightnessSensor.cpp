@@ -46,7 +46,7 @@ void BrightnessSensor::update() {
         if (sensor) {
             if (sensor->hasValue()) {
                 float brightness = sensor->getBrightness();
-                float irradiance = sensor->getIrradiance();
+                // float irradiance = sensor->getIrradiance();
                 // Serial.print("Irradiance: "); Serial.print(irradiance, 7); Serial.println(" W / m^2");
                 // Serial.print("Brightness: "); Serial.print(brightness, 7); Serial.println(" lux");
                 lastBrightness = brightness;

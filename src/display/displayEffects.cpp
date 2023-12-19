@@ -211,8 +211,8 @@ bool Gravity::run() {
             CRGB cellColour = display.getIndex(currentIndex);
             if (cellColour != CRGB(0)) {
                 // if this is the last row
-                if (yMove == 1 && y == displayRegion.yMax || yMove == -1 && y == displayRegion.yMin ||
-                    xMove == 1 && x == displayRegion.xMax || xMove == -1 && x == displayRegion.yMin) {
+                if ((yMove == 1 && y == displayRegion.yMax) || (yMove == -1 && y == displayRegion.yMin) ||
+                    (xMove == 1 && x == displayRegion.xMax) || (xMove == -1 && x == displayRegion.yMin)) {
                     if (empty) {
                         display.setIndex(currentIndex, 0);
                         return true;
@@ -273,7 +273,7 @@ bool Gravity::run() {
 SpectrumDisplay::SpectrumDisplay(PixelDisplay& display, uint8_t width, uint32_t decayRate)
     : _display(display),
       _width(width),
-      _decayRate(_decayRate) {
+      _decayRate(decayRate) {
     colMin = CRGB::Blue;
     colMax = CRGB::Purple;
 }
@@ -470,7 +470,7 @@ bool VolumeDisplay::run() {
 // }
 
 bool ClockFace_Simple::run() {
-    constexpr uint8_t bufSize = 6;
+    constexpr uint8_t bufSize = 8;
     char c_buf[bufSize];
     auto times = timeCallbackFunction();
     snprintf(c_buf, bufSize, "%2d:%02d", times.hour12, times.minute);
@@ -608,16 +608,14 @@ void RainbowWave::apply(PixelDisplay& display) const {
     auto& buffer = display.getFilterBuffer();
     static float wheelPos = 0;
     wheelPos += speed;
-    int _width;
-    if (width == 0) {
+    int _width = width;
+    if (_width == 0) {
         _width = display.getWidth();
-    } else {
-        _width = width;
     }
 
     for (uint8_t x = 0; x < display.getWidth(); x++) {
         for (uint8_t y = 0; y < display.getHeight(); y++) {
-            uint8_t hue = uint8_t(round(wheelPos)) + ((direction == Direction::horizontal ? x : y) * 256 / width);
+            uint8_t hue = uint8_t(round(wheelPos)) + ((direction == Direction::horizontal ? x : y) * 256 / _width);
             auto index = display.XYToIndex(x, y);
             if (buffer[index] == CRGB(0)) { continue; }
             buffer[index] = CHSV(hue, 255, maintainBrightness ? buffer[index].getAverageLight() : 255);
