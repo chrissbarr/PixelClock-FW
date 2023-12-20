@@ -2,6 +2,7 @@
 #include "display/displayEffects.h"
 #include "audio.h"
 #include "display/display.h"
+#include "utility.h"
 
 /* C++ Standard Library */
 #include <random>
@@ -345,18 +346,14 @@ void VolumeDisplay::reset() { _finished = false; }
 
 bool VolumeDisplay::run() {
 
-    auto& volHist = Audio::get().getVolumeHistory();
+    auto& audioHist = Audio::get().getAudioCharacteristicsHistory();
 
     float vLeft = 0;
     float vRight = 0;
 
-    if (!volHist.empty()) {
-        vLeft = std::accumulate(
-                    volHist.begin(), volHist.end(), 0.0, [&](float sum, const Volume& v) { return sum + v.left; }) /
-                volHist.size();
-        vRight = std::accumulate(
-                     volHist.begin(), volHist.end(), 0.0, [&](float sum, const Volume& v) { return sum + v.right; }) /
-                 volHist.size();
+    if (!audioHist.empty()) {
+        vLeft = utility::sum_members(audioHist, &AudioCharacteristics::volumeLeft) / audioHist.size();
+        vRight = utility::sum_members(audioHist, &AudioCharacteristics::volumeRight) / audioHist.size();
 
         vLeft = vLeft / 100;
         vRight = vRight / 100;

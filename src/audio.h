@@ -35,13 +35,12 @@ constexpr int audioSpectrumBinWidth = audioSpectrumMaxFreq / audioSpectrumBins;
 constexpr int audioSpectrumHistorySize = 3;
 constexpr int audioSpectrumBinSize = (fftSamples / 4) / audioSpectrumBins;
 
-constexpr int prevMaxesToKeep = 200;
-
 void read_data_stream(const uint8_t* data, uint32_t length);
 
-struct Volume {
-    float left;
-    float right;
+struct AudioCharacteristics {
+    float volumeLeft;
+    float volumeRight;
+    float spectrumMax;
 };
 
 class Audio {
@@ -63,7 +62,7 @@ public:
     std::deque<std::vector<float>>& getAudioSpectrum() { return audioSpectrum; }
     SemaphoreHandle_t getAudioSpectrumSemaphore() { return audioSpectrumSemaphore; }
 
-    etl::icircular_buffer<Volume>& getVolumeHistory() { return volumeHistory; }
+    etl::icircular_buffer<AudioCharacteristics>& getAudioCharacteristicsHistory() { return audioCharacteristics; }
 
 private:
     Audio();
@@ -79,8 +78,6 @@ private:
     SemaphoreHandle_t audioSpectrumSemaphore;
     std::deque<std::vector<float>> audioSpectrum;
 
-    std::deque<float> prevMaxes;
-
     InstrumentationTrace callbackDuration;
     InstrumentationTrace audioDuration;
     InstrumentationTrace volDuration;
@@ -89,7 +86,7 @@ private:
     uint32_t statReportInterval = 5000;
     uint32_t statReportLastTime = 0;
 
-    etl::circular_buffer<Volume, 10> volumeHistory;
+    etl::circular_buffer<AudioCharacteristics, 10> audioCharacteristics;
 };
 
 #endif // audiofft_h

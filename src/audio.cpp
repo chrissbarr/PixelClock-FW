@@ -2,6 +2,7 @@
 #include "audio.h"
 #include "instrumentation.h"
 #include "pinout.h"
+#include "utility.h"
 
 /* Libraries */
 #include "AudioTools.h"
@@ -45,9 +46,6 @@ void Audio::a2dp_callback(const uint8_t* data, uint32_t length) {
     vLeftAvg = 20 * std::log10(vLeftAvg);
     vRightAvg = 20 * std::log10(vRightAvg);
 
-    // store avg volume in history
-    volumeHistory.push({vLeftAvg, vRightAvg});
-
     volDuration.stop();
     fftDuration.start();
 
@@ -73,7 +71,7 @@ void Audio::a2dp_callback(const uint8_t* data, uint32_t length) {
     auto spectrum = std::vector<float>(audioSpectrumBins, 0);
 
     float prevMax = 0.0;
-    if (!prevMaxes.empty()) { prevMax = prevMaxes.back(); }
+    if (!audioCharacteristics.empty()) { prevMax = audioCharacteristics.back().spectrumMax; }
 
     // Bin FFT results
     for (int i = 5; i < (fftSamples / 2) - 1; i++) {
@@ -90,9 +88,8 @@ void Audio::a2dp_callback(const uint8_t* data, uint32_t length) {
     }
 
     float maxThisTime = *std::max_element(spectrum.begin(), spectrum.end());
-    prevMaxes.push_back(maxThisTime);
-    if (prevMaxes.size() > prevMaxesToKeep) { prevMaxes.pop_front(); }
-    float avgMax = std::accumulate(prevMaxes.begin(), prevMaxes.end(), 0.0) / prevMaxes.size();
+    float avgMax =
+        utility::sum_members(audioCharacteristics, &AudioCharacteristics::spectrumMax) / audioCharacteristics.size();
 
     float maxScale = 6000;
     float scaleFactor = maxScale / avgMax;
@@ -109,6 +106,13 @@ void Audio::a2dp_callback(const uint8_t* data, uint32_t length) {
     xSemaphoreGive(audioSpectrumSemaphore);
 
     fftDuration.stop();
+
+    AudioCharacteristics c{};
+    c.volumeLeft = vLeftAvg;
+    c.volumeRight = vRightAvg;
+    c.spectrumMax = maxThisTime;
+    audioCharacteristics.push(c);
+
     callbackDuration.stop();
 }
 
@@ -163,7 +167,8 @@ void Audio::update() {
         printAndReset("Audio Callback - Vol", volDuration);
         printAndReset("Audio Callback - FFT", fftDuration);
 
-        Serial.printf("Volume: %f %f\n", volumeHistory.back().left, volumeHistory.back().right);
+        Serial.printf(
+            "Volume: L %f, R %f\n", audioCharacteristics.back().volumeLeft, audioCharacteristics.back().volumeRight);
 
         statReportLastTime = millis();
     }
