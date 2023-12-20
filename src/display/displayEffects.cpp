@@ -336,6 +336,9 @@ void SpectrumDisplay::supplyData(std::vector<float> data) { _data = data; }
 VolumeDisplay::VolumeDisplay(PixelDisplay& display) : _display(display) {
     colMin = CRGB::Green;
     colMax = CRGB::Red;
+    colourMap.push_back({0, CRGB::Green});
+    colourMap.push_back({0.4, CRGB::Yellow});
+    colourMap.push_back({0.6, CRGB::Red});
 }
 
 void VolumeDisplay::reset() { _finished = false; }
@@ -348,8 +351,15 @@ bool VolumeDisplay::run() {
     float vRight = 0;
 
     if (!volHist.empty()) {
-        vLeft = volHist.back().left / 100;
-        vRight = volHist.back().right / 100;
+        vLeft = std::accumulate(
+                    volHist.begin(), volHist.end(), 0.0, [&](float sum, const Volume& v) { return sum + v.left; }) /
+                volHist.size();
+        vRight = std::accumulate(
+                     volHist.begin(), volHist.end(), 0.0, [&](float sum, const Volume& v) { return sum + v.right; }) /
+                 volHist.size();
+
+        vLeft = vLeft / 100;
+        vRight = vRight / 100;
     }
 
     uint8_t horMax = _display.getWidth();
@@ -360,7 +370,14 @@ bool VolumeDisplay::run() {
     auto drawBar = [&](float barHeight, int y) {
         for (int x = 0; x < _display.getWidth(); x++) {
             CRGB colour = CRGB::Black;
-            if (x <= barHeight) { colour = CRGB(colMin).lerp16(colMax, fract16((barHeight / float(horMax)) * 65535)); }
+
+            float pct = float(x) / horMax;
+
+            if (x <= barHeight) {
+                for (const auto& m : colourMap) {
+                    if (pct > m.percentage) { colour = m.colour; }
+                }
+            }
             if (x == std::floor(barHeight)) {
                 float remainder = barHeight - std::floor(barHeight);
                 colour = colour.scale8(uint8_t(remainder * 255));
@@ -369,8 +386,11 @@ bool VolumeDisplay::run() {
         }
     };
 
+    _display.fill(0);
+    drawBar(leftBarHeight, 0);
     drawBar(leftBarHeight, 1);
     drawBar(rightBarHeight, 3);
+    drawBar(rightBarHeight, 4);
 
     return finished();
 }
@@ -609,9 +629,7 @@ void RainbowWave::apply(PixelDisplay& display) const {
     static float wheelPos = 0;
     wheelPos += speed;
     int _width = width;
-    if (_width == 0) {
-        _width = display.getWidth();
-    }
+    if (_width == 0) { _width = display.getWidth(); }
 
     for (uint8_t x = 0; x < display.getWidth(); x++) {
         for (uint8_t y = 0; y < display.getHeight(); y++) {

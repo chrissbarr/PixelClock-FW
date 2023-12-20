@@ -243,6 +243,11 @@ private:
     uint32_t _lastDecayedTime = 0;
 };
 
+struct VolumeDisplayColourMap {
+    double percentage;
+    CRGB colour;
+};
+
 class VolumeDisplay : public DisplayEffect {
 public:
     VolumeDisplay(PixelDisplay& display);
@@ -255,7 +260,7 @@ private:
     uint8_t _width;
 
     // float calculateBarHeight(float val, float valMax, float barMax) const;
-
+    std::vector<VolumeDisplayColourMap> colourMap;
     CRGB colMin;
     CRGB colMax;
 
