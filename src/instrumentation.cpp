@@ -6,6 +6,7 @@
 
 /* C++ Standard Library */
 #include <numeric>
+#include <string>
 
 InstrumentationTrace::InstrumentationTrace() { reset(); }
 
@@ -36,3 +37,18 @@ void InstrumentationTrace::reset() {
     avg = 0;
     empty = true;
 }
+
+std::string formatInstrumentationTrace(std::string name, const InstrumentationTrace& trace) {
+    constexpr uint8_t bufSize = 100;
+    char c_buf[bufSize];
+    snprintf(
+        c_buf,
+        bufSize,
+        "%-20s (Min - Max - Avg): %5d - %5d - %5d\n",
+        name.c_str(),
+        trace.getMin(),
+        trace.getMax(),
+        trace.getAvg());
+    std::string val(c_buf);
+    return val;
+};

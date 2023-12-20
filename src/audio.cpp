@@ -153,16 +153,17 @@ void Audio::update() {
 
     if (millis() - statReportLastTime > statReportInterval) {
 
-        auto printInstrumentationTrace = [](std::string name, InstrumentationTrace& t) {
-            Serial.printf(
-                "%-30s (Min - Max - Avg): %5d - %5d - %5d\n", name.c_str(), t.getMin(), t.getMax(), t.getAvg());
+        auto printAndReset = [](std::string name, InstrumentationTrace& t) {
+            Serial.print(formatInstrumentationTrace(name, t).c_str());
             t.reset();
         };
 
-        printInstrumentationTrace("Audio Callback - Total", callbackDuration);
-        printInstrumentationTrace("Audio Callback - I2S", audioDuration);
-        printInstrumentationTrace("Audio Callback - Vol", volDuration);
-        printInstrumentationTrace("Audio Callback - FFT", fftDuration);
+        printAndReset("Audio Callback - Total", callbackDuration);
+        printAndReset("Audio Callback - I2S", audioDuration);
+        printAndReset("Audio Callback - Vol", volDuration);
+        printAndReset("Audio Callback - FFT", fftDuration);
+
+        Serial.printf("Volume: %f %f\n", volumeHistory.back().left, volumeHistory.back().right);
 
         statReportLastTime = millis();
     }

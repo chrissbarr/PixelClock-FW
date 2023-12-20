@@ -3,6 +3,7 @@
 
 /* C++ Standard Library */
 #include <cstdint>
+#include <string>
 
 class InstrumentationTrace {
 public:
@@ -22,5 +23,7 @@ private:
     uint32_t max{};
     bool empty{true};
 };
+
+std::string formatInstrumentationTrace(std::string name, const InstrumentationTrace& trace);
 
 #endif // instrumentation_h
