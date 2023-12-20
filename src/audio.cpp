@@ -1,5 +1,6 @@
 /* Project Scope */
 #include "audio.h"
+#include "instrumentation.h"
 #include "pinout.h"
 
 /* Libraries */
@@ -15,12 +16,17 @@
 void read_data_stream(const uint8_t* data, uint32_t length) { Audio::get().a2dp_callback(data, length); }
 
 void Audio::a2dp_callback(const uint8_t* data, uint32_t length) {
-    uint32_t callbackStart = micros();
+
+    callbackDuration.start();
+    audioDuration.start();
 
     int16_t* samples = (int16_t*)data;
     uint32_t sample_count = length / 2;
 
     i2sOutput->write(data, length);
+
+    audioDuration.stop();
+    volDuration.start();
 
     float vLeftAvg = 0;
     float vRightAvg = 0;
@@ -42,7 +48,8 @@ void Audio::a2dp_callback(const uint8_t* data, uint32_t length) {
     volumeHistory.push_back({vLeftAvg, vRightAvg});
     if (volumeHistory.size() > volumeHistorySize) { volumeHistory.pop_front(); }
 
-    uint32_t fftStart = micros();
+    volDuration.stop();
+    fftDuration.start();
 
     int sourceIdx = 0;
     for (uint32_t i = 0; i < fftSamples; i++) {
@@ -101,13 +108,8 @@ void Audio::a2dp_callback(const uint8_t* data, uint32_t length) {
     if (audioSpectrum.size() > audioSpectrumHistorySize) { audioSpectrum.pop_front(); }
     xSemaphoreGive(audioSpectrumSemaphore);
 
-    uint32_t fftEnd = micros();
-    uint32_t callbackEnd = micros();
-
-    uint32_t callbackDuration = callbackEnd - callbackStart;
-    uint32_t fftDuration = fftEnd - fftStart;
-
-    callbackDiagnostics.push_back({callbackDuration, fftDuration, sample_count});
+    fftDuration.stop();
+    callbackDuration.stop();
 }
 
 Audio::Audio() {}
@@ -149,44 +151,18 @@ void Audio::begin() {
 
 void Audio::update() {
 
-    if (millis() - statReportLastTime > statReportInterval && !callbackDiagnostics.empty()) {
+    if (millis() - statReportLastTime > statReportInterval) {
 
-        float callbackAvg = 0;
-        uint16_t callbackMin = std::numeric_limits<uint16_t>::max();
-        uint16_t callbackMax = 0;
+        auto printInstrumentationTrace = [](std::string name, InstrumentationTrace& t) {
+            Serial.printf(
+                "%-30s (Min - Max - Avg): %5d - %5d - %5d\n", name.c_str(), t.getMin(), t.getMax(), t.getAvg());
+            t.reset();
+        };
 
-        float fftAvg = 0;
-        uint16_t fftMin = std::numeric_limits<uint16_t>::max();
-        uint16_t fftMax = 0;
-
-        float samplesAvg = 0;
-        uint16_t samplesMin = std::numeric_limits<uint16_t>::max();
-        uint16_t samplesMax = 0;
-
-        for (const auto& stats : callbackDiagnostics) {
-            callbackAvg += stats.callbackDuration;
-            if (stats.callbackDuration > callbackMax) { callbackMax = stats.callbackDuration; }
-            if (stats.callbackDuration < callbackMin) { callbackMin = stats.callbackDuration; }
-
-            fftAvg += stats.fftDuration;
-            if (stats.fftDuration > fftMax) { fftMax = stats.fftDuration; }
-            if (stats.fftDuration < fftMin) { fftMin = stats.fftDuration; }
-
-            samplesAvg += stats.sampleCount;
-            if (stats.sampleCount > samplesMax) { samplesMax = stats.sampleCount; }
-            if (stats.sampleCount < samplesMin) { samplesMin = stats.sampleCount; }
-        }
-
-        callbackAvg = callbackAvg / callbackDiagnostics.size();
-        fftAvg = fftAvg / callbackDiagnostics.size();
-        samplesAvg = samplesAvg / callbackDiagnostics.size();
-        callbackDiagnostics.clear();
-
-        Serial.printf(
-            "A2DP Callback Statistics (Min - Max - Avg): %d - %d - %.2f \n", callbackMin, callbackMax, callbackAvg);
-        Serial.printf("A2DP FFT Statistics      (Min - Max - Avg): %d - %d - %.2f \n", fftMin, fftMax, fftAvg);
-        Serial.printf(
-            "A2DP Sample Count        (Min - Max - Avg): %d - %d - %.2f \n", samplesMin, samplesMax, samplesAvg);
+        printInstrumentationTrace("Audio Callback - Total", callbackDuration);
+        printInstrumentationTrace("Audio Callback - I2S", audioDuration);
+        printInstrumentationTrace("Audio Callback - Vol", volDuration);
+        printInstrumentationTrace("Audio Callback - FFT", fftDuration);
 
         statReportLastTime = millis();
     }

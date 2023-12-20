@@ -1,6 +1,9 @@
 #ifndef audiofft_h
 #define audiofft_h
 
+/* Project Scope */
+#include "instrumentation.h"
+
 /* Libraries */
 #include "arduinoFFT.h"
 
@@ -34,12 +37,6 @@ constexpr int audioSpectrumBinSize = (fftSamples / 4) / audioSpectrumBins;
 constexpr int prevMaxesToKeep = 200;
 
 void read_data_stream(const uint8_t* data, uint32_t length);
-
-struct CallbackDiagnostic {
-    uint32_t callbackDuration;
-    uint32_t fftDuration;
-    uint32_t sampleCount;
-};
 
 struct Volume {
     float left;
@@ -83,7 +80,11 @@ private:
 
     std::deque<float> prevMaxes;
 
-    std::deque<CallbackDiagnostic> callbackDiagnostics;
+    InstrumentationTrace callbackDuration;
+    InstrumentationTrace audioDuration;
+    InstrumentationTrace volDuration;
+    InstrumentationTrace fftDuration;
+
     uint32_t statReportInterval = 5000;
     uint32_t statReportLastTime = 0;
 
