@@ -9,6 +9,7 @@
 // #define FFT_SPEED_OVER_PRECISION
 // #define FFT_SQRT_APPROXIMATION
 #include <arduinoFFT.h>
+#include <etl/circular_buffer.h>
 
 /* C++ Standard Library */
 #include <numeric>
@@ -45,8 +46,7 @@ void Audio::a2dp_callback(const uint8_t* data, uint32_t length) {
     vRightAvg = 20 * std::log10(vRightAvg);
 
     // store avg volume in history
-    volumeHistory.push_back({vLeftAvg, vRightAvg});
-    if (volumeHistory.size() > volumeHistorySize) { volumeHistory.pop_front(); }
+    volumeHistory.push({vLeftAvg, vRightAvg});
 
     volDuration.stop();
     fftDuration.start();

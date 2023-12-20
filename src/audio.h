@@ -6,6 +6,7 @@
 
 /* Libraries */
 #include "arduinoFFT.h"
+#include <etl/circular_buffer.h>
 
 /* C++ Standard Library */
 #include <deque>
@@ -62,7 +63,7 @@ public:
     std::deque<std::vector<float>>& getAudioSpectrum() { return audioSpectrum; }
     SemaphoreHandle_t getAudioSpectrumSemaphore() { return audioSpectrumSemaphore; }
 
-    std::deque<Volume>& getVolumeHistory() { return volumeHistory; }
+    etl::icircular_buffer<Volume>& getVolumeHistory() { return volumeHistory; }
 
 private:
     Audio();
@@ -88,8 +89,7 @@ private:
     uint32_t statReportInterval = 5000;
     uint32_t statReportLastTime = 0;
 
-    int16_t volumeHistorySize = 100;
-    std::deque<Volume> volumeHistory;
+    etl::circular_buffer<Volume, 10> volumeHistory;
 };
 
 #endif // audiofft_h

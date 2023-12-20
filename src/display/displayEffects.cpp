@@ -342,7 +342,7 @@ void VolumeDisplay::reset() { _finished = false; }
 
 bool VolumeDisplay::run() {
 
-    auto volHist = Audio::get().getVolumeHistory();
+    auto& volHist = Audio::get().getVolumeHistory();
 
     float vLeft = 0;
     float vRight = 0;
