@@ -18,23 +18,25 @@ void InstrumentationTrace::stop() {
 }
 
 void InstrumentationTrace::update(uint32_t value) {
+    sum += value;
+    sumSamples++;
     if (empty) {
         min = value;
         max = value;
-        avg = value;
         empty = false;
     } else {
         if (value < min) { min = value; }
         if (value > max) { max = value; }
-        // todo better
-        avg = (avg + value) / 2;
     }
+    avg = sum / sumSamples;
 }
 
 void InstrumentationTrace::reset() {
     min = 0;
     max = 0;
     avg = 0;
+    sum = 0;
+    sumSamples = 0;
     empty = true;
 }
 

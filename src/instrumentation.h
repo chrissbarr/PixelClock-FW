@@ -19,6 +19,8 @@ public:
 private:
     uint32_t started{};
     uint32_t avg{};
+    uint64_t sum{};
+    uint32_t sumSamples{};
     uint32_t min{};
     uint32_t max{};
     bool empty{true};
