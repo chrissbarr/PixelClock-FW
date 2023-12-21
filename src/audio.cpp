@@ -85,7 +85,7 @@ void Audio::a2dp_callback(const uint8_t* data, uint32_t length) {
     spectrum.fill(0);
 
     float prevMax = 0.0;
-    if (!audioCharacteristics.empty()) { prevMax = audioCharacteristics.back().spectrumMax; }
+    if (!audioCharacteristics->empty()) { prevMax = audioCharacteristics->back().spectrumMax; }
 
     // Bin FFT results
     for (int i = 5; i < (fftSamples / 2) - 1; i++) {
@@ -102,7 +102,7 @@ void Audio::a2dp_callback(const uint8_t* data, uint32_t length) {
 
     float maxThisTime = *std::max_element(spectrum.begin(), spectrum.end());
     float avgMax =
-        utility::sum_members(audioCharacteristics, &AudioCharacteristics::spectrumMax) / audioCharacteristics.size();
+        utility::sum_members(*audioCharacteristics, &AudioCharacteristics::spectrumMax) / audioCharacteristics->size();
 
     float maxScale = 6000;
     float scaleFactor = maxScale / avgMax;
@@ -122,13 +122,31 @@ void Audio::a2dp_callback(const uint8_t* data, uint32_t length) {
     c.volumeLeft = vLeftAvg;
     c.volumeRight = vRightAvg;
     c.spectrumMax = maxThisTime;
-    audioCharacteristics.push(c);
+    audioCharacteristics->push(c);
 
     callbackDuration.stop();
 }
 
-Audio::Audio() {}
-Audio::~Audio() {}
+Audio::Audio() {
+
+    acBuf = (AudioCharacteristics *) ps_calloc(audioHistorySize + 1, sizeof(AudioCharacteristics));
+    if (acBuf) {
+        Serial.println("PSRAM buffer allocation success!");
+        audioCharacteristics = new etl::circular_buffer_ext<AudioCharacteristics>(acBuf, audioHistorySize);
+    } else {
+        Serial.println("PSRAM buffer allocation fail!");
+        audioCharacteristics = new etl::circular_buffer<AudioCharacteristics, audioHistorySize>();
+    }
+}
+
+Audio::~Audio() {
+
+    if (acBuf) {
+        free(acBuf);
+    }
+    free(audioCharacteristics);
+
+}
 
 void Audio::begin() {
     Serial.println("Audio.begin()");
@@ -183,8 +201,8 @@ void Audio::update() {
             Serial,
             fmt::format(
                 "Volume: L={:.1f} R={:.1f}\n",
-                audioCharacteristics.back().volumeLeft,
-                audioCharacteristics.back().volumeRight));
+                audioCharacteristics->back().volumeLeft,
+                audioCharacteristics->back().volumeRight));
 
         statReportLastTime = millis();
     }

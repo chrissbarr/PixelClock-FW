@@ -36,6 +36,8 @@ constexpr int audioSpectrumBinWidth = audioSpectrumMaxFreq / audioSpectrumBins;
 constexpr int audioSpectrumHistorySize = 3;
 constexpr int audioSpectrumBinSize = (fftSamples / 4) / audioSpectrumBins;
 
+constexpr int audioHistorySize = 100;
+
 void read_data_stream(const uint8_t* data, uint32_t length);
 
 struct AudioCharacteristics {
@@ -63,7 +65,7 @@ public:
     etl::icircular_buffer<etl::array<float, audioSpectrumBins>>& getAudioSpectrum() { return audioSpectrum; }
     SemaphoreHandle_t getAudioSpectrumSemaphore() { return audioSpectrumSemaphore; }
 
-    etl::icircular_buffer<AudioCharacteristics>& getAudioCharacteristicsHistory() { return audioCharacteristics; }
+    etl::icircular_buffer<AudioCharacteristics>& getAudioCharacteristicsHistory() { return *audioCharacteristics; }
 
 private:
     Audio();
@@ -88,7 +90,8 @@ private:
     uint32_t statReportInterval = 5000;
     uint32_t statReportLastTime = 0;
 
-    etl::circular_buffer<AudioCharacteristics, 100> audioCharacteristics;
+    AudioCharacteristics* acBuf;
+    etl::icircular_buffer<AudioCharacteristics>* audioCharacteristics;
 };
 
 #endif // audiofft_h

@@ -100,6 +100,8 @@ void setup() {
     print(Serial, fmt::format("{1:<{0}} {2} kB\n", textPadding, "ESP Flash Size:", ESP.getFlashChipSize() / 1024));
     print(Serial, fmt::format("{1:<{0}} {2}\n", textPadding, "ESP Flash Speed:", ESP.getFlashChipSpeed()));
     print(Serial, fmt::format("{1:<{0}} {2}\n", textPadding, "ESP SDK Version:", ESP.getSdkVersion()));
+    bool psramEnabled = psramInit();
+    print(Serial, fmt::format("{1:<{0}} {2}\n", textPadding, "ESP PSRAM Enabled:", psramEnabled));
 
     // firmware
     printCentred(Serial, "Firmware Information", headingWidth);
