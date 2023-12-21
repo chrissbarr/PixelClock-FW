@@ -13,6 +13,7 @@
 
 /* C++ Standard Library */
 #include <memory>
+#include <string>
 #include <vector>
 
 class GameOfLife;
@@ -26,7 +27,7 @@ struct ButtonReferences {
 
 class MainModeFunction {
 public:
-    MainModeFunction(String name, PixelDisplay& display, ButtonReferences buttons)
+    MainModeFunction(std::string name, PixelDisplay& display, ButtonReferences buttons)
         : _name(name),
           _display(display),
           buttons(buttons) {}
@@ -39,7 +40,7 @@ public:
     // indicates that this mode is ready to exit/return
     virtual bool finished() const { return _finished; }
     // get the name of this mode
-    String getName() const { return _name; }
+    std::string getName() const { return _name; }
 
 protected:
     virtual void moveIntoCore();
@@ -48,7 +49,7 @@ protected:
     bool _finished = false;
     PixelDisplay& _display;
     ButtonReferences buttons;
-    String _name;
+    std::string _name;
 
 private:
     void clearAllButtonCallbacks(Button2& button);

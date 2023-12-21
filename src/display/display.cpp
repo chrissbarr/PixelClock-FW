@@ -64,7 +64,7 @@ void PixelDisplay::update() {
 }
 
 void PixelDisplay::showCharacters(
-    const String& string, const std::vector<CRGB>& colours, int xOffset, uint8_t spacing) {
+    const std::string& string, const std::vector<CRGB>& colours, int xOffset, uint8_t spacing) {
     int xOffsetLocal = 0;
     int colourIndex = 0;
     for (const auto& character : string) {

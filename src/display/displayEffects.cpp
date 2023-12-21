@@ -11,7 +11,7 @@
 
 TextScroller::TextScroller(
     PixelDisplay& display,
-    String textString,
+    std::string textString,
     std::vector<CRGB> colours,
     uint16_t stepDelay,
     uint16_t timeToHoldAtEnd,
@@ -76,7 +76,7 @@ uint32_t TextScroller::calculateOffset(int targetCharIndex) const {
 
 RepeatingTextScroller::RepeatingTextScroller(
     PixelDisplay& display,
-    String textString,
+    std::string textString,
     std::vector<CRGB> colours,
     uint16_t stepDelay,
     uint16_t timeToHoldAtEnd,
@@ -492,7 +492,7 @@ bool ClockFace_Simple::run() {
     auto times = timeCallbackFunction();
     std::string timestr = fmt::format("{:2d}:{:2d}", times.hour12, times.minute);
     _display.fill(0);
-    _display.showCharacters(String(timestr.c_str()), {CRGB::White}, 0, 1);
+    _display.showCharacters(timestr, {CRGB::White}, 0, 1);
     return false;
 }
 

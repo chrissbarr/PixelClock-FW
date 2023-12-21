@@ -47,7 +47,7 @@ std::unique_ptr<ModeManager> modeManager;
 //// Brightness Handling
 std::unique_ptr<BrightnessSensor> brightnessSensor;
 struct BrightnessMode {
-    String name;
+    std::string name;
     std::function<uint8_t()> function;
 };
 

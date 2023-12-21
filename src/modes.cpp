@@ -2,6 +2,7 @@
 #include "modes.h"
 #include "FMTWrapper.h"
 #include "display/gameOfLife.h"
+#include "utility.h"
 
 void MainModeFunction::clearAllButtonCallbacks(Button2& button) {
     button.setChangedHandler(nullptr);
@@ -59,11 +60,11 @@ void Mode_SettingsMenu::moveOutCore() {
 }
 
 void Mode_SettingsMenu::cycleActiveSetting(Button2& btn) {
-    Serial.println("Switching to next setting...");
-    Serial.print("Current Setting Index: ");
-    Serial.println(menuIndex);
-    Serial.print("Current Setting Name: ");
-    Serial.println(menuPages[menuIndex]->getName());
+
+    using namespace printing;
+
+    print(Serial, "Switching to next setting...\n");
+    print(Serial, fmt::format("Previous Setting: {} - {}\n", menuIndex, menuPages[menuIndex]->getName()));
 
     if (btn == buttons.left) {
         if (menuIndex == 0) {
@@ -79,10 +80,7 @@ void Mode_SettingsMenu::cycleActiveSetting(Button2& btn) {
         }
     }
 
-    Serial.print("New Setting Index: ");
-    Serial.println(menuIndex);
-    Serial.print("New Setting Name: ");
-    Serial.println(menuPages[menuIndex]->getName());
+    print(Serial, fmt::format("New Setting: {} - {}\n", menuIndex, menuPages[menuIndex]->getName()));
     menuTextScroller->setText(menuPages[menuIndex]->getName());
     menuTextScroller->reset();
 }
@@ -487,19 +485,15 @@ void ModeManager::run() {
 }
 
 void ModeManager::cycleMode() {
-    Serial.println("Switching to next mode...");
-    Serial.print("Current Mode Index: ");
-    Serial.println(modeIndex);
-    Serial.print("Current Mode Name: ");
-    Serial.println(modes[modeIndex]->getName());
+    using namespace printing;
+
+    print(Serial, "Switching to next mode...\n");
+    print(Serial, fmt::format("Previous Mode: {} - {}\n", modeIndex, modes[modeIndex]->getName()));
 
     modes[modeIndex]->moveOut();
     modeIndex++;
     if (modeIndex == modes.size()) { modeIndex = 0; }
     modes[modeIndex]->moveInto();
 
-    Serial.print("New Mode Index: ");
-    Serial.println(modeIndex);
-    Serial.print("New Mode Name: ");
-    Serial.println(modes[modeIndex]->getName());
+    print(Serial, fmt::format("New Mode: {} - {}\n", modeIndex, modes[modeIndex]->getName()));
 }
