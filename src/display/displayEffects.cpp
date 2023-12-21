@@ -394,6 +394,39 @@ bool VolumeDisplay::run() {
     return finished();
 }
 
+VolumeGraph::VolumeGraph(PixelDisplay& display) : _display(display) {}
+
+void VolumeGraph::reset() { _finished = false; }
+
+bool VolumeGraph::run() {
+
+    _display.fill(0);
+    auto& audioHist = Audio::get().getAudioCharacteristicsHistory();
+
+    float volMin = 0;
+    float volMax = -60;
+    for (auto it = audioHist.rbegin(); it != audioHist.rend(); ++it) {
+        float vol = (it->volumeLeft + it->volumeRight) / 2;
+        if (vol > volMax) { volMax = vol; }
+        if (vol < volMin) { volMin = vol; }
+    }
+
+    int xIdx = _display.getWidth() - 1;
+    for (auto it = audioHist.rbegin(); it != audioHist.rend(); ++it) {
+        float vol = (it->volumeLeft + it->volumeRight) / 2;
+        float barHeight = calculateBarHeight(vol, volMin * 0.9, volMax * 0.9, 5);
+        for (int yIdx = 0; yIdx < _display.getHeight() - 1; yIdx++) {
+            CRGB colour = CRGB::Black;
+            if (yIdx <= barHeight) { colour = CRGB::Blue; }
+            _display.setXY(xIdx, _display.getHeight() - 1 - yIdx, colour);
+        }
+        xIdx -= 1;
+        if (xIdx < 0) { break; }
+    }
+
+    return finished();
+}
+
 // bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty,
 // uint32_t(*colourGenerator)(), DisplayRegion displayRegion)
 // {

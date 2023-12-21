@@ -258,9 +258,20 @@ public:
 private:
     PixelDisplay& _display;
     uint8_t _width;
-
     std::vector<VolumeDisplayColourMap> colourMap;
+    bool _finished = false;
+};
 
+class VolumeGraph : public DisplayEffect {
+public:
+    VolumeGraph(PixelDisplay& display);
+    bool run() override final;
+    bool finished() const override final { return _finished; }
+    void reset() override final;
+
+private:
+    PixelDisplay& _display;
+    uint8_t _width;
     bool _finished = false;
 };
 
