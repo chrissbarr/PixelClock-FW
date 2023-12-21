@@ -38,8 +38,8 @@ constexpr int audioSpectrumBinSize = (fftSamples / 4) / audioSpectrumBins;
 void read_data_stream(const uint8_t* data, uint32_t length);
 
 struct AudioCharacteristics {
-    float volumeLeft;
-    float volumeRight;
+    float volumeLeft;  // Volume of last chunk left channel (RMS dBFS)
+    float volumeRight; // Volume of last chunk right channel (RMS dBFS)
     float spectrumMax;
 };
 

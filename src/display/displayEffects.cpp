@@ -347,8 +347,8 @@ bool VolumeDisplay::run() {
 
     auto& audioHist = Audio::get().getAudioCharacteristicsHistory();
 
-    float vLeft = 0;
-    float vRight = 0;
+    float vLeft = -60;
+    float vRight = -60;
 
     if (!audioHist.empty()) {
         utility::EMA leftAvg(0.8);
