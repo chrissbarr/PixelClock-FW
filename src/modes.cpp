@@ -224,7 +224,7 @@ void Mode_SettingsMenu_SetTime::runCore() {
     // update the scroller text
     auto times = timeCallbackFunction(now() + this->secondsOffset);
     std::string timestr = fmt::format("back {:2d}:{:2d}:{:2d} ok", times.hour24, times.minute, times.second);
-    textscroller->setText(timestr.c_str());
+    textscroller->setText(timestr);
 
     // move to and highlight the active part of the time
     CRGB colourSel = CRGB(CRGB::Red).fadeLightBy(scale8(sin8(millis() / 5), 200));
