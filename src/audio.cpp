@@ -1,5 +1,6 @@
 /* Project Scope */
 #include "audio.h"
+#include "FMTWrapper.h"
 #include "instrumentation.h"
 #include "pinout.h"
 #include "utility.h"
@@ -86,7 +87,6 @@ void Audio::a2dp_callback(const uint8_t* data, uint32_t length) {
     for (int i = 5; i < (fftSamples / 2) - 1; i++) {
         float freq = i * fftFrequencyResolution;
         int binIdx = std::floor(freq / audioSpectrumBinWidth);
-        // Serial.printf("%d\t%f\n", i, vReal[i]);
         // int binIdx = i / audioSpectrumBinSize;
         if (binIdx < spectrum.size()) {
             float val = vReal[i] / audioSpectrumBinSize;
@@ -102,7 +102,6 @@ void Audio::a2dp_callback(const uint8_t* data, uint32_t length) {
 
     float maxScale = 6000;
     float scaleFactor = maxScale / avgMax;
-    // Serial.printf("Scale factor: %f\n", scaleFactor);
 
     std::transform(
         spectrum.begin(),
@@ -167,7 +166,7 @@ void Audio::update() {
     if (millis() - statReportLastTime > statReportInterval) {
 
         auto printAndReset = [](std::string name, InstrumentationTrace& t) {
-            Serial.print(formatInstrumentationTrace(name, t).c_str());
+            printing::print(Serial, formatInstrumentationTrace(name, t));
             t.reset();
         };
 
@@ -176,8 +175,12 @@ void Audio::update() {
         printAndReset("Audio Callback - Vol", volDuration);
         printAndReset("Audio Callback - FFT", fftDuration);
 
-        Serial.printf(
-            "Volume: L %f, R %f\n", audioCharacteristics.back().volumeLeft, audioCharacteristics.back().volumeRight);
+        printing::print(
+            Serial,
+            fmt::format(
+                "Volume: L={:.1f} R={:.1f}\n",
+                audioCharacteristics.back().volumeLeft,
+                audioCharacteristics.back().volumeRight));
 
         statReportLastTime = millis();
     }

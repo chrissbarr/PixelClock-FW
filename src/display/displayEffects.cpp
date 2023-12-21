@@ -1,6 +1,7 @@
 /* Project Scope */
 #include "display/displayEffects.h"
 #include "EMA.h"
+#include "FMTWrapper.h"
 #include "audio.h"
 #include "display/display.h"
 #include "utility.h"
@@ -309,8 +310,6 @@ bool SpectrumDisplay::run() {
     }
     xSemaphoreGive(Audio::get().getAudioSpectrumSemaphore());
 
-    // Serial.printf("data size: %d\n", _data.size());
-
     uint8_t vertMax = _display.getHeight();
     if (!_data.empty()) {
         for (uint8_t x = 0; x < _data.size(); x++) {
@@ -360,7 +359,7 @@ bool VolumeDisplay::run() {
         vLeft = leftAvg.getValue();
         vRight = rightAvg.getValue();
     }
-    // Serial.printf("%5f - %5f\n", vLeft, vRight);
+    // printing::print(Serial, fmt::format("Volume: L={:.1f} R={:.1f}\n", vLeft, vRight));
 
     uint8_t horMax = _display.getWidth();
 
@@ -490,12 +489,10 @@ bool VolumeDisplay::run() {
 // }
 
 bool ClockFace_Simple::run() {
-    constexpr uint8_t bufSize = 8;
-    char c_buf[bufSize];
     auto times = timeCallbackFunction();
-    snprintf(c_buf, bufSize, "%2d:%02d", times.hour12, times.minute);
+    std::string timestr = fmt::format("{:2d}:{:2d}", times.hour12, times.minute);
     _display.fill(0);
-    _display.showCharacters(String(c_buf), {CRGB::White}, 0, 1);
+    _display.showCharacters(String(timestr.c_str()), {CRGB::White}, 0, 1);
     return false;
 }
 

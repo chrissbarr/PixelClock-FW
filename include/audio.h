@@ -2,7 +2,9 @@
 #define audiofft_h
 
 /* Project Scope */
+#include "FMTWrapper.h"
 #include "instrumentation.h"
+#include "utility.h"
 
 /* Libraries */
 #include "arduinoFFT.h"
@@ -14,7 +16,7 @@
 #include <vector>
 
 inline void avrc_metadata_callback(uint8_t id, const uint8_t* text) {
-    Serial.printf("==> AVRC metadata rsp: attribute id 0x%x, %s\n", id, text);
+    printing::print(Serial, fmt::format("==> AVRC metadata rsp: attribute id {:#X}, {}\n", id, (char*)(text)));
 }
 
 // class ArduinoFFT;

@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-using namespace utility::printFormatting;
+using namespace printing;
 
 // LED Panel Configuration
 constexpr uint8_t matrixWidth = 17;

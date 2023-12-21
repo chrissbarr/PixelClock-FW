@@ -1,5 +1,6 @@
 /* Project Scope */
 #include "modes.h"
+#include "FMTWrapper.h"
 #include "display/gameOfLife.h"
 
 void MainModeFunction::clearAllButtonCallbacks(Button2& button) {
@@ -223,11 +224,9 @@ void Mode_SettingsMenu_SetTime::moveIntoCore() {
 
 void Mode_SettingsMenu_SetTime::runCore() {
     // update the scroller text
-    constexpr uint8_t bufSize = 30;
-    char c_buf[bufSize];
     auto times = timeCallbackFunction(now() + this->secondsOffset);
-    snprintf(c_buf, bufSize, "back %02d:%02d:%02d ok", times.hour24, times.minute, times.second);
-    textscroller->setText(c_buf);
+    std::string timestr = fmt::format("back {:2d}:{:2d}:{:2d} ok", times.hour24, times.minute, times.second);
+    textscroller->setText(timestr.c_str());
 
     // move to and highlight the active part of the time
     CRGB colourSel = CRGB(CRGB::Red).fadeLightBy(scale8(sin8(millis() / 5), 200));

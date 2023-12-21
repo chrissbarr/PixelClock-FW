@@ -1,7 +1,10 @@
 /* Project Scope */
 #include "timekeeping.h"
+#include "FMTWrapper.h"
+#include "utility.h"
 
 std::unique_ptr<RTC_DS3231> rtc;
+using namespace printing;
 
 bool initialiseTime() {
     if (initialiseRTC()) {
@@ -38,27 +41,22 @@ bool initialiseRTC() {
             Serial.println("RTC reports it has not lost power.");
         }
 
-        DateTime now = rtc->now();
         Serial.println("RTC has time: ");
-        Serial.print(now.year(), DEC);
-        Serial.print('/');
-        Serial.print(now.month(), DEC);
-        Serial.print('/');
-        Serial.print(now.day(), DEC);
-        Serial.print(" (");
-        Serial.print(daysOfTheWeek[now.dayOfTheWeek()]);
-        Serial.print(") ");
-        Serial.print(now.hour(), DEC);
-        Serial.print(':');
-        Serial.print(now.minute(), DEC);
-        Serial.print(':');
-        Serial.print(now.second(), DEC);
-        Serial.println();
-        Serial.print(" since midnight 1/1/1970 = ");
-        Serial.print(now.unixtime());
-        Serial.print("s = ");
-        Serial.print(now.unixtime() / 86400L);
-        Serial.println("d");
+
+        DateTime now = rtc->now();
+        print(
+            Serial,
+            fmt::format(
+                "{:04d}/{:02d}/{:02d} ({}) : {:02d}:{:02d}:{:02d}\n",
+                now.year(),
+                now.month(),
+                now.day(),
+                daysOfTheWeek[now.dayOfTheWeek()],
+                now.hour(),
+                now.minute(),
+                now.second()));
+
+        print(Serial, fmt::format("since midnight 1/1/1970 = {}s = {}d\n", now.unixtime(), now.unixtime() / 86400L));
         return true;
     }
 }
@@ -101,39 +99,41 @@ void LoopTimeManager::idle() {
 
     if (millis() - lastStatReportTime > statReportInterval) {
         // print timing stats
-        Serial.printf(
-            "Loop Timing Statistics (Min - Max - Avg): %d - %d - %.2f \n", loopTimeMin, loopTimeMax, loopTimeAvg);
+        print(
+            Serial,
+            fmt::format(
+                "Loop Timing Statistics (Min - Max - Avg): {} - {} - {:.2f}\n", loopTimeMin, loopTimeMax, loopTimeAvg));
         // Serial.print("FastLED FPS:" ); Serial.println(FastLED.getFPS());
 
         // print memory usage stats
         float usedHeapPercentage = 100 * (float(ESP.getHeapSize() - ESP.getFreeHeap()) / ESP.getHeapSize());
         uint8_t fieldWidth = 15;
-        Serial.printf("%-*s", fieldWidth, "Memory");
-        Serial.printf("%-*s", fieldWidth, "free (kB)");
-        Serial.printf("%-*s", fieldWidth, "total (kB)");
-        Serial.printf("%-*s", fieldWidth, "used (%)");
-        Serial.printf("%-*s", fieldWidth, "minfree (kB)");
-        Serial.printf("%-*s", fieldWidth, "maxalloc (kB)");
-        Serial.printf("\n");
+        print(Serial, fmt::format("{1:<{0}}", fieldWidth, "Memory"));
+        print(Serial, fmt::format("{1:<{0}}", fieldWidth, "free (kB)"));
+        print(Serial, fmt::format("{1:<{0}}", fieldWidth, "total (kB)"));
+        print(Serial, fmt::format("{1:<{0}}", fieldWidth, "used (%)"));
+        print(Serial, fmt::format("{1:<{0}}", fieldWidth, "minfree (kB)"));
+        print(Serial, fmt::format("{1:<{0}}", fieldWidth, "maxalloc (kB)"));
+        print(Serial, "\n");
 
         // print heap stats
-        Serial.printf("%-*s", fieldWidth, "Heap");
-        Serial.printf("%-*d", fieldWidth, ESP.getFreeHeap() / 1024);
-        Serial.printf("%-*d", fieldWidth, ESP.getHeapSize() / 1024);
-        Serial.printf("%-*.2f", fieldWidth, usedHeapPercentage);
-        Serial.printf("%-*d", fieldWidth, ESP.getMinFreeHeap() / 1024);
-        Serial.printf("%-*d", fieldWidth, ESP.getMaxAllocHeap() / 1024);
-        Serial.printf("\n");
+        print(Serial, fmt::format("{1:<{0}}", fieldWidth, "Heap"));
+        print(Serial, fmt::format("{1:<{0}}", fieldWidth, ESP.getFreeHeap() / 1024));
+        print(Serial, fmt::format("{1:<{0}}", fieldWidth, ESP.getHeapSize() / 1024));
+        print(Serial, fmt::format("{1:<{0}.2f}", fieldWidth, usedHeapPercentage));
+        print(Serial, fmt::format("{1:<{0}}", fieldWidth, ESP.getMinFreeHeap() / 1024));
+        print(Serial, fmt::format("{1:<{0}}", fieldWidth, ESP.getMaxAllocHeap() / 1024));
+        print(Serial, "\n");
 
         // print psram stats
         float usedPsramPercentage = 100 * (float(ESP.getPsramSize() - ESP.getFreePsram()) / ESP.getPsramSize());
-        Serial.printf("%-*s", fieldWidth, "PSRAM");
-        Serial.printf("%-*d", fieldWidth, ESP.getFreePsram() / 1024);
-        Serial.printf("%-*d", fieldWidth, ESP.getPsramSize() / 1024);
-        Serial.printf("%-*.2f", fieldWidth, usedPsramPercentage);
-        Serial.printf("%-*d", fieldWidth, ESP.getMinFreePsram() / 1024);
-        Serial.printf("%-*d", fieldWidth, ESP.getMaxAllocPsram() / 1024);
-        Serial.printf("\n");
+        print(Serial, fmt::format("{1:<{0}}", fieldWidth, "PSRAM"));
+        print(Serial, fmt::format("{1:<{0}}", fieldWidth, ESP.getFreePsram() / 1024));
+        print(Serial, fmt::format("{1:<{0}}", fieldWidth, ESP.getPsramSize() / 1024));
+        print(Serial, fmt::format("{1:<{0}.2f}", fieldWidth, usedPsramPercentage));
+        print(Serial, fmt::format("{1:<{0}}", fieldWidth, ESP.getMinFreePsram() / 1024));
+        print(Serial, fmt::format("{1:<{0}}", fieldWidth, ESP.getMaxAllocPsram() / 1024));
+        print(Serial, "\n");
 
         lastStatReportTime = millis();
         loopTimeMin = std::numeric_limits<uint16_t>::max();

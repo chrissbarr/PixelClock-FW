@@ -1,5 +1,6 @@
 /* Project Scope */
 #include "instrumentation.h"
+#include "FMTWrapper.h"
 
 /* Arduino Core */
 #include <Arduino.h>
@@ -41,16 +42,10 @@ void InstrumentationTrace::reset() {
 }
 
 std::string formatInstrumentationTrace(std::string name, const InstrumentationTrace& trace) {
-    constexpr uint8_t bufSize = 100;
-    char c_buf[bufSize];
-    snprintf(
-        c_buf,
-        bufSize,
-        "%-20s (Min - Max - Avg): %5d - %5d - %5d\n",
+    return fmt::format(
+        "{:<20} (Min - Max - Avg): {:5d} - {:5d} - {:5d}\n",
         name.c_str(),
         trace.getMin(),
         trace.getMax(),
         trace.getAvg());
-    std::string val(c_buf);
-    return val;
 };

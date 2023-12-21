@@ -1,5 +1,7 @@
 /* Project Scope */
+#include "FMTWrapper.h"
 #include "timekeeping.h"
+#include "utility.h"
 
 /* Arduino Core */
 #include "Arduino.h"
@@ -29,8 +31,8 @@ void processSerialCommands() {
 
         if (!substrings.empty()) {
             Serial.print("Received command: ");
-            for (const auto& str : substrings) { Serial.printf("%s ", str.c_str()); }
-            Serial.printf("\n");
+            for (const auto& str : substrings) { printing::print(Serial, fmt::to_string(str)); }
+            Serial.print("\n");
 
             if (substrings[0] == "T") {
                 // YYYY MM DD HH MM SS
