@@ -294,10 +294,10 @@ float calculateBarHeight(float val, float valMin, float valMax, float barMax) {
 
 bool SpectrumDisplay::run() {
     xSemaphoreTake(Audio::get().getAudioSpectrumSemaphore(), portMAX_DELAY);
-    if (!Audio::get().getAudioSpectrum().empty()) {
-        // supplyData(audioSpectrum.back());
 
-        std::vector<float> totals = std::vector<float>(Audio::get().getAudioSpectrum().back().size(), 0);
+    const auto& spec = Audio::get().getAudioSpectrum();
+    if (!spec.empty()) {
+        std::vector<float> totals = std::vector<float>(spec.back().size(), 0);
         for (const auto& spectrum : Audio::get().getAudioSpectrum()) {
             for (int i = 0; i < spectrum.size(); i++) { totals[i] += spectrum[i]; }
         }

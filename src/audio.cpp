@@ -77,8 +77,12 @@ void Audio::a2dp_callback(const uint8_t* data, uint32_t length) {
     FFT->compute(FFTDirection::Forward);                       /* Compute FFT */
     FFT->complexToMagnitude();                                 /* Compute magnitudes */
 
+    fftDuration.stop();
+    specDuration.start();
+
     // Fill the audioSpectrum vector with data.
-    auto spectrum = std::vector<float>(audioSpectrumBins, 0);
+    auto spectrum = etl::array<float, audioSpectrumBins>();
+    spectrum.fill(0);
 
     float prevMax = 0.0;
     if (!audioCharacteristics.empty()) { prevMax = audioCharacteristics.back().spectrumMax; }
@@ -109,11 +113,10 @@ void Audio::a2dp_callback(const uint8_t* data, uint32_t length) {
         spectrum.begin(),
         std::bind(std::multiplies<float>(), std::placeholders::_1, scaleFactor));
     xSemaphoreTake(audioSpectrumSemaphore, portMAX_DELAY);
-    audioSpectrum.push_back(spectrum);
-    if (audioSpectrum.size() > audioSpectrumHistorySize) { audioSpectrum.pop_front(); }
+    audioSpectrum.push(spectrum);
     xSemaphoreGive(audioSpectrumSemaphore);
 
-    fftDuration.stop();
+    specDuration.stop();
 
     AudioCharacteristics c{};
     c.volumeLeft = vLeftAvg;
@@ -174,6 +177,7 @@ void Audio::update() {
         printAndReset("Audio Callback - I2S", audioDuration);
         printAndReset("Audio Callback - Vol", volDuration);
         printAndReset("Audio Callback - FFT", fftDuration);
+        printAndReset("Audio Callback - Spectrum", specDuration);
 
         printing::print(
             Serial,

@@ -9,11 +9,10 @@
 /* Libraries */
 #include "arduinoFFT.h"
 #include <etl/circular_buffer.h>
+#include <etl/array.h>
 
 /* C++ Standard Library */
-#include <deque>
 #include <memory>
-#include <vector>
 
 inline void avrc_metadata_callback(uint8_t id, const uint8_t* text) {
     printing::print(Serial, fmt::format("==> AVRC metadata rsp: attribute id {:#X}, {}\n", id, (char*)(text)));
@@ -61,7 +60,7 @@ public:
 
     void a2dp_callback(const uint8_t* data, uint32_t length);
 
-    std::deque<std::vector<float>>& getAudioSpectrum() { return audioSpectrum; }
+    etl::icircular_buffer<etl::array<float, audioSpectrumBins>>& getAudioSpectrum() { return audioSpectrum; }
     SemaphoreHandle_t getAudioSpectrumSemaphore() { return audioSpectrumSemaphore; }
 
     etl::icircular_buffer<AudioCharacteristics>& getAudioCharacteristicsHistory() { return audioCharacteristics; }
@@ -78,12 +77,13 @@ private:
     float weighingFactors[fftSamples];
 
     SemaphoreHandle_t audioSpectrumSemaphore;
-    std::deque<std::vector<float>> audioSpectrum;
+    etl::circular_buffer<etl::array<float, audioSpectrumBins>, audioSpectrumHistorySize> audioSpectrum;
 
     InstrumentationTrace callbackDuration;
     InstrumentationTrace audioDuration;
     InstrumentationTrace volDuration;
     InstrumentationTrace fftDuration;
+    InstrumentationTrace specDuration;
 
     uint32_t statReportInterval = 5000;
     uint32_t statReportLastTime = 0;
