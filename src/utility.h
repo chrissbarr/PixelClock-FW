@@ -16,12 +16,14 @@ namespace printFormatting {
 constexpr uint8_t headingWidth = 40;
 constexpr uint8_t textPadding = 20;
 
-void printTextCentred(const char* text, uint8_t width);
-void printSolidLine(uint8_t width);
+inline void print(Print& p, const std::string& s) { p.print(s.c_str()); }
+
+void printCentred(Print& p, const std::string& s, uint8_t width);
+void printSolidLine(Print& p, uint8_t width);
 
 } // namespace printFormatting
 
-void listAllI2CDevices(TwoWire& wire);
+std::vector<uint8_t> scanI2CDevices(TwoWire& wire);
 
 template <class T, class M> auto sum_members(const T& container, M member) {
     // Deduce the type of the member

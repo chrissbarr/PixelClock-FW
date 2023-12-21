@@ -1,32 +1,29 @@
 /* Project Scope */
 #include "utility.h"
+#include "FMTWrapper.h"
+
+/* C++ Standard Library */
+#include <vector>
 
 namespace utility {
 
 namespace printFormatting {
 
-void printSolidLine(uint8_t width) {
-    for (int i = 0; i < width; i++) { Serial.printf("-"); }
-    Serial.printf("\n");
-}
+void printSolidLine(Print& p, uint8_t width) { print(p, fmt::format("{1:-^{0}}\n", width, "")); }
 
-void printTextCentred(const char* text, uint8_t width) {
-    int padlen = (width - (strlen(text) + 2)) / 2;
-    for (int i = 0; i < padlen; i++) { Serial.printf("-"); }
-    Serial.printf(" %s ", text);
-    for (int i = 0; i < padlen; i++) { Serial.printf("-"); }
-    Serial.printf("\n");
+void printCentred(Print& p, const std::string& s, uint8_t width) {
+    print(p, fmt::format("{1:-^{0}}\n", width, fmt::format(" {} ", s)));
 }
 
 } // namespace printFormatting
 
-void listAllI2CDevices(TwoWire& wire) {
+std::vector<uint8_t> scanI2CDevices(TwoWire& wire) {
+    std::vector<uint8_t> devices;
     for (uint8_t address = 1; address < 127; address++) {
         wire.beginTransmission(address);
-        if (wire.endTransmission() == 0) {
-            Serial.printf("%-*s 0x%02x\n", printFormatting::textPadding, "Found device at:", address);
-        }
+        if (wire.endTransmission() == 0) { devices.push_back(address); }
     }
+    return devices;
 }
 
 } // namespace utility
