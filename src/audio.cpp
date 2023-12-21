@@ -32,19 +32,28 @@ void Audio::a2dp_callback(const uint8_t* data, uint32_t length) {
 
     float vLeftAvg = 0;
     float vRightAvg = 0;
+    constexpr float fullscaleDiv = 1.0 / 32768;
 
     // calculate average RMS magnitude for L/R channels
     for (uint32_t i = 0; i < sample_count; i += 2) {
         vLeftAvg += samples[i] * samples[i];
         vRightAvg += samples[i + 1] * samples[i + 1];
     }
-    int lrSamples = sample_count / 2;
-    vLeftAvg = std::sqrt(vLeftAvg / lrSamples);
-    vRightAvg = std::sqrt(vRightAvg / lrSamples);
+    int lrSamplesDiv2 = sample_count / 4;
+    vLeftAvg = std::sqrt(vLeftAvg / lrSamplesDiv2) * fullscaleDiv;
+    vRightAvg = std::sqrt(vRightAvg / lrSamplesDiv2) * fullscaleDiv;
 
-    // convert to decibels
-    vLeftAvg = 20 * std::log10(vLeftAvg);
-    vRightAvg = 20 * std::log10(vRightAvg);
+    auto mag2db = [](float mag) -> float {
+        if (mag < 1e-3) {
+            return -60.0;
+        } else {
+            return 20 * std::log10(mag);
+        }
+    };
+
+    // convert to dB
+    vLeftAvg = mag2db(vLeftAvg);
+    vRightAvg = mag2db(vRightAvg);
 
     volDuration.stop();
     fftDuration.start();

@@ -86,7 +86,7 @@ private:
     uint32_t statReportInterval = 5000;
     uint32_t statReportLastTime = 0;
 
-    etl::circular_buffer<AudioCharacteristics, 10> audioCharacteristics;
+    etl::circular_buffer<AudioCharacteristics, 100> audioCharacteristics;
 };
 
 #endif // audiofft_h

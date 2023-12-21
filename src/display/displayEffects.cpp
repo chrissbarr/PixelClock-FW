@@ -1,5 +1,6 @@
 /* Project Scope */
 #include "display/displayEffects.h"
+#include "EMA.h"
 #include "audio.h"
 #include "display/display.h"
 #include "utility.h"
@@ -335,8 +336,6 @@ bool SpectrumDisplay::run() {
 void SpectrumDisplay::supplyData(std::vector<float> data) { _data = data; }
 
 VolumeDisplay::VolumeDisplay(PixelDisplay& display) : _display(display) {
-    colMin = CRGB::Green;
-    colMax = CRGB::Red;
     colourMap.push_back({0, CRGB::Green});
     colourMap.push_back({0.4, CRGB::Yellow});
     colourMap.push_back({0.6, CRGB::Red});
@@ -352,17 +351,21 @@ bool VolumeDisplay::run() {
     float vRight = 0;
 
     if (!audioHist.empty()) {
-        vLeft = utility::sum_members(audioHist, &AudioCharacteristics::volumeLeft) / audioHist.size();
-        vRight = utility::sum_members(audioHist, &AudioCharacteristics::volumeRight) / audioHist.size();
-
-        vLeft = vLeft / 100;
-        vRight = vRight / 100;
+        utility::EMA leftAvg(0.8);
+        utility::EMA rightAvg(0.8);
+        for (const auto& v : audioHist) {
+            leftAvg.update(v.volumeLeft);
+            rightAvg.update(v.volumeRight);
+        }
+        vLeft = leftAvg.getValue();
+        vRight = rightAvg.getValue();
     }
+    // Serial.printf("%5f - %5f\n", vLeft, vRight);
 
     uint8_t horMax = _display.getWidth();
 
-    float leftBarHeight = calculateBarHeight(vLeft, 0.3, 1.0, horMax);
-    float rightBarHeight = calculateBarHeight(vRight, 0.3, 1.0, horMax);
+    float leftBarHeight = calculateBarHeight(vLeft, -40.0, 0.0, horMax);
+    float rightBarHeight = calculateBarHeight(vRight, -40.0, 0.0, horMax);
 
     auto drawBar = [&](float barHeight, int y) {
         for (int x = 0; x < _display.getWidth(); x++) {

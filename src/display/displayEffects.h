@@ -259,10 +259,7 @@ private:
     PixelDisplay& _display;
     uint8_t _width;
 
-    // float calculateBarHeight(float val, float valMax, float barMax) const;
     std::vector<VolumeDisplayColourMap> colourMap;
-    CRGB colMin;
-    CRGB colMax;
 
     bool _finished = false;
 };
