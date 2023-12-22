@@ -275,6 +275,19 @@ private:
     bool _finished = false;
 };
 
+class AudioWaterfall : public DisplayEffect {
+public:
+    AudioWaterfall(PixelDisplay& display);
+    bool run() override final;
+    bool finished() const override final { return _finished; }
+    void reset() override final;
+
+private:
+    PixelDisplay& _display;
+    uint8_t _width;
+    bool _finished = false;
+};
+
 class ClockFace_Base : public DisplayEffect {
 public:
     ClockFace_Base(PixelDisplay& display, std::function<ClockFaceTimeStruct(void)> timeCallbackFunction)

@@ -441,6 +441,36 @@ bool VolumeGraph::run() {
     return finished();
 }
 
+AudioWaterfall::AudioWaterfall(PixelDisplay& display) : _display(display) {}
+
+void AudioWaterfall::reset() { _finished = false; }
+
+bool AudioWaterfall::run() {
+
+    _display.fill(0);
+
+    xSemaphoreTake(Audio::get().getAudioCharacteristicsSemaphore(), portMAX_DELAY);
+    const auto& hist = Audio::get().getAudioCharacteristicsHistory();
+    if (!hist.empty()) {
+
+        int xIdx = _display.getWidth() - 1;
+        for (auto it = hist.rbegin(); it != hist.rend(); ++it) {
+            for (int yIdx = 0; yIdx < _display.getHeight(); yIdx++) {
+                float val = it->spectrum.at(yIdx);
+                val = val / 8000;
+                CRGB colour = CRGB::Red;
+                colour = colour.scale8(uint8_t(val * 255));
+                _display.setXY(xIdx, _display.getHeight() - 1 - yIdx, colour);
+            }
+            xIdx -= 1;
+            if (xIdx < 0) { break; }
+        }
+    }
+    xSemaphoreGive(Audio::get().getAudioCharacteristicsSemaphore());
+
+    return finished();
+}
+
 // bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty,
 // uint32_t(*colourGenerator)(), DisplayRegion displayRegion)
 // {
