@@ -112,9 +112,6 @@ void Audio::a2dp_callback(const uint8_t* data, uint32_t length) {
         spectrum.end(),
         spectrum.begin(),
         std::bind(std::multiplies<float>(), std::placeholders::_1, scaleFactor));
-    xSemaphoreTake(audioSpectrumSemaphore, portMAX_DELAY);
-    audioSpectrum.push(spectrum);
-    xSemaphoreGive(audioSpectrumSemaphore);
 
     specDuration.stop();
 
@@ -122,14 +119,18 @@ void Audio::a2dp_callback(const uint8_t* data, uint32_t length) {
     c.volumeLeft = vLeftAvg;
     c.volumeRight = vRightAvg;
     c.spectrumMax = maxThisTime;
+    c.spectrum = spectrum;
+
+    xSemaphoreTake(audioCharacteristicsSemaphore, portMAX_DELAY);
     audioCharacteristics->push(c);
+    xSemaphoreGive(audioCharacteristicsSemaphore);
 
     callbackDuration.stop();
 }
 
 Audio::Audio() {
 
-    acBuf = (AudioCharacteristics *) ps_calloc(audioHistorySize + 1, sizeof(AudioCharacteristics));
+    acBuf = (AudioCharacteristics*)ps_calloc(audioHistorySize + 1, sizeof(AudioCharacteristics));
     if (acBuf) {
         Serial.println("PSRAM buffer allocation success!");
         audioCharacteristics = new etl::circular_buffer_ext<AudioCharacteristics>(acBuf, audioHistorySize);
@@ -141,11 +142,8 @@ Audio::Audio() {
 
 Audio::~Audio() {
 
-    if (acBuf) {
-        free(acBuf);
-    }
+    if (acBuf) { free(acBuf); }
     free(audioCharacteristics);
-
 }
 
 void Audio::begin() {
@@ -179,7 +177,7 @@ void Audio::begin() {
 
     FFT = std::make_unique<ArduinoFFT<float>>(vReal, vImag, fftSamples, fftSampleFreq, weighingFactors);
 
-    audioSpectrumSemaphore = xSemaphoreCreateMutex();
+    audioCharacteristicsSemaphore = xSemaphoreCreateMutex();
 }
 
 void Audio::update() {

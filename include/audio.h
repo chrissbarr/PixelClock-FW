@@ -33,7 +33,6 @@ constexpr int fftFrequencyResolution = fftSampleFreq / fftSamples; // Width of e
 constexpr int audioSpectrumBins = 17;
 constexpr int audioSpectrumMaxFreq = 3000;
 constexpr int audioSpectrumBinWidth = audioSpectrumMaxFreq / audioSpectrumBins;
-constexpr int audioSpectrumHistorySize = 3;
 constexpr int audioSpectrumBinSize = (fftSamples / 4) / audioSpectrumBins;
 
 constexpr int audioHistorySize = 100;
@@ -44,6 +43,7 @@ struct AudioCharacteristics {
     float volumeLeft;  // Volume of last chunk left channel (RMS dBFS)
     float volumeRight; // Volume of last chunk right channel (RMS dBFS)
     float spectrumMax;
+    etl::array<float, audioSpectrumBins> spectrum;
 };
 
 class Audio {
@@ -62,9 +62,7 @@ public:
 
     void a2dp_callback(const uint8_t* data, uint32_t length);
 
-    etl::icircular_buffer<etl::array<float, audioSpectrumBins>>& getAudioSpectrum() { return audioSpectrum; }
-    SemaphoreHandle_t getAudioSpectrumSemaphore() { return audioSpectrumSemaphore; }
-
+    SemaphoreHandle_t getAudioCharacteristicsSemaphore() { return audioCharacteristicsSemaphore; }
     etl::icircular_buffer<AudioCharacteristics>& getAudioCharacteristicsHistory() { return *audioCharacteristics; }
 
 private:
@@ -78,8 +76,7 @@ private:
     float vImag[fftSamples];
     float weighingFactors[fftSamples];
 
-    SemaphoreHandle_t audioSpectrumSemaphore;
-    etl::circular_buffer<etl::array<float, audioSpectrumBins>, audioSpectrumHistorySize> audioSpectrum;
+    SemaphoreHandle_t audioCharacteristicsSemaphore;
 
     InstrumentationTrace callbackDuration;
     InstrumentationTrace audioDuration;
