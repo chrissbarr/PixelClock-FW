@@ -429,7 +429,7 @@ bool VolumeGraph::run() {
     for (auto it = audioHist.rbegin(); it != audioHist.rend(); ++it) {
         float vol = (it->volumeLeft + it->volumeRight) / 2;
         float barHeight = calculateBarHeight(vol, volMin * 0.9, volMax * 0.9, 5);
-        for (int yIdx = 0; yIdx < _display.getHeight() - 1; yIdx++) {
+        for (int yIdx = 0; yIdx < _display.getHeight(); yIdx++) {
             CRGB colour = CRGB::Black;
             if (yIdx <= barHeight) { colour = CRGB::Blue; }
             _display.setXY(xIdx, _display.getHeight() - 1 - yIdx, colour);
