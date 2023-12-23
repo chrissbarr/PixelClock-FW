@@ -89,4 +89,17 @@ Canvas blit(const Canvas& background, const Canvas& foreground, int xOffset, int
     return c;
 }
 
+Canvas crop(const Canvas& input, int startX, int startY, int width, int height) {
+
+    // create new canvas to hold result
+    Canvas c(width, height);
+
+    // copy cropped region from input
+    for (int x = 0; x < width; x++) {
+        for (int y = 0; y < height; y++) { c.setXY(x, y, input.getXY(x + startX, y + startY)); }
+    }
+
+    return c;
+}
+
 } // namespace canvas

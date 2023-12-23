@@ -47,6 +47,8 @@ private:
 
 Canvas blit(const Canvas& background, const Canvas& foreground, int xOffset, int yOffset);
 
+Canvas crop(const Canvas& input, int startX, int startY, int width, int height);
+
 } // namespace canvas
 
 #endif // canvas_h

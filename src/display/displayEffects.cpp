@@ -455,10 +455,20 @@ canvas::Canvas GravityFill::run() {
 
     // Start with previous state
     gravityEffect->setInput(_c);
+
+    // apply gravity effect
     _c = gravityEffect->run();
+
     if (gravityEffect->finished()) {
-        randomFill->setInput(_c);
-        _c = randomFill->run();
+        // if gravity effect could detects no movable pixels, spawn new pixel.
+
+        // crop to only top row, this is our spawn region
+        auto topRow = canvas::crop(_c, 0, 0, _c.getWidth(), 1);
+        randomFill->setInput(topRow);
+        topRow = randomFill->run();
+        _c = canvas::blit(_c, topRow, 0, 0);
+
+        // unblock gravity effect so it can re-try next loop
         gravityEffect->reset();
     }
 
