@@ -176,34 +176,28 @@ private:
     bool _finished;
 };
 
-// class Gravity : public DisplayEffect {
-// public:
-//     enum class Direction { up, down, left, right };
+class Gravity : public DisplayEffect {
+public:
+    enum class Direction { up, down, left, right };
 
-//     Gravity(
-//         PixelDisplay& display,
-//         uint32_t moveInterval,
-//         bool empty,
-//         Gravity::Direction direction,
-//         const DisplayRegion& displayRegion = defaultFull);
-//     bool run() override final;
-//     bool finished() const override final { return _finished; }
-//     void reset() override final;
+    Gravity(uint32_t moveInterval, bool empty, Gravity::Direction direction);
+    canvas::Canvas run() override final;
+    bool finished() const override final { return _finished; }
+    void reset() override final;
 
-//     Direction getDirection() const { return _direction; }
-//     void setDirection(Direction direction) { _direction = direction; }
+    Direction getDirection() const { return _direction; }
+    void setDirection(Direction direction) { _direction = direction; }
+    void setFallOutOfScreen(bool enabled) { _empty = enabled; }
+    void setInput(const canvas::Canvas& c) { _c = c; }
 
-//     void setFallOutOfScreen(bool enabled) { _empty = enabled; }
-
-// private:
-//     PixelDisplay& _display;
-//     DisplayRegion _displayRegion;
-//     bool _finished = false;
-//     uint32_t _moveInterval;
-//     uint32_t _lastMoveTime = 0;
-//     bool _empty;
-//     Direction _direction;
-// };
+private:
+    canvas::Canvas _c;
+    bool _finished = false;
+    uint32_t _moveInterval;
+    uint32_t _lastMoveTime = 0;
+    bool _empty;
+    Direction _direction;
+};
 
 class SpectrumDisplay : public DisplayEffect {
 public:
@@ -283,20 +277,21 @@ public:
     void reset() override final{};
 };
 
-// class ClockFace_Gravity : public ClockFace_Base {
-// public:
-//     ClockFace_Gravity(PixelDisplay& display, std::function<ClockFaceTimeStruct(void)> timeCallbackFunction);
-//     bool run() override final;
-//     bool finished() const override final { return false; }
-//     void reset() override final;
+class ClockFace_Gravity : public ClockFace_Base {
+public:
+    ClockFace_Gravity(std::function<ClockFaceTimeStruct(void)> timeCallbackFunction);
+    canvas::Canvas run() override final;
+    bool finished() const override final { return false; }
+    void reset() override final;
 
-// private:
-//     std::unique_ptr<ClockFace_Simple> clockFace;
-//     std::unique_ptr<Gravity> gravityEffect;
-//     ClockFaceTimeStruct timePrev;
-//     enum class State { stable, fallToBottom, fallOut };
-//     State currentState = State::stable;
-// };
+private:
+    canvas::Canvas _c;
+    std::unique_ptr<ClockFace_Simple> clockFace;
+    std::unique_ptr<Gravity> gravityEffect;
+    ClockFaceTimeStruct timePrev;
+    enum class State { stable, fallToBottom, fallOut };
+    State currentState = State::stable;
+};
 
 // bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty,
 // uint32_t(*colourGenerator)(), DisplayRegion displayRegion); inline bool gravityFill(PixelDisplay& display, uint32_t
@@ -311,19 +306,19 @@ void displayDiagnostic(PixelDisplay& display);
 
 class FilterMethod {
 public:
-    virtual void apply(canvas::Canvas& c) const = 0;
+    virtual void apply(canvas::Canvas& c) = 0;
 };
 
 class HSVTestPattern : public FilterMethod {
 public:
     HSVTestPattern(){};
-    void apply(canvas::Canvas& c) const override;
+    void apply(canvas::Canvas& c) override;
 };
 
 class SolidColour : public FilterMethod {
 public:
     SolidColour(CRGB colour, bool maintainBrightness = true) : colour(colour), maintainBrightness(maintainBrightness) {}
-    void apply(canvas::Canvas& c) const override;
+    void apply(canvas::Canvas& c) override;
 
 private:
     CRGB colour;
@@ -338,7 +333,7 @@ public:
           width(width),
           direction(direction),
           maintainBrightness(maintainBrightness) {}
-    void apply(canvas::Canvas& c) const override;
+    void apply(canvas::Canvas& c) override;
 
 private:
     float speed;

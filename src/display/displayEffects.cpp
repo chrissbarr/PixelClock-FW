@@ -169,104 +169,90 @@ canvas::Canvas BouncingBall::run() {
     return _c;
 }
 
-// Gravity::Gravity(
-//     PixelDisplay& display,
-//     uint32_t moveInterval,
-//     bool empty,
-//     Gravity::Direction direction,
-//     const DisplayRegion& displayRegion)
-//     : _display(display),
-//       _moveInterval(moveInterval),
-//       _empty(empty),
-//       _direction(direction) {
-//     if (displayRegion == defaultFull) {
-//         _displayRegion = display.getFullDisplayRegion();
-//     } else {
-//         _displayRegion = displayRegion;
-//     }
-// }
+Gravity::Gravity(uint32_t moveInterval, bool empty, Gravity::Direction direction)
+    : _moveInterval(moveInterval),
+      _empty(empty),
+      _direction(direction) {}
 
-// void Gravity::reset() {
-//     _lastMoveTime = millis();
-//     _finished = false;
-// }
+void Gravity::reset() {
+    _lastMoveTime = millis();
+    _finished = false;
+}
 
-// bool Gravity::run() {
-//     uint32_t timenow = millis();
-//     if (timenow - _lastMoveTime > _moveInterval) {
-//         bool anyPixelsMovedThisUpdate = false;
+canvas::Canvas Gravity::run() {
+    uint32_t timenow = millis();
+    if (timenow - _lastMoveTime > _moveInterval) {
+        bool anyPixelsMovedThisUpdate = false;
 
-//         auto movePixel = [](PixelDisplay& display,
-//                             const DisplayRegion& displayRegion,
-//                             int x,
-//                             int y,
-//                             int xMove,
-//                             int yMove,
-//                             bool empty) {
-//             auto currentIndex = display.XYToIndex(x, y);
-//             CRGB cellColour = display.getIndex(currentIndex);
-//             if (cellColour != CRGB(0)) {
-//                 // if this is the last row
-//                 if ((yMove == 1 && y == displayRegion.yMax) || (yMove == -1 && y == displayRegion.yMin) ||
-//                     (xMove == 1 && x == displayRegion.xMax) || (xMove == -1 && x == displayRegion.yMin)) {
-//                     if (empty) {
-//                         display.setIndex(currentIndex, 0);
-//                         return true;
-//                     }
-//                     return false;
-//                 }
-//                 auto moveIntoIndex = display.XYToIndex(x + xMove, y + yMove);
-//                 if (display.getIndex(moveIntoIndex) == CRGB(0)) {
-//                     display.setIndex(moveIntoIndex, cellColour);
-//                     display.setIndex(currentIndex, 0);
-//                     return true;
-//                 }
-//             }
-//             return false;
-//         };
+        int xMax = _c.getWidth() - 1;
+        int yMax = _c.getHeight() - 1;
+        int xMin = 0;
+        int yMin = 0;
 
-//         switch (_direction) {
-//         case Gravity::Direction::down: {
-//             for (int y = _displayRegion.yMax; y >= _displayRegion.yMin; y--) {
-//                 for (int x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
-//                     if (movePixel(_display, _displayRegion, x, y, 0, 1, _empty)) { anyPixelsMovedThisUpdate = true; }
-//                 }
-//             }
-//             break;
-//         }
-//         case Gravity::Direction::up: {
-//             for (int y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
-//                 for (int x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
-//                     if (movePixel(_display, _displayRegion, x, y, 0, -1, _empty)) { anyPixelsMovedThisUpdate = true;
-//                     }
-//                 }
-//             }
-//             break;
-//         }
-//         case Gravity::Direction::left: {
-//             for (int y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
-//                 for (int x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
-//                     if (movePixel(_display, _displayRegion, x, y, -1, 0, _empty)) { anyPixelsMovedThisUpdate = true;
-//                     }
-//                 }
-//             }
-//             break;
-//         }
-//         case Gravity::Direction::right: {
-//             for (int y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
-//                 for (int x = _displayRegion.xMax; x >= _displayRegion.xMin; x--) {
-//                     if (movePixel(_display, _displayRegion, x, y, 1, 0, _empty)) { anyPixelsMovedThisUpdate = true; }
-//                 }
-//             }
-//             break;
-//         }
-//         }
+        auto movePixel = [&](canvas::Canvas& c, int x, int y, int xMove, int yMove, bool empty) {
+            auto currentIndex = c.XYToIndex(x, y);
+            CRGB cellColour = c[currentIndex];
 
-//         if (!anyPixelsMovedThisUpdate) { _finished = true; }
-//         _lastMoveTime = timenow;
-//     }
-//     return _finished;
-// }
+            if (cellColour != CRGB(0)) {
+                // if this is the last row
+                if ((yMove == 1 && y == yMax) || (yMove == -1 && y == yMin) || (xMove == 1 && x == xMin) ||
+                    (xMove == -1 && x == xMin)) {
+                    if (empty) {
+                        c[currentIndex] = 0;
+                        return true;
+                    }
+                    return false;
+                }
+                auto moveIntoIndex = c.XYToIndex(x + xMove, y + yMove);
+                if (c[moveIntoIndex] == CRGB(0)) {
+                    c[moveIntoIndex] = cellColour;
+                    c[currentIndex] = 0;
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        switch (_direction) {
+        case Gravity::Direction::down: {
+            for (int y = yMax; y >= yMin; y--) {
+                for (int x = xMin; x <= xMax; x++) {
+                    if (movePixel(_c, x, y, 0, 1, _empty)) { anyPixelsMovedThisUpdate = true; }
+                }
+            }
+            break;
+        }
+        case Gravity::Direction::up: {
+            for (int y = yMin; y <= yMax; y++) {
+                for (int x = xMin; x <= xMax; x++) {
+                    if (movePixel(_c, x, y, 0, -1, _empty)) { anyPixelsMovedThisUpdate = true; }
+                }
+            }
+            break;
+        }
+        case Gravity::Direction::left: {
+            for (int y = yMin; y <= yMax; y++) {
+                for (int x = xMin; x <= xMax; x++) {
+                    if (movePixel(_c, x, y, -1, 0, _empty)) { anyPixelsMovedThisUpdate = true; }
+                }
+            }
+            break;
+        }
+        case Gravity::Direction::right: {
+            for (int y = yMin; y <= yMax; y++) {
+                for (int x = xMax; x >= xMin; x--) {
+                    if (movePixel(_c, x, y, 1, 0, _empty)) { anyPixelsMovedThisUpdate = true; }
+                }
+            }
+            break;
+        }
+        }
+
+        if (!anyPixelsMovedThisUpdate) { _finished = true; }
+        _lastMoveTime = timenow;
+    }
+    return _c;
+}
 
 SpectrumDisplay::SpectrumDisplay(const canvas::Canvas& size) : _c(size) {
     colMin = CRGB::Blue;
@@ -560,50 +546,50 @@ canvas::Canvas ClockFace_Simple::run() {
     return c;
 }
 
-// ClockFace_Gravity::ClockFace_Gravity(
-//     PixelDisplay& display, std::function<ClockFaceTimeStruct(void)> timeCallbackFunction)
-//     : ClockFace_Base(display, timeCallbackFunction) {
-//     gravityEffect = std::make_unique<Gravity>(display, 500, false, Gravity::Direction::down);
-//     clockFace = std::make_unique<ClockFace_Simple>(display, timeCallbackFunction);
-// }
+ClockFace_Gravity::ClockFace_Gravity(std::function<ClockFaceTimeStruct(void)> timeCallbackFunction)
+    : ClockFace_Base(timeCallbackFunction) {
+    gravityEffect = std::make_unique<Gravity>(500, false, Gravity::Direction::down);
+    clockFace = std::make_unique<ClockFace_Simple>(timeCallbackFunction);
+}
 
-// void ClockFace_Gravity::reset() {
-//     gravityEffect->reset();
-//     clockFace->reset();
-//     timePrev = timeCallbackFunction();
-//     currentState = State::stable;
-// }
+void ClockFace_Gravity::reset() {
+    gravityEffect->reset();
+    clockFace->reset();
+    timePrev = timeCallbackFunction();
+    currentState = State::stable;
+}
 
-// bool ClockFace_Gravity::run() {
-//     auto timeNow = timeCallbackFunction();
+canvas::Canvas ClockFace_Gravity::run() {
+    auto timeNow = timeCallbackFunction();
 
-//     switch (currentState) {
-//     case State::stable:
-//         if (timePrev.minute != timeNow.minute) {
-//             currentState = State::fallToBottom;
-//             gravityEffect->reset();
-//             gravityEffect->setFallOutOfScreen(false);
-//         } else {
-//             clockFace->run();
-//         }
-//         break;
-//     case State::fallToBottom:
-//         gravityEffect->run();
-//         if (gravityEffect->finished()) {
-//             currentState = State::fallOut;
-//             gravityEffect->setFallOutOfScreen(true);
-//             gravityEffect->reset();
-//         }
-//         break;
-//     case State::fallOut:
-//         gravityEffect->run();
-//         if (gravityEffect->finished()) { currentState = State::stable; }
-//         break;
-//     }
+    switch (currentState) {
+    case State::stable:
+        if (timePrev.minute != timeNow.minute) {
+            currentState = State::fallToBottom;
+            gravityEffect->reset();
+            gravityEffect->setInput(_c);
+            gravityEffect->setFallOutOfScreen(false);
+        } else {
+            _c = clockFace->run();
+        }
+        break;
+    case State::fallToBottom:
+        _c = gravityEffect->run();
+        if (gravityEffect->finished()) {
+            currentState = State::fallOut;
+            gravityEffect->setFallOutOfScreen(true);
+            gravityEffect->reset();
+        }
+        break;
+    case State::fallOut:
+        _c = gravityEffect->run();
+        if (gravityEffect->finished()) { currentState = State::stable; }
+        break;
+    }
 
-//     timePrev = timeNow;
-//     return false;
-// }
+    timePrev = timeNow;
+    return _c;
+}
 
 void displayDiagnostic(PixelDisplay& display) {
     // Clear display
@@ -665,7 +651,7 @@ void displayDiagnostic(PixelDisplay& display) {
     display.update(c);
 }
 
-void HSVTestPattern::apply(canvas::Canvas& c) const {
+void HSVTestPattern::apply(canvas::Canvas& c) {
     for (uint8_t x = 0; x < c.getWidth(); x++) {
         for (uint8_t y = 0; y < c.getHeight(); y++) {
             c.setXY(x, y, CHSV(x * (255 / c.getWidth()), 255, y * (255 / c.getHeight())));
@@ -673,14 +659,14 @@ void HSVTestPattern::apply(canvas::Canvas& c) const {
     }
 }
 
-void SolidColour::apply(canvas::Canvas& c) const {
+void SolidColour::apply(canvas::Canvas& c) {
     for (std::size_t i = 0; i < c.getSize(); i++) {
         if (c[i] == CRGB(0)) { continue; }
         c[i] = maintainBrightness ? CRGB(colour).nscale8(c[i].getAverageLight()) : colour;
     }
 }
 
-void RainbowWave::apply(canvas::Canvas& c) const {
+void RainbowWave::apply(canvas::Canvas& c) {
     static float wheelPos = 0;
     wheelPos += speed;
     int _width = width;
