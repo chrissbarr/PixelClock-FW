@@ -2,9 +2,9 @@
 #define modes_h
 
 /* Project Scope */
-#include <canvas.h>
 #include "display/display.h"
 #include "display/displayEffects.h"
+#include <canvas.h>
 
 /* Libraries */
 #include <Button2.h>
@@ -28,9 +28,7 @@ struct ButtonReferences {
 
 class MainModeFunction {
 public:
-    MainModeFunction(std::string name, ButtonReferences buttons)
-        : _name(name),
-          buttons(buttons) {}
+    MainModeFunction(std::string name, ButtonReferences buttons) : _name(name), buttons(buttons) {}
     // should be called by the parent when moving into this mode
     void moveInto();
     // should be called by the parent when this mode is active
@@ -41,8 +39,6 @@ public:
     virtual bool finished() const { return _finished; }
     // get the name of this mode
     std::string getName() const { return _name; }
-
-    //const Canvas& getCanvas() const;
 
 protected:
     virtual void moveIntoCore();
@@ -88,8 +84,8 @@ private:
     std::vector<std::shared_ptr<DisplayEffect>> effects;
     uint8_t effectIndex = 0;
 
-    //std::unique_ptr<GameOfLife> golTrainer;
-    //std::shared_ptr<GameOfLife> golActual;
+    // std::unique_ptr<GameOfLife> golTrainer;
+    // std::shared_ptr<GameOfLife> golActual;
 };
 
 class Mode_SettingsMenu : public MainModeFunction {

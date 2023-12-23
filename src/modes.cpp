@@ -1,9 +1,9 @@
 /* Project Scope */
 #include "modes.h"
-#include <canvas.h>
 #include "FMTWrapper.h"
 #include "display/gameOfLife.h"
 #include "utility.h"
+#include <canvas.h>
 
 void MainModeFunction::clearAllButtonCallbacks(Button2& button) {
     button.setChangedHandler(nullptr);
@@ -351,9 +351,8 @@ canvas::Canvas Mode_SettingsMenu_SetTime::runCore() {
     return textscroller->run();
 }
 
-Mode_ClockFace::Mode_ClockFace(ButtonReferences buttons)
-    : MainModeFunction("Clockface", buttons) {
-    //faces.push_back(std::make_unique<ClockFace_Gravity>(_display, []() { return timeCallbackFunction(now()); }));
+Mode_ClockFace::Mode_ClockFace(ButtonReferences buttons) : MainModeFunction("Clockface", buttons) {
+    // faces.push_back(std::make_unique<ClockFace_Gravity>(_display, []() { return timeCallbackFunction(now()); }));
     faces.push_back(std::make_unique<ClockFace_Simple>([]() { return timeCallbackFunction(now()); }));
     filters.push_back(std::make_unique<RainbowWave>(1, 30, RainbowWave::Direction::horizontal, false));
     filters.push_back(std::make_unique<RainbowWave>(1, 30, RainbowWave::Direction::vertical, false));
@@ -383,9 +382,7 @@ canvas::Canvas Mode_ClockFace::runCore() {
     }
     timePrev = timeNow;
 
-    if (filterIndex < filters.size() && filters[filterIndex]) {
-        filters[filterIndex]->apply(c);
-    }
+    if (filterIndex < filters.size() && filters[filterIndex]) { filters[filterIndex]->apply(c); }
 
     return c;
 }
@@ -426,7 +423,8 @@ Mode_Effects::Mode_Effects(const canvas::Canvas& size, ButtonReferences buttons)
     // Serial.println(stopTime - startTime);
 
     // golActual =
-    //     std::make_shared<GameOfLife>(display, 250, 50, colourGenerator_cycleHSV, display.getFullDisplayRegion(), false);
+    //     std::make_shared<GameOfLife>(display, 250, 50, colourGenerator_cycleHSV, display.getFullDisplayRegion(),
+    //     false);
     // golActual->setScores(golTrainer->getScores());
 
     // effects.push_back(golActual);

@@ -2,10 +2,10 @@
 #define displayeffects_h
 
 /* Project Scope */
-#include <canvas.h>
 #include "display/display.h"
 #include "display/fastled_rgbw.h"
 #include "timekeeping.h"
+#include <canvas.h>
 
 /* Arduino Core */
 #include <Arduino.h>
@@ -58,9 +58,7 @@ public:
     EffectDecorator_Timeout(std::shared_ptr<DisplayEffect> effect, uint32_t timeout)
         : DisplayEffectDecorator(effect),
           timeoutDuration(timeout) {}
-    canvas::Canvas run() {
-        return effect->run();
-    }
+    canvas::Canvas run() { return effect->run(); }
     bool finished() const {
         if (millis() - lastResetTime > timeoutDuration) { return true; }
         return effect->finished();
@@ -161,10 +159,7 @@ private:
 
 class BouncingBall : public DisplayEffect {
 public:
-    BouncingBall(
-        const canvas::Canvas& size,
-        uint32_t updateInterval,
-        CRGB (*colourGenerator)());
+    BouncingBall(const canvas::Canvas& size, uint32_t updateInterval, CRGB (*colourGenerator)());
     canvas::Canvas run() override final;
     bool finished() const override final { return _finished; }
     void reset() override final;

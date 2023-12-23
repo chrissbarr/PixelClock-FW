@@ -1,6 +1,10 @@
 /* Project Scope */
 #include "display/display.h"
 #include "display/displayEffects.h"
+#include <canvas.h>
+
+/* Libraries */
+#include <FastLED.h>
 
 PixelDisplay::PixelDisplay(uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset)
     : width(width),
@@ -8,14 +12,15 @@ PixelDisplay::PixelDisplay(uint8_t width, uint8_t height, bool serpentine, bool 
       size(width * height),
       serpentine(serpentine),
       vertical(vertical),
-      pixelOffset(pixelOffset),
-      buff(size, 0) {}
+      pixelOffset(pixelOffset) {}
 
 PixelDisplay::~PixelDisplay() {}
 
 void PixelDisplay::update(const canvas::Canvas& canvas) {
     // Serial.println("Update...");
     if (leds) {
+
+        auto buff = std::vector<CRGB>(size, 0);
 
         for (int x = 0; x < canvas.getWidth(); x++) {
             if (x >= getWidth()) { break; }

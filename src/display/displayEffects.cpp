@@ -268,15 +268,12 @@ canvas::Canvas BouncingBall::run() {
 //     return _finished;
 // }
 
-SpectrumDisplay::SpectrumDisplay(const canvas::Canvas& size)
-    : _c(size) {
+SpectrumDisplay::SpectrumDisplay(const canvas::Canvas& size) : _c(size) {
     colMin = CRGB::Blue;
     colMax = CRGB::Purple;
 }
 
-void SpectrumDisplay::reset() {
-    _finished = false;
-}
+void SpectrumDisplay::reset() { _finished = false; }
 
 float calculateBarHeight(float val, float valMin, float valMax, float barMax) {
     float barMin = 0;
@@ -299,7 +296,7 @@ canvas::Canvas SpectrumDisplay::run() {
 
         // iterate in reverse order so we always average N latest
         int idx = 0;
-        for(auto it = hist.rbegin(); it != hist.rend(); ++it) {
+        for (auto it = hist.rbegin(); it != hist.rend(); ++it) {
             // add values for this spectrum to total sum
             for (int i = 0; i < it->spectrum.size(); i++) { totals[i] += it->spectrum[i]; }
             idx++;

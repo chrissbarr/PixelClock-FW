@@ -1,30 +1,14 @@
 #ifndef display_h
 #define display_h
 
-/* Project Scope */
-#include "display/fastled_rgbw.h"
-#include <canvas.h>
-
-/* Arduino Core */
-#include <Arduino.h>
-
 /* C++ Standard Library */
-#include <string>
-#include <vector>
+#include <cstdint>
 
-struct DisplayRegion {
-    uint8_t xMin;
-    uint8_t xMax;
-    uint8_t yMin;
-    uint8_t yMax;
-};
-
-constexpr bool operator==(const DisplayRegion& lhs, const DisplayRegion& rhs) {
-    return lhs.xMin == rhs.xMin && lhs.xMax == rhs.xMax && lhs.yMin == rhs.yMin && lhs.yMax == rhs.yMax;
+/* Forward Declarations */
+class CRGB;
+namespace canvas {
+class Canvas;
 }
-
-// Set DisplayRegion arguments to this value to indicate that the full display should be used
-constexpr DisplayRegion defaultFull = {0, 0, 0, 0};
 
 class PixelDisplay {
 public:
@@ -48,7 +32,6 @@ private:
     const bool serpentine;
     const bool vertical;
     const uint32_t pixelOffset;
-    std::vector<CRGB> buff;
 };
 
 #endif // display_h
