@@ -1,6 +1,5 @@
 /* Project Scope */
 #include "display/display.h"
-//#include "display/characters.h"
 #include "display/displayEffects.h"
 
 PixelDisplay::PixelDisplay(uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset)
@@ -9,43 +8,26 @@ PixelDisplay::PixelDisplay(uint8_t width, uint8_t height, bool serpentine, bool 
       size(width * height),
       serpentine(serpentine),
       vertical(vertical),
-      pixelOffset(pixelOffset) {
-    buffer = BufferType(size, 0);
-}
+      pixelOffset(pixelOffset),
+      buff(size, 0) {}
 
 PixelDisplay::~PixelDisplay() {}
 
-void PixelDisplay::setIndex(uint32_t index, CRGB colour) {
-    if (index < size) { buffer[index] = colour; }
-}
-
-CRGB PixelDisplay::getIndex(uint32_t index) const {
-    if (index < size) {
-        return buffer[index];
-    } else {
-        return 0;
-    }
-}
-
-void PixelDisplay::setXY(uint8_t x, uint8_t y, CRGB colour) { buffer[XYToIndex(x, y)] = colour; }
-
-CRGB PixelDisplay::getXY(uint8_t x, uint8_t y) const { return buffer[XYToIndex(x, y)]; }
-
-void PixelDisplay::fill(CRGB colour, const DisplayRegion& region) {
-    for (uint8_t x = region.xMin; x <= region.xMax; x++) {
-        for (uint8_t y = region.yMin; y <= region.yMax; y++) { setXY(x, y, colour); }
-    }
-}
-
-void PixelDisplay::fill(CRGB colour) {
-    for (uint32_t i = 0; i < size; i++) { buffer[i] = colour; }
-}
-
-void PixelDisplay::update() {
+void PixelDisplay::update(const canvas::Canvas& canvas) {
     // Serial.println("Update...");
     if (leds) {
+
+        for (int x = 0; x < canvas.getWidth(); x++) {
+            if (x >= getWidth()) { break; }
+            for (int y = 0; y < canvas.getHeight(); y++) {
+                if (y >= getHeight()) { break; }
+                buff[XYToIndex(x, y)] = canvas.getXY(x, y);
+            }
+        }
+
         uint8_t* byteToWrite = (uint8_t*)leds;
-        for (const CRGB& pixel : buffer) {
+
+        for (const CRGB& pixel : buff) {
             // Serial.println("Writing pixel...");
             *byteToWrite++ = pixel.green;
             *byteToWrite++ = pixel.red;

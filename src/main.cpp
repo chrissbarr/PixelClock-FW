@@ -33,6 +33,7 @@ constexpr uint8_t matrixSize = matrixWidth * matrixHeight;
 constexpr uint16_t dummyLEDCount = getRGBWsize(matrixSize);
 CRGB ledsDummyRGBW[dummyLEDCount];
 PixelDisplay display(matrixWidth, matrixHeight, false, false);
+canvas::Canvas baseCanvas(matrixWidth, matrixHeight);
 
 // Buttons
 Button2 buttonMode(pins::button1, INPUT_PULLUP);
@@ -144,15 +145,13 @@ void setup() {
     brightnessSensor = std::make_unique<BrightnessSensor>();
 
     printCentred(Serial, "Initialising System Modes", headingWidth);
-    canvas::Canvas size(matrixWidth, matrixHeight);
+    baseCanvas.fill(CRGB::Black);
     modeManager =
-        std::make_unique<ModeManager>(size, ButtonReferences{buttonMode, buttonSelect, buttonLeft, buttonRight});
-
+        std::make_unique<ModeManager>(baseCanvas, ButtonReferences{buttonMode, buttonSelect, buttonLeft, buttonRight});
     printCentred(Serial, "Initialising Display", headingWidth);
     FastLED.addLeds<WS2812, pins::matrixLED, RGB>(ledsDummyRGBW, dummyLEDCount);
     display.setLEDStrip(ledsDummyRGBW);
-    display.fill(0);
-    display.update();
+    display.update(baseCanvas);
     delay(100);
     // displayDiagnostic(display);
 
@@ -177,23 +176,10 @@ void loop() {
     buttonRight.loop();
 
     auto c = modeManager->run();
-
-    auto background = canvas::Canvas(17, 5);
-    background.fill(CRGB::Blue);
-
-    auto out = canvas::blit(background, c, 1, 1);
-
-
-    for (int x = 0; x < out.getWidth(); x++) {
-        for (int y = 0; y < out.getHeight(); y++) {
-            display.setXY(x, y, out.getXY(x, y));
-        }
-    }
-
+    auto out = canvas::blit(baseCanvas, c, 0, 0);
     FastLED.setBrightness(brightnessModes[brightnessModeIndex].function());
     FastLED.setDither(1);
-
-    display.update();
+    display.update(out);
 
     Audio::get().update();
 

@@ -3,7 +3,7 @@
 
 /* Project Scope */
 #include <canvas.h>
-// #include "display/display.h"
+#include "display/display.h"
 #include "display/fastled_rgbw.h"
 #include "timekeeping.h"
 
@@ -42,104 +42,103 @@ public:
     virtual void reset() = 0;
 };
 
-// class DisplayEffectDecorator : public DisplayEffect {
-// protected:
-//     std::shared_ptr<DisplayEffect> effect;
+class DisplayEffectDecorator : public DisplayEffect {
+protected:
+    std::shared_ptr<DisplayEffect> effect;
 
-// public:
-//     DisplayEffectDecorator(std::shared_ptr<DisplayEffect> effect) : effect(effect) {}
-//     bool run() { return effect->run(); }
-//     bool finished() const { return effect->finished(); }
-//     void reset() { effect->reset(); }
-// };
+public:
+    DisplayEffectDecorator(std::shared_ptr<DisplayEffect> effect) : effect(effect) {}
+    canvas::Canvas run() { return effect->run(); }
+    bool finished() const { return effect->finished(); }
+    void reset() { effect->reset(); }
+};
 
-// class EffectDecorator_Timeout : public DisplayEffectDecorator {
-// public:
-//     EffectDecorator_Timeout(std::shared_ptr<DisplayEffect> effect, uint32_t timeout)
-//         : DisplayEffectDecorator(effect),
-//           timeoutDuration(timeout) {}
-//     bool run() {
-//         effect->run();
-//         return finished();
-//     }
-//     bool finished() const {
-//         if (millis() - lastResetTime > timeoutDuration) { return true; }
-//         return effect->finished();
-//     }
-//     void reset() {
-//         lastResetTime = millis();
-//         effect->reset();
-//     }
+class EffectDecorator_Timeout : public DisplayEffectDecorator {
+public:
+    EffectDecorator_Timeout(std::shared_ptr<DisplayEffect> effect, uint32_t timeout)
+        : DisplayEffectDecorator(effect),
+          timeoutDuration(timeout) {}
+    canvas::Canvas run() {
+        return effect->run();
+    }
+    bool finished() const {
+        if (millis() - lastResetTime > timeoutDuration) { return true; }
+        return effect->finished();
+    }
+    void reset() {
+        lastResetTime = millis();
+        effect->reset();
+    }
 
-// private:
-//     uint32_t lastResetTime = 0;
-//     uint32_t timeoutDuration;
-// };
+private:
+    uint32_t lastResetTime = 0;
+    uint32_t timeoutDuration;
+};
 
-// class TextScroller : public DisplayEffect {
-// public:
-//     TextScroller(
-//         PixelDisplay& display,
-//         std::string textString,
-//         std::vector<CRGB> colours,
-//         uint16_t stepDelay = 100,
-//         uint16_t timeToHoldAtEnd = 1000,
-//         uint8_t characterSpacing = 1);
-//     virtual bool run() override;
-//     virtual bool finished() const override { return _finished; }
-//     virtual void reset() override {
-//         _finished = false;
-//         currentOffset = 0;
-//         setTargetOffset(0);
-//         arrivedAtEndTime = 0;
-//     }
+class TextScroller : public DisplayEffect {
+public:
+    TextScroller(
+        const canvas::Canvas& size,
+        std::string textString,
+        std::vector<CRGB> colours,
+        uint16_t stepDelay = 100,
+        uint16_t timeToHoldAtEnd = 1000,
+        uint8_t characterSpacing = 1);
+    virtual canvas::Canvas run() override;
+    virtual bool finished() const override { return _finished; }
+    virtual void reset() override {
+        _finished = false;
+        currentOffset = 0;
+        setTargetOffset(0);
+        arrivedAtEndTime = 0;
+    }
 
-//     void setText(const std::string& textIn) { text = textIn; }
-//     void setTargetOffset(int targetCharacterIndex = -1);
-//     void setCurrentOffset(int targetCharacterIndex = -1);
-//     void setColours(std::vector<CRGB> colours) { this->colours = colours; }
+    void setText(const std::string& textIn) { text = textIn; }
+    void setTargetOffset(int targetCharacterIndex = -1);
+    void setCurrentOffset(int targetCharacterIndex = -1);
+    void setColours(std::vector<CRGB> colours) { this->colours = colours; }
 
-// private:
-//     PixelDisplay& display;
-//     std::string text;
-//     std::vector<CRGB> colours;
-//     uint16_t timeToHoldAtEnd;
-//     uint8_t charSpacing;
+private:
+    canvas::Canvas _c;
+    std::string text;
+    std::vector<CRGB> colours;
+    uint16_t timeToHoldAtEnd;
+    uint8_t charSpacing;
 
-//     uint32_t targetOffset;
-//     uint32_t currentOffset;
-//     uint32_t lastUpdateTime;
+    uint32_t targetOffset;
+    uint32_t currentOffset;
+    uint32_t lastUpdateTime;
 
-//     uint32_t stepDelay;
-//     uint32_t arrivedAtEndTime = 0;
+    uint32_t stepDelay;
+    uint32_t arrivedAtEndTime = 0;
 
-//     uint32_t calculateOffset(int charIdx) const;
+    uint32_t calculateOffset(int charIdx) const;
 
-//     bool _finished = false;
-// };
+    bool _finished = false;
+};
 
-// class RepeatingTextScroller : public TextScroller {
-// public:
-//     RepeatingTextScroller(
-//         PixelDisplay& display,
-//         std::string textString,
-//         std::vector<CRGB> colours,
-//         uint16_t stepDelay = 100,
-//         uint16_t timeToHoldAtEnd = 1000,
-//         uint8_t characterSpacing = 1);
-//     bool run() override;
-//     bool finished() const override { return cycles >= 2; }
-//     void reset() override {
-//         TextScroller::reset();
-//         forward = true;
-//         TextScroller::setTargetOffset(-1);
-//         cycles = 0;
-//     }
+class RepeatingTextScroller : public TextScroller {
+public:
+    RepeatingTextScroller(
+        const canvas::Canvas& size,
+        std::string textString,
+        std::vector<CRGB> colours,
+        uint16_t stepDelay = 100,
+        uint16_t timeToHoldAtEnd = 1000,
+        uint8_t characterSpacing = 1);
+    canvas::Canvas run() override;
+    bool finished() const override { return cycles >= 2; }
+    void reset() override {
+        TextScroller::reset();
+        forward = true;
+        TextScroller::setTargetOffset(-1);
+        cycles = 0;
+    }
 
-// private:
-//     uint32_t cycles = 0;
-//     bool forward = true;
-// };
+private:
+    uint32_t cycles = 0;
+    bool forward = true;
+};
 
 class RandomFill : public DisplayEffect {
 public:
@@ -160,29 +159,27 @@ private:
     canvas::Canvas _c;
 };
 
-// class BouncingBall : public DisplayEffect {
-// public:
-//     BouncingBall(
-//         PixelDisplay& display,
-//         uint32_t updateInterval,
-//         CRGB (*colourGenerator)(),
-//         const DisplayRegion& displayRegion = defaultFull);
-//     bool run() override final;
-//     bool finished() const override final { return _finished; }
-//     void reset() override final;
+class BouncingBall : public DisplayEffect {
+public:
+    BouncingBall(
+        const canvas::Canvas& size,
+        uint32_t updateInterval,
+        CRGB (*colourGenerator)());
+    canvas::Canvas run() override final;
+    bool finished() const override final { return _finished; }
+    void reset() override final;
 
-// private:
-//     float ballx;
-//     float bally;
-//     int xDir;
-//     int yDir;
-//     PixelDisplay& _display;
-//     uint32_t _lastLoopTime;
-//     uint32_t _updateInterval;
-//     CRGB (*_colourGenerator)();
-//     DisplayRegion _displayRegion;
-//     bool _finished;
-// };
+private:
+    canvas::Canvas _c;
+    float ballx;
+    float bally;
+    int xDir;
+    int yDir;
+    uint32_t _lastLoopTime;
+    uint32_t _updateInterval;
+    CRGB (*_colourGenerator)();
+    bool _finished;
+};
 
 // class Gravity : public DisplayEffect {
 // public:
@@ -213,76 +210,62 @@ private:
 //     Direction _direction;
 // };
 
-// class SpectrumDisplay : public DisplayEffect {
-// public:
-//     SpectrumDisplay(PixelDisplay& display, uint8_t width, uint32_t decayRate);
-//     bool run() override final;
-//     bool finished() const override final { return _finished; }
-//     void reset() override final;
+class SpectrumDisplay : public DisplayEffect {
+public:
+    SpectrumDisplay(const canvas::Canvas& size);
+    canvas::Canvas run() override final;
+    bool finished() const override final { return _finished; }
+    void reset() override final;
 
-//     void supplyData(std::vector<float> data);
+private:
+    canvas::Canvas _c;
+    CRGB colMin;
+    CRGB colMax;
+    float maxScale = 5000;
+    bool _finished = false;
+};
 
-// private:
-//     PixelDisplay& _display;
-//     uint8_t _width;
+struct VolumeDisplayColourMap {
+    double percentage;
+    CRGB colour;
+};
 
-//     // float calculateBarHeight(float val, float valMax, float barMax) const;
+class VolumeDisplay : public DisplayEffect {
+public:
+    VolumeDisplay(const canvas::Canvas& size);
+    canvas::Canvas run() override final;
+    bool finished() const override final { return _finished; }
+    void reset() override final;
 
-//     CRGB colMin;
-//     CRGB colMax;
+private:
+    canvas::Canvas _c;
+    std::vector<VolumeDisplayColourMap> colourMap;
+    bool _finished = false;
+};
 
-//     std::vector<float> _data;
-//     float maxScale = 5000;
+class VolumeGraph : public DisplayEffect {
+public:
+    VolumeGraph(const canvas::Canvas& size);
+    canvas::Canvas run() override final;
+    bool finished() const override final { return _finished; }
+    void reset() override final;
 
-//     bool _finished = false;
-//     uint32_t _decayRate;
-//     uint32_t _lastDecayedTime = 0;
-// };
+private:
+    canvas::Canvas _c;
+    bool _finished = false;
+};
 
-// struct VolumeDisplayColourMap {
-//     double percentage;
-//     CRGB colour;
-// };
+class AudioWaterfall : public DisplayEffect {
+public:
+    AudioWaterfall(const canvas::Canvas& size);
+    canvas::Canvas run() override final;
+    bool finished() const override final { return _finished; }
+    void reset() override final;
 
-// class VolumeDisplay : public DisplayEffect {
-// public:
-//     VolumeDisplay(PixelDisplay& display);
-//     bool run() override final;
-//     bool finished() const override final { return _finished; }
-//     void reset() override final;
-
-// private:
-//     PixelDisplay& _display;
-//     uint8_t _width;
-//     std::vector<VolumeDisplayColourMap> colourMap;
-//     bool _finished = false;
-// };
-
-// class VolumeGraph : public DisplayEffect {
-// public:
-//     VolumeGraph(PixelDisplay& display);
-//     bool run() override final;
-//     bool finished() const override final { return _finished; }
-//     void reset() override final;
-
-// private:
-//     PixelDisplay& _display;
-//     uint8_t _width;
-//     bool _finished = false;
-// };
-
-// class AudioWaterfall : public DisplayEffect {
-// public:
-//     AudioWaterfall(PixelDisplay& display);
-//     bool run() override final;
-//     bool finished() const override final { return _finished; }
-//     void reset() override final;
-
-// private:
-//     PixelDisplay& _display;
-//     uint8_t _width;
-//     bool _finished = false;
-// };
+private:
+    canvas::Canvas _c;
+    bool _finished = false;
+};
 
 class ClockFace_Base : public DisplayEffect {
 public:
@@ -329,7 +312,7 @@ public:
 
 // void tetris(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval);
 
-// void displayDiagnostic(PixelDisplay& display);
+void displayDiagnostic(PixelDisplay& display);
 
 class FilterMethod {
 public:

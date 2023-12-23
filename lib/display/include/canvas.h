@@ -16,6 +16,7 @@ namespace canvas {
 
 class Canvas {
 public:
+    Canvas() : Canvas(0, 0) {}
     Canvas(uint8_t width, uint8_t height);
 
     uint8_t getWidth() const { return width; }
@@ -38,9 +39,9 @@ public:
     void showCharacter(const FontGlyph& character, CRGB colour, int xOffset);
 
 private:
-    const uint8_t width;
-    const uint8_t height;
-    const uint16_t length;
+    uint8_t width;
+    uint8_t height;
+    uint16_t length;
     std::vector<CRGB> data;
 };
 

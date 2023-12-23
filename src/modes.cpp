@@ -1,5 +1,6 @@
 /* Project Scope */
 #include "modes.h"
+#include <canvas.h>
 #include "FMTWrapper.h"
 #include "display/gameOfLife.h"
 #include "utility.h"
@@ -39,314 +40,316 @@ void MainModeFunction::moveOut() {
     this->moveOutCore();
 }
 
-// Mode_SettingsMenu::Mode_SettingsMenu(PixelDisplay& display, ButtonReferences buttons)
-//     : MainModeFunction("Settings Menu", display, buttons) {
-//     menuTextScroller =
-//         std::make_unique<RepeatingTextScroller>(_display, "Placeholder", std::vector<CRGB>{CRGB::Red}, 50, 2000, 1);
-//     menuPages.push_back(std::make_unique<Mode_SettingsMenu_SetTime>(display, buttons));
-//     menuPages.push_back(std::make_unique<Mode_SettingsMenu_SetBrightness>(display, buttons));
-// }
+Mode_SettingsMenu::Mode_SettingsMenu(const canvas::Canvas& size, ButtonReferences buttons)
+    : MainModeFunction("Settings Menu", buttons) {
+    menuTextScroller =
+        std::make_unique<RepeatingTextScroller>(size, "Placeholder", std::vector<CRGB>{CRGB::Red}, 50, 2000, 1);
+    menuPages.push_back(std::make_unique<Mode_SettingsMenu_SetTime>(size, buttons));
+    menuPages.push_back(std::make_unique<Mode_SettingsMenu_SetBrightness>(size, buttons));
+}
 
-// void Mode_SettingsMenu::moveIntoCore() {
-//     menuIndex = 0;
-//     menuTextScroller->setText(menuPages[menuIndex]->getName());
-//     menuTextScroller->reset();
-//     registerButtonCallbacks();
-// }
+void Mode_SettingsMenu::moveIntoCore() {
+    menuIndex = 0;
+    menuTextScroller->setText(menuPages[menuIndex]->getName());
+    menuTextScroller->reset();
+    registerButtonCallbacks();
+}
 
-// void Mode_SettingsMenu::moveOutCore() {
-//     menuPages[menuIndex]->moveOut(); // todo. Need to have some better way of moving up and down (particularly with
-//                                      // de/re-registering button callbacks.)
-// }
+void Mode_SettingsMenu::moveOutCore() {
+    menuPages[menuIndex]->moveOut(); // todo. Need to have some better way of moving up and down (particularly with
+                                     // de/re-registering button callbacks.)
+}
 
-// void Mode_SettingsMenu::cycleActiveSetting(Button2& btn) {
+void Mode_SettingsMenu::cycleActiveSetting(Button2& btn) {
 
-//     using namespace printing;
+    using namespace printing;
 
-//     print(Serial, "Switching to next setting...\n");
-//     print(Serial, fmt::format("Previous Setting: {} - {}\n", menuIndex, menuPages[menuIndex]->getName()));
+    print(Serial, "Switching to next setting...\n");
+    print(Serial, fmt::format("Previous Setting: {} - {}\n", menuIndex, menuPages[menuIndex]->getName()));
 
-//     if (btn == buttons.left) {
-//         if (menuIndex == 0) {
-//             menuIndex = menuPages.size() - 1;
-//         } else {
-//             menuIndex--;
-//         }
-//     } else {
-//         if (menuIndex == menuPages.size() - 1) {
-//             menuIndex = 0;
-//         } else {
-//             menuIndex++;
-//         }
-//     }
+    if (btn == buttons.left) {
+        if (menuIndex == 0) {
+            menuIndex = menuPages.size() - 1;
+        } else {
+            menuIndex--;
+        }
+    } else {
+        if (menuIndex == menuPages.size() - 1) {
+            menuIndex = 0;
+        } else {
+            menuIndex++;
+        }
+    }
 
-//     print(Serial, fmt::format("New Setting: {} - {}\n", menuIndex, menuPages[menuIndex]->getName()));
-//     menuTextScroller->setText(menuPages[menuIndex]->getName());
-//     menuTextScroller->reset();
-// }
+    print(Serial, fmt::format("New Setting: {} - {}\n", menuIndex, menuPages[menuIndex]->getName()));
+    menuTextScroller->setText(menuPages[menuIndex]->getName());
+    menuTextScroller->reset();
+}
 
-// void Mode_SettingsMenu::registerButtonCallbacks() {
-//     buttons.left.setTapHandler([this](Button2& btn) { cycleActiveSetting(btn); });
-//     buttons.right.setTapHandler([this](Button2& btn) { cycleActiveSetting(btn); });
+void Mode_SettingsMenu::registerButtonCallbacks() {
+    buttons.left.setTapHandler([this](Button2& btn) { cycleActiveSetting(btn); });
+    buttons.right.setTapHandler([this](Button2& btn) { cycleActiveSetting(btn); });
 
-//     auto moveIntoSetting = [this](Button2& btn) {
-//         activeMenuPage = menuPages[menuIndex];
-//         activeMenuPage->moveInto();
-//     };
-//     buttons.select.setTapHandler(moveIntoSetting);
-//     buttons.mode.setTapHandler([this](Button2& btn) { this->_finished = true; });
-//     Serial.println("Registered settings button callbacks");
-// }
+    auto moveIntoSetting = [this](Button2& btn) {
+        activeMenuPage = menuPages[menuIndex];
+        activeMenuPage->moveInto();
+    };
+    buttons.select.setTapHandler(moveIntoSetting);
+    buttons.mode.setTapHandler([this](Button2& btn) { this->_finished = true; });
+    Serial.println("Registered settings button callbacks");
+}
 
-// void Mode_SettingsMenu::runCore() {
-//     if (activeMenuPage) {
-//         activeMenuPage->run();
-//         if (activeMenuPage->finished()) {
-//             activeMenuPage->moveOut();
-//             activeMenuPage.reset();
-//             registerButtonCallbacks();
-//             menuTextScroller->reset();
-//         }
-//     } else {
-//         menuTextScroller->run();
-//     }
-// }
+canvas::Canvas Mode_SettingsMenu::runCore() {
+    canvas::Canvas c;
+    if (activeMenuPage) {
+        c = activeMenuPage->run();
+        if (activeMenuPage->finished()) {
+            activeMenuPage->moveOut();
+            activeMenuPage.reset();
+            registerButtonCallbacks();
+            menuTextScroller->reset();
+        }
+    } else {
+        c = menuTextScroller->run();
+    }
+    return c;
+}
 
-// Mode_SettingsMenu_SetTime::Mode_SettingsMenu_SetTime(PixelDisplay& display, ButtonReferences buttons)
-//     : MainModeFunction("Set Time", display, buttons) {
-//     textscroller = std::make_unique<TextScroller>(_display, "12:34:56", std::vector<CRGB>{CRGB::White}, 10, 1000, 1);
-// }
+Mode_SettingsMenu_SetTime::Mode_SettingsMenu_SetTime(const canvas::Canvas& size, ButtonReferences buttons)
+    : MainModeFunction("Set Time", buttons) {
+    textscroller = std::make_unique<TextScroller>(size, "12:34:56", std::vector<CRGB>{CRGB::White}, 10, 1000, 1);
+}
 
-// bool Mode_SettingsMenu_SetTime::finished() const { return currentlySettingTimeSegment == TimeSegment::done; }
+bool Mode_SettingsMenu_SetTime::finished() const { return currentlySettingTimeSegment == TimeSegment::done; }
 
-// void Mode_SettingsMenu_SetTime::moveIntoCore() {
-//     auto changeTimeCallback = [this](Button2& btn) {
-//         Serial.println("Inc/Dec Current Time");
-//         int changeDir = 1;
-//         if (btn == buttons.left) { changeDir = -1; }
+void Mode_SettingsMenu_SetTime::moveIntoCore() {
+    auto changeTimeCallback = [this](Button2& btn) {
+        Serial.println("Inc/Dec Current Time");
+        int changeDir = 1;
+        if (btn == buttons.left) { changeDir = -1; }
 
-//         switch (currentlySettingTimeSegment) {
-//         case TimeSegment::hour: {
-//             int changeAmt = changeDir * 60 * 60;
-//             Serial.print("Changing hour by: ");
-//             Serial.println(changeAmt);
-//             this->secondsOffset += changeAmt;
-//             break;
-//         }
-//         case TimeSegment::minute: {
-//             int changeAmt = changeDir * 60;
-//             Serial.print("Changing minute by: ");
-//             Serial.println(changeAmt);
-//             this->secondsOffset += changeAmt;
-//             break;
-//         }
-//         case TimeSegment::second: {
-//             int changeAmt = changeDir;
-//             Serial.print("Changing second by: ");
-//             Serial.println(changeAmt);
-//             this->secondsOffset += changeAmt;
-//             break;
-//         }
-//         default: {
-//             break;
-//         }
-//         }
-//     };
-//     buttons.left.setTapHandler(changeTimeCallback);
-//     buttons.left.setLongClickDetectedHandler(changeTimeCallback);
-//     buttons.left.setLongClickDetectedRetriggerable(true);
-//     buttons.right.setTapHandler(changeTimeCallback);
-//     buttons.right.setLongClickDetectedHandler(changeTimeCallback);
-//     buttons.right.setLongClickDetectedRetriggerable(true);
+        switch (currentlySettingTimeSegment) {
+        case TimeSegment::hour: {
+            int changeAmt = changeDir * 60 * 60;
+            Serial.print("Changing hour by: ");
+            Serial.println(changeAmt);
+            this->secondsOffset += changeAmt;
+            break;
+        }
+        case TimeSegment::minute: {
+            int changeAmt = changeDir * 60;
+            Serial.print("Changing minute by: ");
+            Serial.println(changeAmt);
+            this->secondsOffset += changeAmt;
+            break;
+        }
+        case TimeSegment::second: {
+            int changeAmt = changeDir;
+            Serial.print("Changing second by: ");
+            Serial.println(changeAmt);
+            this->secondsOffset += changeAmt;
+            break;
+        }
+        default: {
+            break;
+        }
+        }
+    };
+    buttons.left.setTapHandler(changeTimeCallback);
+    buttons.left.setLongClickDetectedHandler(changeTimeCallback);
+    buttons.left.setLongClickDetectedRetriggerable(true);
+    buttons.right.setTapHandler(changeTimeCallback);
+    buttons.right.setLongClickDetectedHandler(changeTimeCallback);
+    buttons.right.setLongClickDetectedRetriggerable(true);
 
-//     auto advanceTimeSegment = [this](Button2& btn) {
-//         Serial.println("Moving to next time segment...");
+    auto advanceTimeSegment = [this](Button2& btn) {
+        Serial.println("Moving to next time segment...");
 
-//         bool forward = (btn == buttons.select);
+        bool forward = (btn == buttons.select);
 
-//         switch (currentlySettingTimeSegment) {
-//         case TimeSegment::cancel: {
-//             if (forward) {
-//                 currentlySettingTimeSegment = TimeSegment::hour;
-//             } else {
-//                 currentlySettingTimeSegment = TimeSegment::done;
-//             }
-//             break;
-//         }
-//         case TimeSegment::hour: {
-//             if (forward) {
-//                 currentlySettingTimeSegment = TimeSegment::minute;
-//             } else {
-//                 currentlySettingTimeSegment = TimeSegment::cancel;
-//             }
-//             break;
-//         }
-//         case TimeSegment::minute: {
-//             if (forward) {
-//                 currentlySettingTimeSegment = TimeSegment::second;
-//             } else {
-//                 currentlySettingTimeSegment = TimeSegment::hour;
-//             }
-//             break;
-//         }
-//         case TimeSegment::second: {
-//             if (forward) {
-//                 currentlySettingTimeSegment = TimeSegment::confirm;
-//             } else {
-//                 currentlySettingTimeSegment = TimeSegment::minute;
-//             }
-//             break;
-//         }
-//         case TimeSegment::confirm: {
-//             if (forward) {
-//                 currentlySettingTimeSegment = TimeSegment::done;
-//                 setTimeGlobally(now() + this->secondsOffset);
-//             } else {
-//                 currentlySettingTimeSegment = TimeSegment::second;
-//             }
-//             break;
-//         }
-//         default: {
-//             break;
-//         }
-//         }
-//     };
-//     buttons.select.setTapHandler(advanceTimeSegment);
-//     buttons.mode.setTapHandler(advanceTimeSegment);
-//     currentlySettingTimeSegment = TimeSegment::hour;
-//     secondsOffset = 0;
-//     textscroller->reset();
-//     textscroller->setCurrentOffset(5);
-//     textscroller->setTargetOffset(5);
-// }
+        switch (currentlySettingTimeSegment) {
+        case TimeSegment::cancel: {
+            if (forward) {
+                currentlySettingTimeSegment = TimeSegment::hour;
+            } else {
+                currentlySettingTimeSegment = TimeSegment::done;
+            }
+            break;
+        }
+        case TimeSegment::hour: {
+            if (forward) {
+                currentlySettingTimeSegment = TimeSegment::minute;
+            } else {
+                currentlySettingTimeSegment = TimeSegment::cancel;
+            }
+            break;
+        }
+        case TimeSegment::minute: {
+            if (forward) {
+                currentlySettingTimeSegment = TimeSegment::second;
+            } else {
+                currentlySettingTimeSegment = TimeSegment::hour;
+            }
+            break;
+        }
+        case TimeSegment::second: {
+            if (forward) {
+                currentlySettingTimeSegment = TimeSegment::confirm;
+            } else {
+                currentlySettingTimeSegment = TimeSegment::minute;
+            }
+            break;
+        }
+        case TimeSegment::confirm: {
+            if (forward) {
+                currentlySettingTimeSegment = TimeSegment::done;
+                setTimeGlobally(now() + this->secondsOffset);
+            } else {
+                currentlySettingTimeSegment = TimeSegment::second;
+            }
+            break;
+        }
+        default: {
+            break;
+        }
+        }
+    };
+    buttons.select.setTapHandler(advanceTimeSegment);
+    buttons.mode.setTapHandler(advanceTimeSegment);
+    currentlySettingTimeSegment = TimeSegment::hour;
+    secondsOffset = 0;
+    textscroller->reset();
+    textscroller->setCurrentOffset(5);
+    textscroller->setTargetOffset(5);
+}
 
-// void Mode_SettingsMenu_SetTime::runCore() {
-//     // update the scroller text
-//     auto times = timeCallbackFunction(now() + this->secondsOffset);
-//     std::string timestr = fmt::format("back {:2d}:{:2d}:{:2d} ok", times.hour24, times.minute, times.second);
-//     textscroller->setText(timestr);
+canvas::Canvas Mode_SettingsMenu_SetTime::runCore() {
+    // update the scroller text
+    auto times = timeCallbackFunction(now() + this->secondsOffset);
+    std::string timestr = fmt::format("back {:2d}:{:2d}:{:2d} ok", times.hour24, times.minute, times.second);
+    textscroller->setText(timestr);
 
-//     // move to and highlight the active part of the time
-//     CRGB colourSel = CRGB(CRGB::Red).fadeLightBy(scale8(sin8(millis() / 5), 200));
-//     // 255 - scale8(sin8(millis()/5), 128), 0, 0);
-//     CRGB colourIdle = CRGB(100, 100, 100);
-//     switch (currentlySettingTimeSegment) {
-//     case TimeSegment::cancel: {
-//         textscroller->setTargetOffset(0);
-//         textscroller->setColours({
-//             colourSel,
-//             colourSel,
-//             colourSel,
-//             colourSel,
-//             colourSel, // back + space
-//             colourIdle,
-//             colourIdle,
-//             colourIdle, // HH:
-//             colourIdle,
-//             colourIdle,
-//             colourIdle, // MM:
-//             colourIdle,
-//             colourIdle, // SS
-//             colourIdle,
-//             colourIdle,
-//             colourIdle, // space + ok
-//         });
-//         break;
-//     }
-//     case TimeSegment::hour: {
-//         textscroller->setTargetOffset(5);
-//         textscroller->setColours({
-//             colourIdle,
-//             colourIdle,
-//             colourIdle,
-//             colourIdle,
-//             colourIdle, // back + space
-//             colourSel,
-//             colourSel,
-//             colourIdle, // HH:
-//             colourIdle,
-//             colourIdle,
-//             colourIdle, // MM:
-//             colourIdle,
-//             colourIdle, // SS
-//             colourIdle,
-//             colourIdle,
-//             colourIdle, // space + ok
-//         });
-//         break;
-//     }
-//     case TimeSegment::minute: {
-//         textscroller->setTargetOffset(8);
-//         textscroller->setColours({
-//             colourIdle,
-//             colourIdle,
-//             colourIdle,
-//             colourIdle,
-//             colourIdle, // back + space
-//             colourIdle,
-//             colourIdle,
-//             colourIdle, // HH:
-//             colourSel,
-//             colourSel,
-//             colourIdle, // MM:
-//             colourIdle,
-//             colourIdle, // SS
-//             colourIdle,
-//             colourIdle,
-//             colourIdle, // space + ok
-//         });
-//         break;
-//     }
-//     case TimeSegment::second: {
-//         textscroller->setTargetOffset(11);
-//         textscroller->setColours({
-//             colourIdle,
-//             colourIdle,
-//             colourIdle,
-//             colourIdle,
-//             colourIdle, // back + space
-//             colourIdle,
-//             colourIdle,
-//             colourIdle, // HH:
-//             colourIdle,
-//             colourIdle,
-//             colourIdle, // MM:
-//             colourSel,
-//             colourSel, // SS
-//             colourIdle,
-//             colourIdle,
-//             colourIdle, // space + ok
-//         });
-//         break;
-//     }
-//     case TimeSegment::confirm: {
-//         textscroller->setTargetOffset(14);
-//         textscroller->setColours({
-//             colourIdle,
-//             colourIdle,
-//             colourIdle,
-//             colourIdle,
-//             colourIdle, // back + space
-//             colourIdle,
-//             colourIdle,
-//             colourIdle, // HH:
-//             colourIdle,
-//             colourIdle,
-//             colourIdle, // MM:
-//             colourIdle,
-//             colourIdle, // SS
-//             colourIdle,
-//             colourSel,
-//             colourSel, // space + ok
-//         });
-//         break;
-//     }
-//     default: {
-//         break;
-//     }
-//     }
-//     textscroller->run();
-// }
+    // move to and highlight the active part of the time
+    CRGB colourSel = CRGB(CRGB::Red).fadeLightBy(scale8(sin8(millis() / 5), 200));
+    // 255 - scale8(sin8(millis()/5), 128), 0, 0);
+    CRGB colourIdle = CRGB(100, 100, 100);
+    switch (currentlySettingTimeSegment) {
+    case TimeSegment::cancel: {
+        textscroller->setTargetOffset(0);
+        textscroller->setColours({
+            colourSel,
+            colourSel,
+            colourSel,
+            colourSel,
+            colourSel, // back + space
+            colourIdle,
+            colourIdle,
+            colourIdle, // HH:
+            colourIdle,
+            colourIdle,
+            colourIdle, // MM:
+            colourIdle,
+            colourIdle, // SS
+            colourIdle,
+            colourIdle,
+            colourIdle, // space + ok
+        });
+        break;
+    }
+    case TimeSegment::hour: {
+        textscroller->setTargetOffset(5);
+        textscroller->setColours({
+            colourIdle,
+            colourIdle,
+            colourIdle,
+            colourIdle,
+            colourIdle, // back + space
+            colourSel,
+            colourSel,
+            colourIdle, // HH:
+            colourIdle,
+            colourIdle,
+            colourIdle, // MM:
+            colourIdle,
+            colourIdle, // SS
+            colourIdle,
+            colourIdle,
+            colourIdle, // space + ok
+        });
+        break;
+    }
+    case TimeSegment::minute: {
+        textscroller->setTargetOffset(8);
+        textscroller->setColours({
+            colourIdle,
+            colourIdle,
+            colourIdle,
+            colourIdle,
+            colourIdle, // back + space
+            colourIdle,
+            colourIdle,
+            colourIdle, // HH:
+            colourSel,
+            colourSel,
+            colourIdle, // MM:
+            colourIdle,
+            colourIdle, // SS
+            colourIdle,
+            colourIdle,
+            colourIdle, // space + ok
+        });
+        break;
+    }
+    case TimeSegment::second: {
+        textscroller->setTargetOffset(11);
+        textscroller->setColours({
+            colourIdle,
+            colourIdle,
+            colourIdle,
+            colourIdle,
+            colourIdle, // back + space
+            colourIdle,
+            colourIdle,
+            colourIdle, // HH:
+            colourIdle,
+            colourIdle,
+            colourIdle, // MM:
+            colourSel,
+            colourSel, // SS
+            colourIdle,
+            colourIdle,
+            colourIdle, // space + ok
+        });
+        break;
+    }
+    case TimeSegment::confirm: {
+        textscroller->setTargetOffset(14);
+        textscroller->setColours({
+            colourIdle,
+            colourIdle,
+            colourIdle,
+            colourIdle,
+            colourIdle, // back + space
+            colourIdle,
+            colourIdle,
+            colourIdle, // HH:
+            colourIdle,
+            colourIdle,
+            colourIdle, // MM:
+            colourIdle,
+            colourIdle, // SS
+            colourIdle,
+            colourSel,
+            colourSel, // space + ok
+        });
+        break;
+    }
+    default: {
+        break;
+    }
+    }
+    return textscroller->run();
+}
 
 Mode_ClockFace::Mode_ClockFace(ButtonReferences buttons)
     : MainModeFunction("Clockface", buttons) {
@@ -389,12 +392,12 @@ canvas::Canvas Mode_ClockFace::runCore() {
 
 Mode_Effects::Mode_Effects(const canvas::Canvas& size, ButtonReferences buttons)
     : MainModeFunction("Effects", buttons) {
-    // effects.push_back(std::make_unique<AudioWaterfall>(_display));
-    // effects.push_back(std::make_unique<VolumeGraph>(_display));
-    // effects.push_back(std::make_unique<VolumeDisplay>(_display));
-    // effects.push_back(std::make_unique<SpectrumDisplay>(_display, _display.getWidth(), 0));
+    effects.push_back(std::make_unique<AudioWaterfall>(size));
+    effects.push_back(std::make_unique<VolumeGraph>(size));
+    effects.push_back(std::make_unique<VolumeDisplay>(size));
+    effects.push_back(std::make_unique<SpectrumDisplay>(size));
     effects.push_back(std::make_unique<RandomFill>(size, 100, colourGenerator_randomHSV));
-    // effects.push_back(std::make_unique<BouncingBall>(_display, 100, colourGenerator_cycleHSV));
+    effects.push_back(std::make_unique<BouncingBall>(size, 100, colourGenerator_cycleHSV));
 
     // Serial.println("Pregenerating GoL seeds...");
     // uint32_t startTime = millis();
@@ -483,7 +486,7 @@ canvas::Canvas Mode_Effects::runCore() {
 ModeManager::ModeManager(const canvas::Canvas& size, ButtonReferences buttons) {
     modes.push_back(std::make_unique<Mode_ClockFace>(buttons));
     modes.push_back(std::make_unique<Mode_Effects>(size, buttons));
-    //modes.push_back(std::make_unique<Mode_SettingsMenu>(display, buttons));
+    modes.push_back(std::make_unique<Mode_SettingsMenu>(size, buttons));
     modes[modeIndex]->moveInto();
 }
 

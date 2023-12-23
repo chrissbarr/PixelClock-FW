@@ -9,100 +9,100 @@
 /* C++ Standard Library */
 #include <random>
 
-// TextScroller::TextScroller(
-//     PixelDisplay& display,
-//     std::string textString,
-//     std::vector<CRGB> colours,
-//     uint16_t stepDelay,
-//     uint16_t timeToHoldAtEnd,
-//     uint8_t characterSpacing)
-//     : display(display),
-//       text(textString),
-//       colours(colours),
-//       stepDelay(stepDelay),
-//       timeToHoldAtEnd(timeToHoldAtEnd),
-//       charSpacing(characterSpacing) {
-//     lastUpdateTime = millis();
-//     currentOffset = 0;
-//     setTargetOffset(0);
-// }
+TextScroller::TextScroller(
+    const canvas::Canvas& size,
+    std::string textString,
+    std::vector<CRGB> colours,
+    uint16_t stepDelay,
+    uint16_t timeToHoldAtEnd,
+    uint8_t characterSpacing)
+    : _c(size),
+      text(textString),
+      colours(colours),
+      stepDelay(stepDelay),
+      timeToHoldAtEnd(timeToHoldAtEnd),
+      charSpacing(characterSpacing) {
+    lastUpdateTime = millis();
+    currentOffset = 0;
+    setTargetOffset(0);
+}
 
-// bool TextScroller::run() {
-//     if (currentOffset == targetOffset) {
-//         if (arrivedAtEndTime == 0) {
-//             arrivedAtEndTime = millis();
-//         } else {
-//             if (millis() - arrivedAtEndTime > timeToHoldAtEnd) {
-//                 _finished = true;
-//                 arrivedAtEndTime = 0;
-//             }
-//         }
-//     } else {
-//         if (millis() - lastUpdateTime >= stepDelay) {
-//             if (targetOffset > currentOffset) {
-//                 currentOffset += 1;
-//             } else if (targetOffset < currentOffset) {
-//                 currentOffset -= 1;
-//             }
-//             lastUpdateTime = millis();
-//         }
-//     }
-//     display.fill(CRGB::Black);
-//     display.showCharacters(text, colours, -currentOffset, charSpacing);
-//     return _finished;
-// }
+canvas::Canvas TextScroller::run() {
+    if (currentOffset == targetOffset) {
+        if (arrivedAtEndTime == 0) {
+            arrivedAtEndTime = millis();
+        } else {
+            if (millis() - arrivedAtEndTime > timeToHoldAtEnd) {
+                _finished = true;
+                arrivedAtEndTime = 0;
+            }
+        }
+    } else {
+        if (millis() - lastUpdateTime >= stepDelay) {
+            if (targetOffset > currentOffset) {
+                currentOffset += 1;
+            } else if (targetOffset < currentOffset) {
+                currentOffset -= 1;
+            }
+            lastUpdateTime = millis();
+        }
+    }
+    _c.fill(CRGB::Black);
+    _c.showCharacters(text, colours, -currentOffset, charSpacing);
+    return _c;
+}
 
-// void TextScroller::setTargetOffset(int targetCharacterIndex) {
-//     targetOffset = calculateOffset(targetCharacterIndex);
-//     _finished = false;
-// }
+void TextScroller::setTargetOffset(int targetCharacterIndex) {
+    targetOffset = calculateOffset(targetCharacterIndex);
+    _finished = false;
+}
 
-// void TextScroller::setCurrentOffset(int targetCharacterIndex) {
-//     currentOffset = calculateOffset(targetCharacterIndex);
-//     _finished = false;
-// }
+void TextScroller::setCurrentOffset(int targetCharacterIndex) {
+    currentOffset = calculateOffset(targetCharacterIndex);
+    _finished = false;
+}
 
-// uint32_t TextScroller::calculateOffset(int targetCharIndex) const {
-//     int end = 0;
-//     int charIndex = 0;
-//     for (const char& character : text) {
-//         if (targetCharIndex != -1 && charIndex == targetCharIndex) { break; }
-//         end += characterFontArray[charToIndex(character)].width + charSpacing;
-//         charIndex++;
-//     }
-//     if (targetCharIndex == -1) { end -= (charSpacing + display.getWidth()); }
-//     return end;
-// }
+uint32_t TextScroller::calculateOffset(int targetCharIndex) const {
+    int end = 0;
+    int charIndex = 0;
+    for (const char& character : text) {
+        if (targetCharIndex != -1 && charIndex == targetCharIndex) { break; }
+        end += characterFontArray[charToIndex(character)].width + charSpacing;
+        charIndex++;
+    }
+    if (targetCharIndex == -1) { end -= (charSpacing + _c.getWidth()); }
+    return end;
+}
 
-// RepeatingTextScroller::RepeatingTextScroller(
-//     PixelDisplay& display,
-//     std::string textString,
-//     std::vector<CRGB> colours,
-//     uint16_t stepDelay,
-//     uint16_t timeToHoldAtEnd,
-//     uint8_t characterSpacing)
-//     : TextScroller(display, textString, colours, stepDelay, timeToHoldAtEnd, characterSpacing) {
-//     TextScroller::setTargetOffset(-1);
-// }
+RepeatingTextScroller::RepeatingTextScroller(
+    const canvas::Canvas& size,
+    std::string textString,
+    std::vector<CRGB> colours,
+    uint16_t stepDelay,
+    uint16_t timeToHoldAtEnd,
+    uint8_t characterSpacing)
+    : TextScroller(size, textString, colours, stepDelay, timeToHoldAtEnd, characterSpacing) {
+    TextScroller::setTargetOffset(-1);
+}
 
-// bool RepeatingTextScroller::run() {
-//     bool scrollerFinished = TextScroller::run();
-//     if (scrollerFinished) {
-//         if (forward) {
-//             TextScroller::setTargetOffset(0);
-//             forward = false;
-//         } else {
-//             TextScroller::setTargetOffset(-1);
-//             forward = true;
-//         }
-//         cycles++;
-//     }
+canvas::Canvas RepeatingTextScroller::run() {
+    auto c = TextScroller::run();
+    bool scrollerFinished = TextScroller::finished();
+    if (scrollerFinished) {
+        if (forward) {
+            TextScroller::setTargetOffset(0);
+            forward = false;
+        } else {
+            TextScroller::setTargetOffset(-1);
+            forward = true;
+        }
+        cycles++;
+    }
 
-//     return finished();
-// }
+    return c;
+}
 
-RandomFill::RandomFill(
-    const canvas::Canvas& size, uint32_t fillInterval, CRGB (*colourGenerator)())
+RandomFill::RandomFill(const canvas::Canvas& size, uint32_t fillInterval, CRGB (*colourGenerator)())
     : _c(size),
       _fillInterval(fillInterval),
       _colourGenerator(colourGenerator) {
@@ -131,44 +131,43 @@ canvas::Canvas RandomFill::run() {
     return _c;
 }
 
-// BouncingBall::BouncingBall(
-//     PixelDisplay& display, uint32_t updateInterval, CRGB (*colourGenerator)(), const DisplayRegion& displayRegion)
-//     : _display(display),
-//       _updateInterval(updateInterval),
-//       _colourGenerator(colourGenerator) {
-//     if (displayRegion == defaultFull) {
-//         _displayRegion = display.getFullDisplayRegion();
-//     } else {
-//         _displayRegion = displayRegion;
-//     }
-// }
+BouncingBall::BouncingBall(const canvas::Canvas& size, uint32_t updateInterval, CRGB (*colourGenerator)())
+    : _c(size),
+      _updateInterval(updateInterval),
+      _colourGenerator(colourGenerator) {
+    reset();
+}
 
-// void BouncingBall::reset() {
-//     ballx = random(_displayRegion.xMin + 1, _displayRegion.xMax);
-//     bally = random(_displayRegion.yMin + 1, _displayRegion.yMax);
-//     xDir = 1;
-//     yDir = 1;
-//     _finished = false;
-//     _lastLoopTime = millis();
-//     _display.fill(0, _displayRegion);
-// }
+void BouncingBall::reset() {
+    const int spawnInFromBorder = 1;
+    ballx = random(spawnInFromBorder, _c.getWidth() - 1 - spawnInFromBorder);
+    bally = random(spawnInFromBorder, _c.getHeight() - 1 - spawnInFromBorder);
+    xDir = 1;
+    yDir = 1;
+    _finished = false;
+    _lastLoopTime = millis();
+    _c.fill(CRGB::Black);
+}
 
-// bool BouncingBall::run() {
-//     uint32_t millisSinceLastRun = millis() - _lastLoopTime;
-//     if (millisSinceLastRun > _updateInterval) {
-//         ballx += xDir;
-//         bally += yDir;
+canvas::Canvas BouncingBall::run() {
+    uint32_t millisSinceLastRun = millis() - _lastLoopTime;
+    if (millisSinceLastRun > _updateInterval) {
+        ballx += xDir;
+        bally += yDir;
 
-//         if (ballx <= _displayRegion.xMin || ballx >= _displayRegion.xMax) { xDir = -xDir; }
-//         if (bally <= _displayRegion.yMin || bally >= _displayRegion.yMax) { yDir = -yDir; }
+        if (ballx <= 0 || ballx >= _c.getWidth() - 1) { xDir = -xDir; }
+        if (bally <= 0 || bally >= _c.getHeight() - 1) { yDir = -yDir; }
 
-//         _display.fill(0, _displayRegion);
-//         _display.setXY(uint8_t(round(ballx)), uint8_t(round(bally)), _colourGenerator());
+        _c.fill(CRGB::Black);
+        uint8_t pixelx = uint8_t(round(ballx));
+        uint8_t pixely = uint8_t(round(bally));
+        // printing::print(Serial, fmt::format("Ball (x={:.2f}({}), y={:.2f}({}))\n", ballx, pixelx, bally, pixely));
+        _c.setXY(pixelx, pixely, _colourGenerator());
 
-//         _lastLoopTime = millis();
-//     }
-//     return true;
-// }
+        _lastLoopTime = millis();
+    }
+    return _c;
+}
 
 // Gravity::Gravity(
 //     PixelDisplay& display,
@@ -238,7 +237,8 @@ canvas::Canvas RandomFill::run() {
 //         case Gravity::Direction::up: {
 //             for (int y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
 //                 for (int x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
-//                     if (movePixel(_display, _displayRegion, x, y, 0, -1, _empty)) { anyPixelsMovedThisUpdate = true; }
+//                     if (movePixel(_display, _displayRegion, x, y, 0, -1, _empty)) { anyPixelsMovedThisUpdate = true;
+//                     }
 //                 }
 //             }
 //             break;
@@ -246,7 +246,8 @@ canvas::Canvas RandomFill::run() {
 //         case Gravity::Direction::left: {
 //             for (int y = _displayRegion.yMin; y <= _displayRegion.yMax; y++) {
 //                 for (int x = _displayRegion.xMin; x <= _displayRegion.xMax; x++) {
-//                     if (movePixel(_display, _displayRegion, x, y, -1, 0, _empty)) { anyPixelsMovedThisUpdate = true; }
+//                     if (movePixel(_display, _displayRegion, x, y, -1, 0, _empty)) { anyPixelsMovedThisUpdate = true;
+//                     }
 //                 }
 //             }
 //             break;
@@ -267,203 +268,197 @@ canvas::Canvas RandomFill::run() {
 //     return _finished;
 // }
 
-// SpectrumDisplay::SpectrumDisplay(PixelDisplay& display, uint8_t width, uint32_t decayRate)
-//     : _display(display),
-//       _width(width),
-//       _decayRate(decayRate) {
-//     colMin = CRGB::Blue;
-//     colMax = CRGB::Purple;
-// }
+SpectrumDisplay::SpectrumDisplay(const canvas::Canvas& size)
+    : _c(size) {
+    colMin = CRGB::Blue;
+    colMax = CRGB::Purple;
+}
 
-// void SpectrumDisplay::reset() {
-//     _data = std::vector<float>(_width, 0);
-//     _finished = false;
-// }
+void SpectrumDisplay::reset() {
+    _finished = false;
+}
 
-// float calculateBarHeight(float val, float valMin, float valMax, float barMax) {
-//     float barMin = 0;
-//     float height = std::clamp((val - valMin) * (barMax - barMin) / (valMax - valMin) + barMin, barMin, barMax);
-//     return height;
-// }
+float calculateBarHeight(float val, float valMin, float valMax, float barMax) {
+    float barMin = 0;
+    float height = std::clamp((val - valMin) * (barMax - barMin) / (valMax - valMin) + barMin, barMin, barMax);
+    return height;
+}
 
-// bool SpectrumDisplay::run() {
-//     xSemaphoreTake(Audio::get().getAudioCharacteristicsSemaphore(), portMAX_DELAY);
+canvas::Canvas SpectrumDisplay::run() {
+    xSemaphoreTake(Audio::get().getAudioCharacteristicsSemaphore(), portMAX_DELAY);
 
-//     // average this many spectrums max
-//     const std::size_t maxSamplesToAvg = 5;
+    // average this many spectrums max
+    const std::size_t maxSamplesToAvg = 5;
+    std::vector<float> totals;
+    const auto& hist = Audio::get().getAudioCharacteristicsHistory();
+    if (!hist.empty()) {
+        totals = std::vector<float>(hist.back().spectrum.size(), 0);
 
-//     const auto& hist = Audio::get().getAudioCharacteristicsHistory();
-//     if (!hist.empty()) {
-//         std::vector<float> totals = std::vector<float>(hist.back().spectrum.size(), 0);
+        // limit averages to maximum and available
+        const std::size_t samplesToAvg = std::min(maxSamplesToAvg, hist.size());
 
-//         // limit averages to maximum and available
-//         const std::size_t samplesToAvg = std::min(maxSamplesToAvg, hist.size());
+        // iterate in reverse order so we always average N latest
+        int idx = 0;
+        for(auto it = hist.rbegin(); it != hist.rend(); ++it) {
+            // add values for this spectrum to total sum
+            for (int i = 0; i < it->spectrum.size(); i++) { totals[i] += it->spectrum[i]; }
+            idx++;
+            if (idx == samplesToAvg) { break; }
+        }
 
-//         // iterate in reverse order so we always average N latest
-//         int idx = 0;
-//         for(auto it = hist.rbegin(); it != hist.rend(); ++it) {
-//             // add values for this spectrum to total sum
-//             for (int i = 0; i < it->spectrum.size(); i++) { totals[i] += it->spectrum[i]; }
-//             idx++;
-//             if (idx == samplesToAvg) { break; }
-//         }
+        // divide summed values by N samples
+        std::transform(
+            totals.begin(),
+            totals.end(),
+            totals.begin(),
+            std::bind(std::multiplies<float>(), std::placeholders::_1, 1.0 / samplesToAvg));
+    }
+    xSemaphoreGive(Audio::get().getAudioCharacteristicsSemaphore());
 
-//         // divide summed values by N samples
-//         std::transform(
-//             totals.begin(),
-//             totals.end(),
-//             totals.begin(),
-//             std::bind(std::multiplies<float>(), std::placeholders::_1, 1.0 / samplesToAvg));
-//         supplyData(totals);
-//     }
-//     xSemaphoreGive(Audio::get().getAudioCharacteristicsSemaphore());
+    uint8_t vertMax = _c.getHeight();
+    if (!totals.empty()) {
+        for (uint8_t x = 0; x < totals.size(); x++) {
+            if (x >= _c.getWidth()) { break; }
+            // we need to scale the value from 0 - valMax to 0 - vertMax
+            auto barHeight = calculateBarHeight(totals[x], 0, maxScale, vertMax);
+            for (int y = 0; y < _c.getHeight(); y++) {
+                CRGB colour = CRGB::Black;
+                if (y <= barHeight) {
+                    colour = CRGB(colMin).lerp16(colMax, fract16((barHeight / float(vertMax)) * 65535));
+                }
+                if (y == std::floor(barHeight)) {
+                    float remainder = barHeight - std::floor(barHeight);
+                    colour = colour.scale8(uint8_t(remainder * 255));
+                }
+                _c.setXY(x, _c.getHeight() - 1 - y, colour);
+            }
+        }
+    }
+    return _c;
+}
 
-//     uint8_t vertMax = _display.getHeight();
-//     if (!_data.empty()) {
-//         for (uint8_t x = 0; x < _data.size(); x++) {
-//             if (x >= _display.getWidth()) { break; }
-//             // we need to scale the value from 0 - valMax to 0 - vertMax
-//             auto barHeight = calculateBarHeight(_data[x], 0, maxScale, vertMax);
-//             for (int y = 0; y < _display.getHeight(); y++) {
-//                 CRGB colour = CRGB::Black;
-//                 if (y <= barHeight) {
-//                     colour = CRGB(colMin).lerp16(colMax, fract16((barHeight / float(vertMax)) * 65535));
-//                 }
-//                 if (y == std::floor(barHeight)) {
-//                     float remainder = barHeight - std::floor(barHeight);
-//                     colour = colour.scale8(uint8_t(remainder * 255));
-//                 }
-//                 _display.setXY(x, _display.getHeight() - 1 - y, colour);
-//             }
-//         }
-//     }
-//     return finished();
-// }
+VolumeDisplay::VolumeDisplay(const canvas::Canvas& size) : _c(size) {
+    colourMap.push_back({0, CRGB::Green});
+    colourMap.push_back({0.4, CRGB::Yellow});
+    colourMap.push_back({0.6, CRGB::Red});
+}
 
-// void SpectrumDisplay::supplyData(std::vector<float> data) { _data = data; }
+void VolumeDisplay::reset() { _finished = false; }
 
-// VolumeDisplay::VolumeDisplay(PixelDisplay& display) : _display(display) {
-//     colourMap.push_back({0, CRGB::Green});
-//     colourMap.push_back({0.4, CRGB::Yellow});
-//     colourMap.push_back({0.6, CRGB::Red});
-// }
+canvas::Canvas VolumeDisplay::run() {
 
-// void VolumeDisplay::reset() { _finished = false; }
+    auto& audioHist = Audio::get().getAudioCharacteristicsHistory();
 
-// bool VolumeDisplay::run() {
+    float vLeft = -60;
+    float vRight = -60;
 
-//     auto& audioHist = Audio::get().getAudioCharacteristicsHistory();
+    if (!audioHist.empty()) {
+        utility::EMA leftAvg(0.8);
+        utility::EMA rightAvg(0.8);
+        for (const auto& v : audioHist) {
+            leftAvg.update(v.volumeLeft);
+            rightAvg.update(v.volumeRight);
+        }
+        vLeft = leftAvg.getValue();
+        vRight = rightAvg.getValue();
+    }
+    // printing::print(Serial, fmt::format("Volume: L={:.1f} R={:.1f}\n", vLeft, vRight));
 
-//     float vLeft = -60;
-//     float vRight = -60;
+    uint8_t horMax = _c.getWidth();
 
-//     if (!audioHist.empty()) {
-//         utility::EMA leftAvg(0.8);
-//         utility::EMA rightAvg(0.8);
-//         for (const auto& v : audioHist) {
-//             leftAvg.update(v.volumeLeft);
-//             rightAvg.update(v.volumeRight);
-//         }
-//         vLeft = leftAvg.getValue();
-//         vRight = rightAvg.getValue();
-//     }
-//     // printing::print(Serial, fmt::format("Volume: L={:.1f} R={:.1f}\n", vLeft, vRight));
+    float leftBarHeight = calculateBarHeight(vLeft, -40.0, 0.0, horMax);
+    float rightBarHeight = calculateBarHeight(vRight, -40.0, 0.0, horMax);
 
-//     uint8_t horMax = _display.getWidth();
+    auto drawBar = [&](float barHeight, int y) {
+        for (int x = 0; x < _c.getWidth(); x++) {
+            CRGB colour = CRGB::Black;
 
-//     float leftBarHeight = calculateBarHeight(vLeft, -40.0, 0.0, horMax);
-//     float rightBarHeight = calculateBarHeight(vRight, -40.0, 0.0, horMax);
+            float pct = float(x) / horMax;
 
-//     auto drawBar = [&](float barHeight, int y) {
-//         for (int x = 0; x < _display.getWidth(); x++) {
-//             CRGB colour = CRGB::Black;
+            if (x <= barHeight) {
+                for (const auto& m : colourMap) {
+                    if (pct > m.percentage) { colour = m.colour; }
+                }
+            }
+            if (x == std::floor(barHeight)) {
+                float remainder = barHeight - std::floor(barHeight);
+                colour = colour.scale8(uint8_t(remainder * 255));
+            }
+            _c.setXY(x, y, colour);
+        }
+    };
 
-//             float pct = float(x) / horMax;
+    _c.fill(0);
+    drawBar(leftBarHeight, 0);
+    drawBar(leftBarHeight, 1);
+    drawBar(rightBarHeight, 3);
+    drawBar(rightBarHeight, 4);
 
-//             if (x <= barHeight) {
-//                 for (const auto& m : colourMap) {
-//                     if (pct > m.percentage) { colour = m.colour; }
-//                 }
-//             }
-//             if (x == std::floor(barHeight)) {
-//                 float remainder = barHeight - std::floor(barHeight);
-//                 colour = colour.scale8(uint8_t(remainder * 255));
-//             }
-//             _display.setXY(x, y, colour);
-//         }
-//     };
+    return _c;
+}
 
-//     _display.fill(0);
-//     drawBar(leftBarHeight, 0);
-//     drawBar(leftBarHeight, 1);
-//     drawBar(rightBarHeight, 3);
-//     drawBar(rightBarHeight, 4);
+VolumeGraph::VolumeGraph(const canvas::Canvas& size) : _c(size) {}
 
-//     return finished();
-// }
+void VolumeGraph::reset() { _finished = false; }
 
-// VolumeGraph::VolumeGraph(PixelDisplay& display) : _display(display) {}
+canvas::Canvas VolumeGraph::run() {
 
-// void VolumeGraph::reset() { _finished = false; }
+    _c.fill(0);
+    auto& audioHist = Audio::get().getAudioCharacteristicsHistory();
 
-// bool VolumeGraph::run() {
+    float volMin = 0;
+    float volMax = -60;
+    for (auto it = audioHist.rbegin(); it != audioHist.rend(); ++it) {
+        float vol = (it->volumeLeft + it->volumeRight) / 2;
+        if (vol > volMax) { volMax = vol; }
+        if (vol < volMin) { volMin = vol; }
+    }
 
-//     _display.fill(0);
-//     auto& audioHist = Audio::get().getAudioCharacteristicsHistory();
+    int xIdx = _c.getWidth() - 1;
+    for (auto it = audioHist.rbegin(); it != audioHist.rend(); ++it) {
+        float vol = (it->volumeLeft + it->volumeRight) / 2;
+        float barHeight = calculateBarHeight(vol, volMin * 0.9, volMax * 0.9, 5);
+        for (int yIdx = 0; yIdx < _c.getHeight(); yIdx++) {
+            CRGB colour = CRGB::Black;
+            if (yIdx <= barHeight) { colour = CRGB::Blue; }
+            _c.setXY(xIdx, _c.getHeight() - 1 - yIdx, colour);
+        }
+        xIdx -= 1;
+        if (xIdx < 0) { break; }
+    }
 
-//     float volMin = 0;
-//     float volMax = -60;
-//     for (auto it = audioHist.rbegin(); it != audioHist.rend(); ++it) {
-//         float vol = (it->volumeLeft + it->volumeRight) / 2;
-//         if (vol > volMax) { volMax = vol; }
-//         if (vol < volMin) { volMin = vol; }
-//     }
+    return _c;
+}
 
-//     int xIdx = _display.getWidth() - 1;
-//     for (auto it = audioHist.rbegin(); it != audioHist.rend(); ++it) {
-//         float vol = (it->volumeLeft + it->volumeRight) / 2;
-//         float barHeight = calculateBarHeight(vol, volMin * 0.9, volMax * 0.9, 5);
-//         for (int yIdx = 0; yIdx < _display.getHeight(); yIdx++) {
-//             CRGB colour = CRGB::Black;
-//             if (yIdx <= barHeight) { colour = CRGB::Blue; }
-//             _display.setXY(xIdx, _display.getHeight() - 1 - yIdx, colour);
-//         }
-//         xIdx -= 1;
-//         if (xIdx < 0) { break; }
-//     }
+AudioWaterfall::AudioWaterfall(const canvas::Canvas& size) : _c(size) {}
 
-//     return finished();
-// }
+void AudioWaterfall::reset() { _finished = false; }
 
-// AudioWaterfall::AudioWaterfall(PixelDisplay& display) : _display(display) {}
+canvas::Canvas AudioWaterfall::run() {
 
-// void AudioWaterfall::reset() { _finished = false; }
+    _c.fill(0);
 
-// bool AudioWaterfall::run() {
+    xSemaphoreTake(Audio::get().getAudioCharacteristicsSemaphore(), portMAX_DELAY);
+    const auto& hist = Audio::get().getAudioCharacteristicsHistory();
+    if (!hist.empty()) {
 
-//     _display.fill(0);
+        int xIdx = _c.getWidth() - 1;
+        for (auto it = hist.rbegin(); it != hist.rend(); ++it) {
+            for (int yIdx = 0; yIdx < _c.getHeight(); yIdx++) {
+                float val = it->spectrum.at(yIdx);
+                val = val / 8000;
+                CRGB colour = CRGB::Red;
+                colour = colour.scale8(uint8_t(val * 255));
+                _c.setXY(xIdx, _c.getHeight() - 1 - yIdx, colour);
+            }
+            xIdx -= 1;
+            if (xIdx < 0) { break; }
+        }
+    }
+    xSemaphoreGive(Audio::get().getAudioCharacteristicsSemaphore());
 
-//     xSemaphoreTake(Audio::get().getAudioCharacteristicsSemaphore(), portMAX_DELAY);
-//     const auto& hist = Audio::get().getAudioCharacteristicsHistory();
-//     if (!hist.empty()) {
-
-//         int xIdx = _display.getWidth() - 1;
-//         for (auto it = hist.rbegin(); it != hist.rend(); ++it) {
-//             for (int yIdx = 0; yIdx < _display.getHeight(); yIdx++) {
-//                 float val = it->spectrum.at(yIdx);
-//                 val = val / 8000;
-//                 CRGB colour = CRGB::Red;
-//                 colour = colour.scale8(uint8_t(val * 255));
-//                 _display.setXY(xIdx, _display.getHeight() - 1 - yIdx, colour);
-//             }
-//             xIdx -= 1;
-//             if (xIdx < 0) { break; }
-//         }
-//     }
-//     xSemaphoreGive(Audio::get().getAudioCharacteristicsSemaphore());
-
-//     return finished();
-// }
+    return _c;
+}
 
 // bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty,
 // uint32_t(*colourGenerator)(), DisplayRegion displayRegion)
@@ -613,67 +608,65 @@ canvas::Canvas ClockFace_Simple::run() {
 //     return false;
 // }
 
-// void displayDiagnostic(PixelDisplay& display) {
-//     // Clear display
-//     display.fill(0);
-//     display.update();
-//     delay(250);
+void displayDiagnostic(PixelDisplay& display) {
+    // Clear display
+    canvas::Canvas c(display.getWidth(), display.getHeight());
+    c.fill(0);
+    display.update(c);
+    delay(250);
 
-//     // Show Pixel 0
-//     display.setXY(0, 0, CRGB(255, 0, 0));
-//     display.update();
-//     delay(250);
+    // Show Pixel 0
+    c.setXY(0, 0, CRGB(255, 0, 0));
+    display.update(c);
+    delay(250);
 
-//     // Solid Red, Green, Blue
-//     display.fill(CRGB(255, 0, 0));
-//     display.update();
-//     delay(250);
-//     display.fill(CRGB(0, 255, 0));
-//     display.update();
-//     delay(250);
-//     display.fill(CRGB(0, 0, 255));
-//     display.update();
-//     delay(250);
+    // Solid Red, Green, Blue
+    c.fill(CRGB(255, 0, 0));
+    display.update(c);
+    delay(250);
+    c.fill(CRGB(0, 255, 0));
+    display.update(c);
+    delay(250);
+    c.fill(CRGB(0, 0, 255));
+    display.update(c);
+    delay(250);
 
-//     // Move through XY sequentially
-//     for (uint8_t y = 0; y < display.getHeight(); y++) {
-//         for (uint8_t x = 0; x < display.getWidth(); x++) {
-//             display.fill(0);
-//             display.setXY(x, y, CRGB(100, 0, 0));
-//             display.update();
-//             delay(1);
-//         }
-//     }
+    // Move through XY sequentially
+    for (uint8_t y = 0; y < c.getHeight(); y++) {
+        for (uint8_t x = 0; x < c.getWidth(); x++) {
+            c.fill(0);
+            c.setXY(x, y, CRGB(100, 0, 0));
+            display.update(c);
+            delay(1);
+        }
+    }
 
-//     // Scroll short test
-//     display.fill(0);
-//     display.update();
-//     auto textScrollTest1 =
-//         RepeatingTextScroller(display, "Hello - Testing!", std::vector<CRGB>{CRGB(0, 0, 255)}, 50, 500, 1);
-//     while (!textScrollTest1.run()) {
-//         display.update();
-//         display.fill(0);
-//         delay(1);
-//     }
+    // Scroll short test
+    c.fill(0);
+    display.update(c);
+    auto textScrollTest1 = RepeatingTextScroller(c, "Hello - Testing!", std::vector<CRGB>{CRGB(0, 0, 255)}, 50, 500, 1);
+    while (!textScrollTest1.finished()) {
+        display.update(textScrollTest1.run());
+        delay(1);
+    }
 
-//     // Scroll full character set
-//     display.fill(0);
-//     display.update();
-//     auto textScrollTest = RepeatingTextScroller(
-//         display,
-//         "ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 !\"#$%&'()*+'-./:;<=>?@",
-//         std::vector<CRGB>{CRGB(0, 255, 0)},
-//         50,
-//         500,
-//         1);
-//     while (!textScrollTest.run()) {
-//         display.update();
-//         display.fill(0);
-//         delay(1);
-//     }
-//     display.fill(0);
-//     display.update();
-// }
+    // Scroll full character set
+    c.fill(0);
+    display.update(c);
+    auto textScrollTest = RepeatingTextScroller(
+        c,
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 !\"#$%&'()*+'-./:;<=>?@",
+        std::vector<CRGB>{CRGB(0, 255, 0)},
+        50,
+        500,
+        1);
+    while (!textScrollTest.finished()) {
+        display.update(textScrollTest.run());
+        delay(1);
+    }
+    c.fill(0);
+    display.update(c);
+}
 
 void HSVTestPattern::apply(canvas::Canvas& c) const {
     for (uint8_t x = 0; x < c.getWidth(); x++) {
