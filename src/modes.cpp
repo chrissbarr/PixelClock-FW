@@ -395,6 +395,7 @@ Mode_Effects::Mode_Effects(const canvas::Canvas& size, ButtonReferences buttons)
     effects.push_back(std::make_unique<SpectrumDisplay>(size));
     effects.push_back(std::make_unique<RandomFill>(size, 100, colourGenerator_randomHSV));
     effects.push_back(std::make_unique<BouncingBall>(size, 100, colourGenerator_cycleHSV));
+    effects.push_back(std::make_unique<GravityFill>(size, 100, 500, colourGenerator_cycleHSV));
 
     // Serial.println("Pregenerating GoL seeds...");
     // uint32_t startTime = millis();

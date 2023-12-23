@@ -443,48 +443,30 @@ canvas::Canvas AudioWaterfall::run() {
     return _c;
 }
 
-// bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty,
-// uint32_t(*colourGenerator)(), DisplayRegion displayRegion)
-// {
-//   static uint32_t lastMoveTime = 0;
-//   uint32_t timeNow = millis();
+GravityFill::GravityFill(
+    const canvas::Canvas& size, uint32_t fillInterval, uint32_t moveInterval, CRGB (*colourGenerator)())
+    : _c(size) {
+    randomFill = std::make_unique<RandomFill>(size, fillInterval, colourGenerator);
+    gravityEffect = std::make_unique<Gravity>(moveInterval, false, Gravity::Direction::down);
+    reset();
+}
 
-//   DisplayRegion spawnZone;
-//   spawnZone.xMin = displayRegion.xMin;
-//   spawnZone.xMax = displayRegion.xMax;
-//   spawnZone.yMin = displayRegion.yMin;
-//   spawnZone.yMax = displayRegion.yMin;
+canvas::Canvas GravityFill::run() {
 
-//   if (fillInterval != 0) {
-//     fillRandomly(display, fillInterval, colourGenerator, spawnZone);
-//   }
+    // Start with previous state
+    gravityEffect->setInput(_c);
+    _c = gravityEffect->run();
+    if (gravityEffect->finished()) {
+        randomFill->setInput(_c);
+        _c = randomFill->run();
+        gravityEffect->reset();
+    }
 
-//   if (moveInterval != 0) {
-//     // Move all pixels down
-//     if (timeNow - lastMoveTime > moveInterval) {
-//       for (int y = displayRegion.yMax; y >= displayRegion.yMin; y--) {
-//         for (uint8_t x = displayRegion.xMin; x <= displayRegion.xMax; x++) {
-//           uint32_t cellColour = display.getXY(x, y);
-//           if (cellColour != 0) {
-//             // if this is the last row
-//             if (y == displayRegion.yMax) {
-//               if (empty) {
-//                 display.setXY(x, y, 0);
-//               }
-//               continue;
-//             }
-//             if (display.getXY(x, y + 1) == uint32_t(0)) {
-//               display.setXY(x, y + 1, cellColour);
-//               display.setXY(x, y, 0);
-//             }
-//           }
-//         }
-//       }
-//       lastMoveTime = timeNow;
-//     }
-//   }
-//   return !display.filled(0, displayRegion);
-// }
+    // If there is no space left, effect is finished
+    _finished = randomFill->finished();
+
+    return _c;
+}
 
 // void tetris(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval)
 // {

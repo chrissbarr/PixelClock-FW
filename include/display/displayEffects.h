@@ -149,6 +149,8 @@ public:
         _c.fill(0);
     };
 
+    void setInput(const canvas::Canvas& c) { _c = c; }
+
 private:
     uint32_t _fillInterval;
     CRGB (*_colourGenerator)();
@@ -293,12 +295,27 @@ private:
     State currentState = State::stable;
 };
 
-// bool gravityFill(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval, bool empty,
-// uint32_t(*colourGenerator)(), DisplayRegion displayRegion); inline bool gravityFill(PixelDisplay& display, uint32_t
-// fillInterval, uint32_t moveInterval, bool empty, uint32_t(*colourGenerator)())
-// {
-//   return gravityFill(display, fillInterval, moveInterval, empty, colourGenerator, display.getFullDisplayRegion());
-// }
+class GravityFill : public DisplayEffect {
+public:
+    GravityFill(const canvas::Canvas& size, uint32_t fillInterval, uint32_t moveInterval, CRGB (*colourGenerator)());
+    canvas::Canvas run() override final;
+    bool finished() const override final { return _finished; }
+    void reset() override final {
+        randomFill->reset();
+        gravityEffect->reset();
+        _finished = false;
+        _c.fill(0);
+    };
+
+private:
+    std::unique_ptr<RandomFill> randomFill;
+    std::unique_ptr<Gravity> gravityEffect;
+
+    CRGB (*_colourGenerator)();
+    bool _finished;
+
+    canvas::Canvas _c;
+};
 
 // void tetris(PixelDisplay& display, uint32_t fillInterval, uint32_t moveInterval);
 
