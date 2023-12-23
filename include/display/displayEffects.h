@@ -190,6 +190,7 @@ public:
     Direction getDirection() const { return _direction; }
     void setDirection(Direction direction) { _direction = direction; }
     void setFallOutOfScreen(bool enabled) { _empty = enabled; }
+    bool getFallOutOfScreen() const { return _empty; }
     void setInput(const canvas::Canvas& c) { _c = c; }
 
 private:
