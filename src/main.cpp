@@ -144,8 +144,9 @@ void setup() {
     brightnessSensor = std::make_unique<BrightnessSensor>();
 
     printCentred(Serial, "Initialising System Modes", headingWidth);
+    canvas::Canvas size(matrixWidth, matrixHeight);
     modeManager =
-        std::make_unique<ModeManager>(display, ButtonReferences{buttonMode, buttonSelect, buttonLeft, buttonRight});
+        std::make_unique<ModeManager>(size, ButtonReferences{buttonMode, buttonSelect, buttonLeft, buttonRight});
 
     printCentred(Serial, "Initialising Display", headingWidth);
     FastLED.addLeds<WS2812, pins::matrixLED, RGB>(ledsDummyRGBW, dummyLEDCount);
@@ -175,7 +176,19 @@ void loop() {
     buttonLeft.loop();
     buttonRight.loop();
 
-    modeManager->run();
+    auto c = modeManager->run();
+
+    auto background = canvas::Canvas(17, 5);
+    background.fill(CRGB::Blue);
+
+    auto out = canvas::blit(background, c, 1, 1);
+
+
+    for (int x = 0; x < out.getWidth(); x++) {
+        for (int y = 0; y < out.getHeight(); y++) {
+            display.setXY(x, y, out.getXY(x, y));
+        }
+    }
 
     FastLED.setBrightness(brightnessModes[brightnessModeIndex].function());
     FastLED.setDither(1);

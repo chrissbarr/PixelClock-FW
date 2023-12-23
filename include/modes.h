@@ -2,6 +2,7 @@
 #define modes_h
 
 /* Project Scope */
+#include <canvas.h>
 #include "display/display.h"
 #include "display/displayEffects.h"
 
@@ -27,14 +28,13 @@ struct ButtonReferences {
 
 class MainModeFunction {
 public:
-    MainModeFunction(std::string name, PixelDisplay& display, ButtonReferences buttons)
+    MainModeFunction(std::string name, ButtonReferences buttons)
         : _name(name),
-          _display(display),
           buttons(buttons) {}
     // should be called by the parent when moving into this mode
     void moveInto();
     // should be called by the parent when this mode is active
-    void run();
+    canvas::Canvas run();
     // should be called by the parent when moving out of this mode
     void moveOut();
     // indicates that this mode is ready to exit/return
@@ -42,12 +42,13 @@ public:
     // get the name of this mode
     std::string getName() const { return _name; }
 
+    //const Canvas& getCanvas() const;
+
 protected:
     virtual void moveIntoCore();
     virtual void moveOutCore() = 0;
-    virtual void runCore() = 0;
+    virtual canvas::Canvas runCore() = 0;
     bool _finished = false;
-    PixelDisplay& _display;
     ButtonReferences buttons;
     std::string _name;
 
@@ -57,11 +58,11 @@ private:
 
 class Mode_ClockFace : public MainModeFunction {
 public:
-    Mode_ClockFace(PixelDisplay& display, ButtonReferences buttons);
+    Mode_ClockFace(ButtonReferences buttons);
 
 protected:
     void moveIntoCore() override final;
-    void runCore() override final;
+    canvas::Canvas runCore() override final;
     void moveOutCore() override final {}
 
 private:
@@ -76,72 +77,72 @@ private:
 
 class Mode_Effects : public MainModeFunction {
 public:
-    Mode_Effects(PixelDisplay& display, ButtonReferences buttons);
+    Mode_Effects(const canvas::Canvas& size, ButtonReferences buttons);
 
 protected:
     void moveIntoCore() override final;
-    void runCore() override final;
+    canvas::Canvas runCore() override final;
     void moveOutCore() override final {}
 
 private:
     std::vector<std::shared_ptr<DisplayEffect>> effects;
     uint8_t effectIndex = 0;
 
-    std::unique_ptr<GameOfLife> golTrainer;
-    std::shared_ptr<GameOfLife> golActual;
+    //std::unique_ptr<GameOfLife> golTrainer;
+    //std::shared_ptr<GameOfLife> golActual;
 };
 
-class Mode_SettingsMenu : public MainModeFunction {
-public:
-    Mode_SettingsMenu(PixelDisplay& display, ButtonReferences buttons);
+// class Mode_SettingsMenu : public MainModeFunction {
+// public:
+//     Mode_SettingsMenu(PixelDisplay& display, ButtonReferences buttons);
 
-protected:
-    void moveIntoCore() override final;
-    void runCore() override final;
-    void moveOutCore() override final;
+// protected:
+//     void moveIntoCore() override final;
+//     void runCore() override final;
+//     void moveOutCore() override final;
 
-private:
-    void cycleActiveSetting(Button2& btn);
-    void registerButtonCallbacks();
-    std::unique_ptr<TextScroller> menuTextScroller;
-    std::vector<std::shared_ptr<MainModeFunction>> menuPages;
-    std::shared_ptr<MainModeFunction> activeMenuPage = nullptr;
-    uint8_t menuIndex = 0;
-};
+// private:
+//     void cycleActiveSetting(Button2& btn);
+//     void registerButtonCallbacks();
+//     std::unique_ptr<TextScroller> menuTextScroller;
+//     std::vector<std::shared_ptr<MainModeFunction>> menuPages;
+//     std::shared_ptr<MainModeFunction> activeMenuPage = nullptr;
+//     uint8_t menuIndex = 0;
+// };
 
-class Mode_SettingsMenu_SetTime : public MainModeFunction {
-public:
-    Mode_SettingsMenu_SetTime(PixelDisplay& display, ButtonReferences buttons);
-    bool finished() const override;
+// class Mode_SettingsMenu_SetTime : public MainModeFunction {
+// public:
+//     Mode_SettingsMenu_SetTime(PixelDisplay& display, ButtonReferences buttons);
+//     bool finished() const override;
 
-protected:
-    void moveIntoCore() override final;
-    void runCore() override final;
-    void moveOutCore() override final {}
+// protected:
+//     void moveIntoCore() override final;
+//     void runCore() override final;
+//     void moveOutCore() override final {}
 
-private:
-    int secondsOffset = 0;
-    std::unique_ptr<TextScroller> textscroller;
-    enum class TimeSegment { cancel, hour, minute, second, confirm, done };
-    TimeSegment currentlySettingTimeSegment = TimeSegment::hour;
-};
+// private:
+//     int secondsOffset = 0;
+//     std::unique_ptr<TextScroller> textscroller;
+//     enum class TimeSegment { cancel, hour, minute, second, confirm, done };
+//     TimeSegment currentlySettingTimeSegment = TimeSegment::hour;
+// };
 
-class Mode_SettingsMenu_SetBrightness : public MainModeFunction {
-public:
-    Mode_SettingsMenu_SetBrightness(PixelDisplay& display, ButtonReferences buttons)
-        : MainModeFunction("Set Brightness", display, buttons) {}
+// class Mode_SettingsMenu_SetBrightness : public MainModeFunction {
+// public:
+//     Mode_SettingsMenu_SetBrightness(PixelDisplay& display, ButtonReferences buttons)
+//         : MainModeFunction("Set Brightness", display, buttons) {}
 
-protected:
-    void moveIntoCore() override final {}
-    void runCore() override final {}
-    void moveOutCore() override final {}
-};
+// protected:
+//     void moveIntoCore() override final {}
+//     void runCore() override final {}
+//     void moveOutCore() override final {}
+// };
 
 class ModeManager {
 public:
-    ModeManager(PixelDisplay& display, ButtonReferences buttons);
+    ModeManager(const canvas::Canvas& size, ButtonReferences buttons);
     void cycleMode();
-    void run();
+    canvas::Canvas run();
 
 private:
     std::vector<std::unique_ptr<MainModeFunction>> modes;
