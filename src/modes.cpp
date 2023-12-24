@@ -4,6 +4,7 @@
 #include "display/effects/audiowaterfall.h"
 #include "display/effects/bouncingball.h"
 #include "display/effects/clockfaces.h"
+#include "display/effects/gameoflife.h"
 #include "display/effects/gravityfill.h"
 #include "display/effects/randomfill.h"
 #include "display/effects/spectrumdisplay.h"
@@ -405,38 +406,35 @@ Mode_Effects::Mode_Effects(const canvas::Canvas& size, ButtonReferences buttons)
     effects.push_back(std::make_unique<BouncingBall>(size, 100, colourGenerator::cycleHSV));
     effects.push_back(std::make_unique<GravityFill>(size, 25, 25, colourGenerator::randomHSV));
 
-    // Serial.println("Pregenerating GoL seeds...");
-    // uint32_t startTime = millis();
-    // golTrainer =
-    //     std::make_unique<GameOfLife>(display, 0, 0, colourGenerator_white, display.getFullDisplayRegion(), false);
-    // golTrainer->setFadeOnDeath(false);
-    // golTrainer->setSeedingMode(true);
+    Serial.println("Pregenerating GoL seeds...");
+    uint32_t startTime = millis();
+    golTrainer = std::make_unique<GameOfLife>(size, 0, 0, colourGenerator::white, false);
+    golTrainer->setFadeOnDeath(false);
+    golTrainer->setSeedingMode(true);
 
-    // // run until we have a few initial states
-    // while (golTrainer->getSeededCount() < 3) {
-    //     while (!golTrainer->finished()) {
-    //         golTrainer->run();
-    //         // catch any infinite-running seeds
-    //         if (golTrainer->getLifespan() > 500) { break; }
-    //     }
-    //     golTrainer->reset();
-    // }
-    // Serial.println("GoL scores: ");
-    // for (const auto& score : golTrainer->getScores()) {
-    //     Serial.print(score.lifespan);
-    //     Serial.print("\t");
-    //     Serial.println(score.seed);
-    // }
-    // uint32_t stopTime = millis();
-    // Serial.print("Seeding duration: ");
-    // Serial.println(stopTime - startTime);
+    // run until we have a few initial states
+    while (golTrainer->getSeededCount() < 3) {
+        while (!golTrainer->finished()) {
+            golTrainer->run();
+            // catch any infinite-running seeds
+            if (golTrainer->getLifespan() > 500) { break; }
+        }
+        golTrainer->reset();
+    }
+    Serial.println("GoL scores: ");
+    for (const auto& score : golTrainer->getScores()) {
+        Serial.print(score.lifespan);
+        Serial.print("\t");
+        Serial.println(score.seed);
+    }
+    uint32_t stopTime = millis();
+    Serial.print("Seeding duration: ");
+    Serial.println(stopTime - startTime);
 
-    // golActual =
-    //     std::make_shared<GameOfLife>(display, 250, 50, colourGenerator_cycleHSV, display.getFullDisplayRegion(),
-    //     false);
-    // golActual->setScores(golTrainer->getScores());
+    golActual = std::make_shared<GameOfLife>(size, 250, 50, colourGenerator::cycleHSV, false);
+    golActual->setScores(golTrainer->getScores());
 
-    // effects.push_back(golActual);
+    effects.push_back(golActual);
 }
 
 void Mode_Effects::moveIntoCore() {

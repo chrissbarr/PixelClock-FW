@@ -5,6 +5,7 @@
 #include "display/display.h"
 #include "display/effects/effect.h"
 #include "display/effects/filters.h"
+#include "display/effects/gameoflife.h"
 #include "display/effects/textscroller.h"
 #include "timekeeping.h"
 #include <canvas.h>
@@ -87,8 +88,8 @@ private:
     std::vector<std::shared_ptr<DisplayEffect>> effects;
     uint8_t effectIndex = 0;
 
-    // std::unique_ptr<GameOfLife> golTrainer;
-    // std::shared_ptr<GameOfLife> golActual;
+    std::unique_ptr<GameOfLife> golTrainer;
+    std::shared_ptr<GameOfLife> golActual;
 };
 
 class Mode_SettingsMenu : public MainModeFunction {
