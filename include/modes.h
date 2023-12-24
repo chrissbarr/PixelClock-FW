@@ -3,7 +3,10 @@
 
 /* Project Scope */
 #include "display/display.h"
-#include "display/displayEffects.h"
+#include "display/effects/effect.h"
+#include "display/effects/filters.h"
+#include "display/effects/textscroller.h"
+#include "timekeeping.h"
 #include <canvas.h>
 
 /* Libraries */

@@ -1,6 +1,14 @@
 /* Project Scope */
 #include "modes.h"
 #include "FMTWrapper.h"
+#include "display/effects/clockfaces.h"
+#include "display/effects/audiowaterfall.h"
+#include "display/effects/spectrumdisplay.h"
+#include "display/effects/volumedisplay.h"
+#include "display/effects/volumegraph.h"
+#include "display/effects/gravityfill.h"
+#include "display/effects/bouncingball.h"
+#include "display/effects/randomfill.h"
 #include "display/gameOfLife.h"
 #include "utility.h"
 #include <canvas.h>

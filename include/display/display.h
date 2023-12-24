@@ -34,4 +34,6 @@ private:
     const uint32_t pixelOffset;
 };
 
+void displayDiagnostic(PixelDisplay& display);
+
 #endif // display_h
