@@ -1,11 +1,15 @@
 /* Project Scope */
 #include "display/effects/gravityfill.h"
+#include "display/effects/utilities.h"
 
 /* C++ Standard Library */
 #include <memory>
 
 GravityFill::GravityFill(
-    const canvas::Canvas& size, uint32_t fillInterval, uint32_t moveInterval, CRGB (*colourGenerator)())
+    const canvas::Canvas& size,
+    uint32_t fillInterval,
+    uint32_t moveInterval,
+    colourGenerator::Generator colourGenerator)
     : _c(size) {
     randomFill = std::make_unique<RandomFill>(size, fillInterval, colourGenerator);
     gravityEffect = std::make_unique<Gravity>(moveInterval, false, Gravity::Direction::down);

@@ -1,5 +1,6 @@
 /* Project Scope */
 #include "display/effects/randomfill.h"
+#include "display/effects/utilities.h"
 
 /* Arduino Core */
 #include <Arduino.h>
@@ -7,7 +8,7 @@
 /* C++ Standard Library */
 #include <random>
 
-RandomFill::RandomFill(const canvas::Canvas& size, uint32_t fillInterval, CRGB (*colourGenerator)())
+RandomFill::RandomFill(const canvas::Canvas& size, uint32_t fillInterval, colourGenerator::Generator colourGenerator)
     : _c(size),
       _fillInterval(fillInterval),
       _colourGenerator(colourGenerator) {

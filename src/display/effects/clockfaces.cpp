@@ -4,8 +4,8 @@
 #include "utility.h"
 
 /* C++ Standard Library */
-#include <string>
 #include <memory>
+#include <string>
 
 canvas::Canvas ClockFace_Simple::run() {
     auto times = timeCallbackFunction();

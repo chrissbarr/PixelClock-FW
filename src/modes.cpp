@@ -1,15 +1,15 @@
 /* Project Scope */
 #include "modes.h"
 #include "FMTWrapper.h"
-#include "display/effects/clockfaces.h"
 #include "display/effects/audiowaterfall.h"
+#include "display/effects/bouncingball.h"
+#include "display/effects/clockfaces.h"
+#include "display/effects/gravityfill.h"
+#include "display/effects/randomfill.h"
 #include "display/effects/spectrumdisplay.h"
+#include "display/effects/utilities.h"
 #include "display/effects/volumedisplay.h"
 #include "display/effects/volumegraph.h"
-#include "display/effects/gravityfill.h"
-#include "display/effects/bouncingball.h"
-#include "display/effects/randomfill.h"
-#include "display/gameOfLife.h"
 #include "utility.h"
 #include <canvas.h>
 
@@ -401,9 +401,9 @@ Mode_Effects::Mode_Effects(const canvas::Canvas& size, ButtonReferences buttons)
     effects.push_back(std::make_unique<VolumeGraph>(size));
     effects.push_back(std::make_unique<VolumeDisplay>(size));
     effects.push_back(std::make_unique<SpectrumDisplay>(size));
-    effects.push_back(std::make_unique<RandomFill>(size, 100, colourGenerator_randomHSV));
-    effects.push_back(std::make_unique<BouncingBall>(size, 100, colourGenerator_cycleHSV));
-    effects.push_back(std::make_unique<GravityFill>(size, 25, 25, colourGenerator_randomHSV));
+    effects.push_back(std::make_unique<RandomFill>(size, 100, colourGenerator::randomHSV));
+    effects.push_back(std::make_unique<BouncingBall>(size, 100, colourGenerator::cycleHSV));
+    effects.push_back(std::make_unique<GravityFill>(size, 25, 25, colourGenerator::randomHSV));
 
     // Serial.println("Pregenerating GoL seeds...");
     // uint32_t startTime = millis();

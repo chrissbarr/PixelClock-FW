@@ -3,6 +3,7 @@
 
 /* Project Scope */
 #include "display/effects/effect.h"
+#include "display/effects/utilities.h"
 #include <canvas.h>
 
 /* Libraries */
@@ -10,7 +11,7 @@
 
 class RandomFill : public DisplayEffect {
 public:
-    RandomFill(const canvas::Canvas& size, uint32_t fillInterval, CRGB (*colourGenerator)());
+    RandomFill(const canvas::Canvas& size, uint32_t fillInterval, colourGenerator::Generator colourGenerator);
     canvas::Canvas run() override final;
     bool finished() const override final { return _finished; }
     void reset() override final {
@@ -23,7 +24,7 @@ public:
 
 private:
     uint32_t _fillInterval;
-    CRGB (*_colourGenerator)();
+    colourGenerator::Generator _colourGenerator;
     bool _finished;
     uint32_t _lastSpawnTime = 0;
     canvas::Canvas _c;

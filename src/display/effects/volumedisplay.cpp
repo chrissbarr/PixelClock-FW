@@ -1,12 +1,11 @@
 /* Project Scope */
 #include "display/effects/volumedisplay.h"
-#include "display/effects/utilities.h"
 #include "EMA.h"
 #include "FMTWrapper.h"
 #include "audio.h"
 #include "display/display.h"
+#include "display/effects/utilities.h"
 #include "utility.h"
-
 
 VolumeDisplay::VolumeDisplay(const canvas::Canvas& size) : _c(size) {
     colourMap.push_back({0, CRGB::Green});

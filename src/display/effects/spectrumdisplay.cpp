@@ -1,7 +1,7 @@
 /* Project Scope */
 #include "display/effects/spectrumdisplay.h"
-#include "display/effects/utilities.h"
 #include "audio.h"
+#include "display/effects/utilities.h"
 
 /* C++ Standard Library */
 #include <algorithm>

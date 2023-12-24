@@ -14,12 +14,6 @@
 /* C++ Standard Library */
 #include <memory>
 
-// Colour generating functions
-inline CRGB colourGenerator_randomHSV() { return CHSV(random8(), 255, 255); }
-inline CRGB colourGenerator_cycleHSV() { return CHSV((millis() / 10), 255, 255); }
-inline CRGB colourGenerator_black() { return 0; }
-inline CRGB colourGenerator_white() { return CRGB::White; }
-
 /**
  * @brief Abstract Base Class for classes that implement an Effect (e.g., a pattern, demo, game, etc. that takes place
  * over time)

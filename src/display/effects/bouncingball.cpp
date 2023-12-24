@@ -1,10 +1,12 @@
 /* Project Scope */
 #include "display/effects/bouncingball.h"
+#include "display/effects/utilities.h"
 
 /* C++ Standard Library */
 #include <random>
 
-BouncingBall::BouncingBall(const canvas::Canvas& size, uint32_t updateInterval, CRGB (*colourGenerator)())
+BouncingBall::BouncingBall(
+    const canvas::Canvas& size, uint32_t updateInterval, colourGenerator::Generator colourGenerator)
     : _c(size),
       _updateInterval(updateInterval),
       _colourGenerator(colourGenerator) {

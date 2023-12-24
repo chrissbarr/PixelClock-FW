@@ -1,10 +1,10 @@
 /* Project Scope */
 #include "display/effects/volumegraph.h"
-#include "display/effects/utilities.h"
 #include "EMA.h"
 #include "FMTWrapper.h"
 #include "audio.h"
 #include "display/display.h"
+#include "display/effects/utilities.h"
 #include "utility.h"
 
 VolumeGraph::VolumeGraph(const canvas::Canvas& size) : _c(size) {}
