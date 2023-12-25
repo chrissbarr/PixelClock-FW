@@ -5,9 +5,6 @@
 #include "characters.h"
 #include "p_pixeltypes.h"
 
-/* Libraries */
-//#include "FastLED.h"
-
 /* C++ Standard Library */
 #include <cstdint>
 #include <string>

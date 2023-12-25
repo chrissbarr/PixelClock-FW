@@ -7,9 +7,6 @@
 #include "timekeeping.h"
 #include <canvas.h>
 
-/* Libraries */
-//#include <FastLED.h>
-
 /* C++ Standard Library */
 #include <memory>
 

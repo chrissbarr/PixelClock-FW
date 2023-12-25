@@ -6,9 +6,6 @@
 
 #include "p_pixeltypes.h"
 
-/* Libraries */
-//#include <FastLED.h>
-
 class FilterMethod {
 public:
     virtual void apply(canvas::Canvas& c) = 0;

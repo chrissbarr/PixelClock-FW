@@ -24,13 +24,9 @@ project(
 
 
 add_library(ArduinoStub INTERFACE)
-target_include_directories(ArduinoStub INTERFACE lib_desktop/arduino/include)
+target_include_directories(ArduinoStub INTERFACE lib_desktop/ArduinoStub/include)
 #set_target_properties(ArduinoStub PROPERTIES LINKER_LANGUAGE CXX)
 #target_compile_definitions(ArduinoStub PUBLIC DESKTOP)
-
-#include(FastLED.cmake)
-#target_link_libraries(FastLED ArduinoStub)
-#target_compile_definitions(FastLED PUBLIC FASTLED_NO_MCU FASTLED_NO_PINMAP NO_MINIMUM_WAIT)
 
 add_library(Display lib/display/src/canvas.cpp lib/display/src/p_hsv2rgb.cpp lib/display/src/p_lib8tion.cpp)
 target_link_libraries(Display ArduinoStub)

@@ -2,7 +2,6 @@
 #include "audio.h"
 #include "brightnessSensor.h"
 #include "display/display.h"
-#include "display/fastled_rgbw.h"
 #include "modes.h"
 #include "pinout.h"
 #include "serialCommands.h"
@@ -27,9 +26,6 @@ using namespace printing;
 // LED Panel Configuration
 constexpr uint8_t matrixWidth = 17;
 constexpr uint8_t matrixHeight = 5;
-constexpr uint8_t matrixSize = matrixWidth * matrixHeight;
-constexpr uint16_t dummyLEDCount = getRGBWsize(matrixSize);
-CRGB ledsDummyRGBW[dummyLEDCount];
 PixelDisplay display(matrixWidth, matrixHeight, false, false);
 canvas::Canvas baseCanvas(matrixWidth, matrixHeight);
 
@@ -147,8 +143,6 @@ void setup() {
     modeManager =
         std::make_unique<ModeManager>(baseCanvas, ButtonReferences{buttonMode, buttonSelect, buttonLeft, buttonRight});
     printCentred(Serial, "Initialising Display", headingWidth);
-    FastLED.addLeds<WS2812, pins::matrixLED, RGB>(ledsDummyRGBW, dummyLEDCount);
-    display.setLEDStrip(ledsDummyRGBW);
     display.update(baseCanvas);
     delay(100);
     // displayDiagnostic(display);
@@ -175,8 +169,7 @@ void loop() {
 
     auto c = modeManager->run();
     auto out = canvas::blit(baseCanvas, c, 0, 0);
-    FastLED.setBrightness(brightnessModes[brightnessModeIndex].function());
-    FastLED.setDither(1);
+    display.setBrightness(brightnessModes[brightnessModeIndex].function());
     display.update(out);
 
     Audio::get().update();

@@ -5,11 +5,30 @@
 
 #include "p_pixeltypes.h"
 
+#include "pinout.h"
+
 
 
 
 /* Libraries */
+//#define FASTLED_NAMESPACE_BEGIN namespace NSFastLED {
+//#define FASTLED_NAMESPACE_END }
+//#define FASTLED_USING_NAMESPACE using namespace NSFastLED;
 #include <FastLED.h>
+
+/* Hack to enable SK6812 RGBW strips to work with FastLED.
+ *
+ * Original code by Jim Bumgardner (http://krazydad.com).
+ * Modified by David Madison (http://partsnotincluded.com).
+ */
+constexpr uint16_t getRGBWsize(uint16_t nleds) {
+    uint16_t nbytes = nleds * 4;
+    if (nbytes % 3 > 0) {
+        return nbytes / 3 + 1;
+    } else {
+        return nbytes / 3;
+    }
+}
 
 PixelDisplay::PixelDisplay(uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset)
     : width(width),
@@ -17,9 +36,17 @@ PixelDisplay::PixelDisplay(uint8_t width, uint8_t height, bool serpentine, bool 
       size(width * height),
       serpentine(serpentine),
       vertical(vertical),
-      pixelOffset(pixelOffset) {}
+      pixelOffset(pixelOffset) {
 
-PixelDisplay::~PixelDisplay() {}
+        uint16_t dummyLEDCount = getRGBWsize(size);
+        leds = (CRGB*)calloc(dummyLEDCount, sizeof(CRGB));
+        FastLED.addLeds<WS2812, pins::matrixLED, RGB>(leds, dummyLEDCount);
+
+      }
+
+PixelDisplay::~PixelDisplay() {
+    free(leds);
+}
 
 void PixelDisplay::update(const canvas::Canvas& canvas) {
     // Serial.println("Update...");
@@ -44,6 +71,9 @@ void PixelDisplay::update(const canvas::Canvas& canvas) {
             *byteToWrite++ = pixel.blue;
             *byteToWrite++ = 0;
         }
+
+        FastLED.setBrightness(brightness);
+        FastLED.setDither(1);
         FastLED.show();
     }
 }

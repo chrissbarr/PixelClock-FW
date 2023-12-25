@@ -5,9 +5,6 @@
 #include "display/effects/effect.h"
 #include <canvas.h>
 
-/* Libraries */
-//#include <FastLED.h>
-
 /* C++ Standard Library */
 #include <vector>
 

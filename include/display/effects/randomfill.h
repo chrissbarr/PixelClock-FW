@@ -6,9 +6,6 @@
 #include "display/effects/utilities.h"
 #include <canvas.h>
 
-/* Libraries */
-//#include <FastLED.h>
-
 class RandomFill : public DisplayEffect {
 public:
     RandomFill(const canvas::Canvas& size, uint32_t fillInterval, colourGenerator::Generator colourGenerator);

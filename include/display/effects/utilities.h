@@ -4,9 +4,6 @@
 #include <p_pixeltypes.h>
 #include <p_lib8tion.h>
 
-/* Libraries */
-//#include <FastLED.h>
-
 /* C++ Standard Library */
 #include <functional>
 

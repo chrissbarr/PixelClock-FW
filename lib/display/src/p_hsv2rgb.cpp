@@ -231,21 +231,6 @@ void hsv2rgb_spectrum( const struct CHSV& hsv, CRGB& rgb)
     hsv2rgb_raw(hsv2, rgb);
 }
 
-
-/// Force a variable reference to avoid compiler over-optimization.
-/// Sometimes the compiler will do clever things to reduce
-/// code size that result in a net slowdown, if it thinks that
-/// a variable is not used in a certain location.
-/// This macro does its best to convince the compiler that
-/// the variable is used in this location, to help control
-/// code motion and de-duplication that would result in a slowdown.
-#if defined(__AVR__) && !defined( LIB8_ATTINY )
-    #define FORCE_REFERENCE(var)  asm volatile( "" : : "r" (var) )
-#else
-    #define FORCE_REFERENCE(var)  (var)
-#endif
-
-
 /// @cond
 #define K255 255
 #define K171 171
@@ -314,7 +299,6 @@ void hsv2rgb_rainbow( const CHSV& hsv, CRGB& rgb)
                 r = K255 - third;
                 g = third;
                 b = 0;
-                FORCE_REFERENCE(b);
             } else {
                 // 001
                 //case 1: // O -> Y
@@ -322,7 +306,6 @@ void hsv2rgb_rainbow( const CHSV& hsv, CRGB& rgb)
                     r = K171;
                     g = K85 + third ;
                     b = 0;
-                    FORCE_REFERENCE(b);
                 }
                 if( Y2 ) {
                     r = K170 + third;
@@ -330,7 +313,6 @@ void hsv2rgb_rainbow( const CHSV& hsv, CRGB& rgb)
                     uint8_t twothirds = scale8( offset8, ((256 * 2) / 3)); // max=170
                     g = K85 + twothirds;
                     b = 0;
-                    FORCE_REFERENCE(b);
                 }
             }
         } else {
@@ -345,19 +327,16 @@ void hsv2rgb_rainbow( const CHSV& hsv, CRGB& rgb)
                     r = K171 - twothirds;
                     g = K170 + third;
                     b = 0;
-                    FORCE_REFERENCE(b);
                 }
                 if( Y2 ) {
                     r = K255 - offset8;
                     g = K255;
                     b = 0;
-                    FORCE_REFERENCE(b);
                 }
             } else {
                 // 011
                 // case 3: // G -> A
                 r = 0;
-                FORCE_REFERENCE(r);
                 g = K255 - third;
                 b = third;
             }
@@ -371,7 +350,6 @@ void hsv2rgb_rainbow( const CHSV& hsv, CRGB& rgb)
                 // 100
                 //case 4: // A -> B
                 r = 0;
-                FORCE_REFERENCE(r);
                 //uint8_t twothirds = (third << 1);
                 uint8_t twothirds = scale8( offset8, ((256 * 2) / 3)); // max=170
                 g = K171 - twothirds; //K170?
@@ -382,7 +360,6 @@ void hsv2rgb_rainbow( const CHSV& hsv, CRGB& rgb)
                 //case 5: // B -> P
                 r = third;
                 g = 0;
-                FORCE_REFERENCE(g);
                 b = K255 - third;
 
             }
@@ -392,7 +369,6 @@ void hsv2rgb_rainbow( const CHSV& hsv, CRGB& rgb)
                 //case 6: // P -- K
                 r = K85 + third;
                 g = 0;
-                FORCE_REFERENCE(g);
                 b = K171 - third;
 
             } else {
@@ -400,7 +376,6 @@ void hsv2rgb_rainbow( const CHSV& hsv, CRGB& rgb)
                 //case 7: // K -> R
                 r = K170 + third;
                 g = 0;
-                FORCE_REFERENCE(g);
                 b = K85 - third;
 
             }

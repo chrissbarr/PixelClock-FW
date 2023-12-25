@@ -6,10 +6,10 @@
 
 #include "p_pixeltypes.h"
 
-#include <FastLED.h>
+
 
 /* Forward Declarations */
-//class CRGB;
+class CRGB;
 namespace canvas {
 class Canvas;
 }
@@ -19,7 +19,7 @@ public:
     PixelDisplay(uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset = 0);
     ~PixelDisplay();
 
-    void setLEDStrip(CRGB* leds) { this->leds = leds; }
+    void setBrightness(uint8_t brightness) { this->brightness = brightness; }
     void update(const canvas::Canvas& canvas);
 
     uint8_t getWidth() const { return width; }
@@ -36,6 +36,7 @@ private:
     const bool serpentine;
     const bool vertical;
     const uint32_t pixelOffset;
+    uint8_t brightness{255};
 };
 
 void displayDiagnostic(PixelDisplay& display);

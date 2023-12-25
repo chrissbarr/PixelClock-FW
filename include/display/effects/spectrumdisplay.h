@@ -5,9 +5,6 @@
 #include "display/effects/effect.h"
 #include <canvas.h>
 
-/* Libraries */
-//#include <FastLED.h>
-
 class SpectrumDisplay : public DisplayEffect {
 public:
     SpectrumDisplay(const canvas::Canvas& size);

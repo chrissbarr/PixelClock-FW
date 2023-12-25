@@ -1,9 +1,6 @@
 /* Project Scope */
 #include "display/effects/filters.h"
 
-/* Libraries */
-//#include <FastLED.h>
-
 using namespace pixel;
 
 void HSVTestPattern::apply(canvas::Canvas& c) {
