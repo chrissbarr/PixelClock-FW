@@ -7,7 +7,7 @@
 #include <canvas.h>
 
 /* Libraries */
-#include <FastLED.h>
+//#include <FastLED.h>
 
 class RandomFill : public DisplayEffect {
 public:

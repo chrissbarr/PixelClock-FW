@@ -64,10 +64,10 @@ private:
 
     uint8_t readBuffer = 0;
     uint8_t writeBuffer = 1;
-    std::vector<std::vector<CRGB>> buffers;
+    std::vector<std::vector<pixel::CRGB>> buffers;
     std::deque<std::size_t> bufferHashes;
 
-    std::size_t hashBuffer(const std::vector<CRGB>& vec) const;
+    std::size_t hashBuffer(const std::vector<pixel::CRGB>& vec) const;
 };
 
 #endif // gameoflife_h

@@ -19,7 +19,7 @@ canvas::Canvas AudioWaterfall::run() {
             for (int yIdx = 0; yIdx < _c.getHeight(); yIdx++) {
                 float val = it->spectrum.at(yIdx);
                 val = val / 8000;
-                CRGB colour = CRGB::Red;
+                pixel::CRGB colour = pixel::CRGB::Red;
                 colour = colour.scale8(uint8_t(val * 255));
                 _c.setXY(xIdx, _c.getHeight() - 1 - yIdx, colour);
             }

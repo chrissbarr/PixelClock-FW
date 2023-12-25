@@ -1,8 +1,11 @@
 #ifndef displayutilities_h
 #define displayutilities_h
 
+#include <p_pixeltypes.h>
+#include <p_lib8tion.h>
+
 /* Libraries */
-#include <FastLED.h>
+//#include <FastLED.h>
 
 /* C++ Standard Library */
 #include <functional>
@@ -11,13 +14,13 @@ float calculateBarHeight(float val, float valMin, float valMax, float barMax);
 
 namespace colourGenerator {
 
-using Generator = std::function<CRGB()>;
+using Generator = std::function<pixel::CRGB()>;
 
 // Colour generating functions
-inline Generator randomHSV = []() { return CHSV(random8(), 255, 255); };
-inline Generator cycleHSV = []() { return CHSV((millis() / 10), 255, 255); };
+inline Generator randomHSV = []() { return pixel::CHSV(pixel::random8(), 255, 255); };
+inline Generator cycleHSV = []() { return pixel::CHSV((millis() / 10), 255, 255); };
 inline Generator black = []() { return 0; };
-inline Generator white = []() { return CRGB::White; };
+inline Generator white = []() { return pixel::CRGB::White; };
 
 } // namespace colourGenerator
 

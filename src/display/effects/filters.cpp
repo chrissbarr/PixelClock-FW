@@ -2,7 +2,9 @@
 #include "display/effects/filters.h"
 
 /* Libraries */
-#include <FastLED.h>
+//#include <FastLED.h>
+
+using namespace pixel;
 
 void HSVTestPattern::apply(canvas::Canvas& c) {
     for (uint8_t x = 0; x < c.getWidth(); x++) {

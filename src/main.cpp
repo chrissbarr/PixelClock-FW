@@ -143,7 +143,7 @@ void setup() {
     brightnessSensor = std::make_unique<BrightnessSensor>();
 
     printCentred(Serial, "Initialising System Modes", headingWidth);
-    baseCanvas.fill(CRGB::Black);
+    baseCanvas.fill(pixel::CRGB::Black);
     modeManager =
         std::make_unique<ModeManager>(baseCanvas, ButtonReferences{buttonMode, buttonSelect, buttonLeft, buttonRight});
     printCentred(Serial, "Initialising Display", headingWidth);

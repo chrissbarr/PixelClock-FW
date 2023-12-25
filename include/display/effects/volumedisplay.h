@@ -6,14 +6,14 @@
 #include <canvas.h>
 
 /* Libraries */
-#include <FastLED.h>
+//#include <FastLED.h>
 
 /* C++ Standard Library */
 #include <vector>
 
 struct VolumeDisplayColourMap {
     double percentage;
-    CRGB colour;
+    pixel::CRGB colour;
 };
 
 class VolumeDisplay : public DisplayEffect {

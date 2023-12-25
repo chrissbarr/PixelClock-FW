@@ -4,8 +4,10 @@
 /* Project Scope */
 #include <canvas.h>
 
+#include "p_pixeltypes.h"
+
 /* Libraries */
-#include <FastLED.h>
+//#include <FastLED.h>
 
 class FilterMethod {
 public:
@@ -20,11 +22,11 @@ public:
 
 class SolidColour : public FilterMethod {
 public:
-    SolidColour(CRGB colour, bool maintainBrightness = true) : colour(colour), maintainBrightness(maintainBrightness) {}
+    SolidColour(pixel::CRGB colour, bool maintainBrightness = true) : colour(colour), maintainBrightness(maintainBrightness) {}
     void apply(canvas::Canvas& c) override;
 
 private:
-    CRGB colour;
+    pixel::CRGB colour;
     bool maintainBrightness;
 };
 

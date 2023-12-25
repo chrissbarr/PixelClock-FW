@@ -4,8 +4,12 @@
 /* C++ Standard Library */
 #include <cstdint>
 
+#include "p_pixeltypes.h"
+
+#include <FastLED.h>
+
 /* Forward Declarations */
-class CRGB;
+//class CRGB;
 namespace canvas {
 class Canvas;
 }

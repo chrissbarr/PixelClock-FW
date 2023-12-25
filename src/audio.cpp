@@ -157,7 +157,7 @@ void Audio::begin() {
     cfg.pin_data = pins::i2sDout;
     cfg.pin_bck = pins::i2sBclk;
     cfg.pin_ws = pins::i2sWclk;
-    cfg.buffer_count = 10;
+    cfg.buffer_count = 5;
     cfg.buffer_size = 1024;
     // cfg.sample_rate = a2dpSink->sample_rate();
     cfg.channels = 2;

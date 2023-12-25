@@ -19,12 +19,12 @@ canvas::Canvas RandomFill::run() {
     uint32_t timeNow = millis();
 
     if (timeNow - _lastSpawnTime >= _fillInterval) {
-        if (_c.containsColour(CRGB::Black)) {
+        if (_c.containsColour(pixel::CRGB::Black)) {
             bool filledPixel = false;
             while (!filledPixel) {
                 uint8_t x = random(0, _c.getWidth());
                 uint8_t y = random(0, _c.getHeight());
-                if (_c.getXY(x, y) == CRGB::Black) {
+                if (_c.getXY(x, y) == pixel::CRGB::Black) {
                     _c.setXY(x, y, _colourGenerator());
                     filledPixel = true;
                     _lastSpawnTime = timeNow;

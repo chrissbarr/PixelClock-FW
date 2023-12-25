@@ -21,7 +21,7 @@ void BouncingBall::reset() {
     yDir = 1;
     _finished = false;
     _lastLoopTime = millis();
-    _c.fill(CRGB::Black);
+    _c.fill(pixel::CRGB::Black);
 }
 
 canvas::Canvas BouncingBall::run() {
@@ -33,7 +33,7 @@ canvas::Canvas BouncingBall::run() {
         if (ballx <= 0 || ballx >= _c.getWidth() - 1) { xDir = -xDir; }
         if (bally <= 0 || bally >= _c.getHeight() - 1) { yDir = -yDir; }
 
-        _c.fill(CRGB::Black);
+        _c.fill(pixel::CRGB::Black);
         uint8_t pixelx = uint8_t(round(ballx));
         uint8_t pixely = uint8_t(round(bally));
         // printing::print(Serial, fmt::format("Ball (x={:.2f}({}), y={:.2f}({}))\n", ballx, pixelx, bally, pixely));

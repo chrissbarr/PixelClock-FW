@@ -8,7 +8,7 @@
 #include <canvas.h>
 
 /* Libraries */
-#include <FastLED.h>
+//#include <FastLED.h>
 
 /* C++ Standard Library */
 #include <memory>

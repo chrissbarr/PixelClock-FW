@@ -3,9 +3,10 @@
 
 /* Project Scope */
 #include "characters.h"
+#include "p_pixeltypes.h"
 
 /* Libraries */
-#include "FastLED.h"
+//#include "FastLED.h"
 
 /* C++ Standard Library */
 #include <cstdint>
@@ -13,6 +14,8 @@
 #include <vector>
 
 namespace canvas {
+
+using CRGB = pixel::CRGB;
 
 class Canvas {
 public:

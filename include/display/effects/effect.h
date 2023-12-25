@@ -6,7 +6,7 @@
 #include <canvas.h>
 
 /* Libraries */
-#include <FastLED.h>
+//#include <FastLED.h>
 
 /* Arduino Core */
 #include <Arduino.h>

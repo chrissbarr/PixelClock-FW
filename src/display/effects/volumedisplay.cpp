@@ -8,9 +8,9 @@
 #include "utility.h"
 
 VolumeDisplay::VolumeDisplay(const canvas::Canvas& size) : _c(size) {
-    colourMap.push_back({0, CRGB::Green});
-    colourMap.push_back({0.4, CRGB::Yellow});
-    colourMap.push_back({0.6, CRGB::Red});
+    colourMap.push_back({0, pixel::CRGB::Green});
+    colourMap.push_back({0.4, pixel::CRGB::Yellow});
+    colourMap.push_back({0.6, pixel::CRGB::Red});
 }
 
 void VolumeDisplay::reset() { _finished = false; }
@@ -41,7 +41,7 @@ canvas::Canvas VolumeDisplay::run() {
 
     auto drawBar = [&](float barHeight, int y) {
         for (int x = 0; x < _c.getWidth(); x++) {
-            CRGB colour = CRGB::Black;
+            pixel::CRGB colour = pixel::CRGB::Black;
 
             float pct = float(x) / horMax;
 

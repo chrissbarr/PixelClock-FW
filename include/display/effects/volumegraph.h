@@ -6,7 +6,7 @@
 #include <canvas.h>
 
 /* Libraries */
-#include <FastLED.h>
+//#include <FastLED.h>
 
 class VolumeGraph : public DisplayEffect {
 public:

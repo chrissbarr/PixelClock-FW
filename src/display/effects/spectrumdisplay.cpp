@@ -9,8 +9,8 @@
 #include <vector>
 
 SpectrumDisplay::SpectrumDisplay(const canvas::Canvas& size) : _c(size) {
-    colMin = CRGB::Blue;
-    colMax = CRGB::Purple;
+    colMin = pixel::CRGB::Blue;
+    colMax = pixel::CRGB::Purple;
 }
 
 void SpectrumDisplay::reset() { _finished = false; }
@@ -53,9 +53,9 @@ canvas::Canvas SpectrumDisplay::run() {
             // we need to scale the value from 0 - valMax to 0 - vertMax
             auto barHeight = calculateBarHeight(totals[x], 0, maxScale, vertMax);
             for (int y = 0; y < _c.getHeight(); y++) {
-                CRGB colour = CRGB::Black;
+                pixel::CRGB colour = pixel::CRGB::Black;
                 if (y <= barHeight) {
-                    colour = CRGB(colMin).lerp16(colMax, fract16((barHeight / float(vertMax)) * 65535));
+                    colour = pixel::CRGB(colMin).lerp16(colMax, pixel::fract16((barHeight / float(vertMax)) * 65535));
                 }
                 if (y == std::floor(barHeight)) {
                     float remainder = barHeight - std::floor(barHeight);

@@ -6,7 +6,7 @@
 #include <canvas.h>
 
 /* Libraries */
-#include <FastLED.h>
+//#include <FastLED.h>
 
 class SpectrumDisplay : public DisplayEffect {
 public:
@@ -17,8 +17,8 @@ public:
 
 private:
     canvas::Canvas _c;
-    CRGB colMin;
-    CRGB colMax;
+    pixel::CRGB colMin;
+    pixel::CRGB colMax;
     float maxScale = 5000;
     bool _finished = false;
 };
