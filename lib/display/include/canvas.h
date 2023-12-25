@@ -3,7 +3,7 @@
 
 /* Project Scope */
 #include "characters.h"
-#include "p_pixeltypes.h"
+#include "flm_pixeltypes.h"
 
 /* C++ Standard Library */
 #include <cstdint>

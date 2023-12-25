@@ -1,8 +1,6 @@
 #ifndef p_color_h
 #define p_color_h
 
-//#include "FastLED.h"
-
 //ASTLED_NAMESPACE_BEGIN
 namespace pixel {
 

@@ -1,7 +1,7 @@
 /// @file hsv2rgb.cpp
 /// Functions to convert from the HSV colorspace to the RGB colorspace
 
-#include "p_hsv2rgb.h"
+#include "flm_hsv2rgb.h"
 
 /// Disables pragma messages and warnings
 #define FASTLED_INTERNAL

@@ -1,11 +1,12 @@
 /* Project Scope */
 #include "display/display.h"
 #include "display/effects/textscroller.h"
+#include "pinout.h"
 #include <canvas.h>
 
-#include "p_pixeltypes.h"
+#include "flm_pixeltypes.h"
 
-#include "pinout.h"
+
 
 
 

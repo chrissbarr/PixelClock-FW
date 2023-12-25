@@ -4,7 +4,7 @@
 /* Project Scope */
 #include <canvas.h>
 
-#include "p_pixeltypes.h"
+#include "flm_pixeltypes.h"
 
 class FilterMethod {
 public:

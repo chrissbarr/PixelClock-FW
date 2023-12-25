@@ -2,8 +2,8 @@
 #define p_pixeltypes_h
 
 #include <cstdint>
-#include "p_lib8tion.h"
-#include "p_color.h"
+#include "flm_lib8tion.h"
+#include "flm_color.h"
 
 /// @file pixeltypes.h
 /// Definitions for pixel color data structs

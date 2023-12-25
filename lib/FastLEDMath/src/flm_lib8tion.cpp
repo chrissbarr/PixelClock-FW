@@ -5,7 +5,7 @@
 /// Disables pragma messages and warnings
 #define FASTLED_INTERNAL
 
-#include "p_lib8tion.h"
+#include "flm_lib8tion.h"
 #include <stdint.h>
 
 namespace pixel {

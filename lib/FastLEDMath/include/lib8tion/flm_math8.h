@@ -1,7 +1,7 @@
 #ifndef __INC_PLIB8TION_MATH_H
 #define __INC_PLIB8TION_MATH_H
 
-#include "p_scale8.h"
+#include "flm_scale8.h"
 
 
 /// @file math8.h

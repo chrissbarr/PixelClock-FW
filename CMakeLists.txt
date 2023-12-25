@@ -28,9 +28,13 @@ target_include_directories(ArduinoStub INTERFACE lib_desktop/ArduinoStub/include
 #set_target_properties(ArduinoStub PROPERTIES LINKER_LANGUAGE CXX)
 #target_compile_definitions(ArduinoStub PUBLIC DESKTOP)
 
-add_library(Display lib/display/src/canvas.cpp lib/display/src/p_hsv2rgb.cpp lib/display/src/p_lib8tion.cpp)
-target_link_libraries(Display ArduinoStub)
+add_library(FastLEDMath lib/FastLEDMath/src/p_hsv2rgb.cpp lib/FastLEDMath/src/p_lib8tion.cpp)
+target_include_directories(FastLEDMath PUBLIC lib/FastLEDMath/include/)
+target_link_libraries(FastLEDMath ArduinoStub)
+
+add_library(Display lib/display/src/canvas.cpp)
 target_include_directories(Display PUBLIC lib/display/include/)
+target_link_libraries(Display FastLEDMath)
 #target_link_libraries(Display FastLED)
 
 

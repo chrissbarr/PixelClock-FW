@@ -1,8 +1,6 @@
 #ifndef p_lib8tion_h
 #define p_lib8tion_h
 
-//#include "FastLED.h"
-
 //#ifndef __INC_LED_SYSDEFS_H
 //#error WTH?  led_sysdefs needs to be included first
 //#endif
@@ -455,10 +453,10 @@ typedef union {
 /// @} FractionalTypes
 
 
-#include "lib8tion/p_math8.h"
-#include "lib8tion/p_scale8.h"
-#include "lib8tion/p_random8.h"
-#include "lib8tion/p_trig8.h"
+#include "lib8tion/flm_math8.h"
+#include "lib8tion/flm_scale8.h"
+#include "lib8tion/flm_random8.h"
+#include "lib8tion/flm_trig8.h"
 
 ///////////////////////////////////////////////////////////////////////
 

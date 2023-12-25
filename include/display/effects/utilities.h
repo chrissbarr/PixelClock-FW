@@ -1,8 +1,8 @@
 #ifndef displayutilities_h
 #define displayutilities_h
 
-#include <p_pixeltypes.h>
-#include <p_lib8tion.h>
+#include <flm_pixeltypes.h>
+#include <flm_lib8tion.h>
 
 /* C++ Standard Library */
 #include <functional>
