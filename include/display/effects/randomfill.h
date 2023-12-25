@@ -6,6 +6,8 @@
 #include "display/effects/utilities.h"
 #include <canvas.h>
 
+#include <random>
+
 class RandomFill : public DisplayEffect {
 public:
     RandomFill(const canvas::Canvas& size, uint32_t fillInterval, colourGenerator::Generator colourGenerator);
@@ -25,6 +27,7 @@ private:
     bool _finished;
     uint32_t _lastSpawnTime = 0;
     canvas::Canvas _c;
+    std::minstd_rand rand;
 };
 
 #endif // randomfill_h
