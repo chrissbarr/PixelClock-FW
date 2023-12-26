@@ -9,6 +9,7 @@
 
 /* C++ Standard Library */
 #include <memory>
+#include <functional>
 
 class ClockFace_Base : public DisplayEffect {
 public:

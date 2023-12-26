@@ -3,154 +3,120 @@
 #include "FMTWrapper.h"
 #include "utility.h"
 
-std::unique_ptr<RTC_DS3231> rtc;
+#ifdef PIXELCLOCK_DESKTOP
+#include <chrono>
+#endif
+
+#ifndef PIXELCLOCK_DESKTOP
+#include <RTClib.h>
+#include <TimeLib.h>
+#endif
+
 using namespace printing;
 
-bool initialiseTime() {
+#ifndef PIXELCLOCK_DESKTOP
+bool TimeManagerEmbedded::initialise() {
     if (initialiseRTC()) {
         // Set Time to sync from RTC
-        setSyncProvider([]() { return time_t(rtc->now().unixtime()); });
-        setSyncInterval(60);
+        syncRTC();
 
         if (timeStatus() != timeSet) {
-            Serial.println("Unable to sync with the RTC.");
+            print("Unable to sync with the RTC.\n");
         } else {
-            Serial.println("RTC has set the system time");
+            print("RTC has set the system time\n");
         }
     } else {
-        Serial.println("Setting time to placeholder value.");
-        setTime(11, 55, 50, 1, 1, 2022);
+        print("Setting time to placeholder value.\n");
+        ::setTime(11, 55, 50, 1, 1, 2022);
     }
     return true;
 }
 
-bool initialiseRTC() {
-    Serial.print("Initialising RTC: ");
+bool TimeManagerEmbedded::initialiseRTC() {
+
+    print("Initialising RTC: \n");
 
     rtc = std::make_unique<RTC_DS3231>();
 
     if (!rtc->begin()) {
-        Serial.println("Error!");
+        print("Error!\n");
+        rtc.reset();
         return false;
     } else {
-        Serial.println("Success!");
+        print("Success!\n");
 
         if (rtc->lostPower()) {
-            Serial.println("RTC has lost power and time needs to be set!");
+            print("RTC has lost power and time needs to be set!\n");
         } else {
-            Serial.println("RTC reports it has not lost power.");
+            print("RTC reports it has not lost power.\n");
         }
 
-        Serial.println("RTC has time: ");
+        print("RTC has time: \n");
 
         DateTime now = rtc->now();
-        print(
-            Serial,
-            fmt::format(
-                "{:04d}/{:02d}/{:02d} ({}) : {:02d}:{:02d}:{:02d}\n",
-                now.year(),
-                now.month(),
-                now.day(),
-                daysOfTheWeek[now.dayOfTheWeek()],
-                now.hour(),
-                now.minute(),
-                now.second()));
+        print(fmt::format(
+            "{:04d}/{:02d}/{:02d} ({}) : {:02d}:{:02d}:{:02d}\n",
+            now.year(),
+            now.month(),
+            now.day(),
+            daysOfTheWeek[now.dayOfTheWeek()],
+            now.hour(),
+            now.minute(),
+            now.second()));
 
-        print(Serial, fmt::format("since midnight 1/1/1970 = {}s = {}d\n", now.unixtime(), now.unixtime() / 86400L));
+        print(fmt::format("since midnight 1/1/1970 = {}s = {}d\n", now.unixtime(), now.unixtime() / 86400L));
         return true;
     }
 }
 
-ClockFaceTimeStruct timeCallbackFunction(time_t time) {
+std::time_t TimeManagerEmbedded::now() const { return std::time_t(::now()); }
+
+void TimeManagerEmbedded::setTime(std::time_t newTime) {
+    if (rtc) {
+        print("Setting RTC time...\n");
+        rtc->adjust(newTime);
+    }
+    print("Setting time...\n");
+    setTime(newTime);
+}
+
+void TimeManagerEmbedded::update() {
+    auto timeNow = now();
+    if (timeNow - syncLast > syncInterval) {
+        syncRTC();
+        syncLast = timeNow;
+    }
+}
+
+void TimeManagerEmbedded::syncRTC() {
+    if (!rtc) { return; }
+    setTime(time_t(rtc->now().unixtime()));
+}
+
+#endif
+
+#ifdef PIXELCLOCK_DESKTOP
+bool TimeManagerDesktop::initialise() { return true; }
+std::time_t TimeManagerDesktop::now() const {
+    const auto tnow = std::chrono::system_clock::now();
+    const std::time_t tc = std::chrono::system_clock::to_time_t(tnow);
+    return tc;
+}
+void TimeManagerDesktop::setTime(std::time_t newTime) {}
+void TimeManagerDesktop::update() {}
+#endif
+
+ClockFaceTimeStruct timeCallbackFunction(std::time_t time) {
     // extract elements of time into struct
+
+    const std::tm caltime = *localtime(&time);
+
     ClockFaceTimeStruct val;
-    val.hour12 = hourFormat12(time);
-    val.hour24 = hour(time);
-    val.minute = minute(time);
-    val.second = second(time);
+    val.hour12 = caltime.tm_hour; // hourFormat12(time);
+    val.hour24 = caltime.tm_hour; // hour(time);
+    val.minute = caltime.tm_min;  // minute(time);
+    val.second = caltime.tm_sec;  // second(time);
     return val;
 }
 
-ClockFaceTimeStruct timeCallbackFunction() { return timeCallbackFunction(now()); }
-
-void setTimeGlobally(uint32_t timeToSet) {
-    Serial.println("Setting time...");
-    if (rtc) {
-        Serial.println("Setting RTC time...");
-        rtc->adjust(timeToSet);
-    }
-    setTime(timeToSet);
-}
-
-LoopTimeManager::LoopTimeManager(uint32_t desiredLoopDuration, uint32_t statReportInterval)
-    : desiredLoopDuration(desiredLoopDuration),
-      statReportInterval(statReportInterval) {
-    loopTimeMin = std::numeric_limits<uint16_t>::max();
-    loopTimeMax = 0;
-}
-
-void LoopTimeManager::idle() {
-    // Manage loop timing
-    uint32_t loopTime = millis() - lastLoopTime;
-
-    loopTimeAvg = approxRollingAverage(loopTimeAvg, float(loopTime), 1000);
-    if (loopTime > loopTimeMax) { loopTimeMax = loopTime; }
-    if (loopTime < loopTimeMin) { loopTimeMin = loopTime; }
-
-    if (millis() - lastStatReportTime > statReportInterval) {
-        // print timing stats
-        print(
-            Serial,
-            fmt::format(
-                "Loop Timing Statistics (Min - Max - Avg): {} - {} - {:.2f}\n", loopTimeMin, loopTimeMax, loopTimeAvg));
-        // Serial.print("FastLED FPS:" ); Serial.println(FastLED.getFPS());
-
-        // print memory usage stats
-        float usedHeapPercentage = 100 * (float(ESP.getHeapSize() - ESP.getFreeHeap()) / ESP.getHeapSize());
-        uint8_t fieldWidth = 15;
-        print(Serial, fmt::format("{1:<{0}}", fieldWidth, "Memory"));
-        print(Serial, fmt::format("{1:<{0}}", fieldWidth, "free (kB)"));
-        print(Serial, fmt::format("{1:<{0}}", fieldWidth, "total (kB)"));
-        print(Serial, fmt::format("{1:<{0}}", fieldWidth, "used (%)"));
-        print(Serial, fmt::format("{1:<{0}}", fieldWidth, "minfree (kB)"));
-        print(Serial, fmt::format("{1:<{0}}", fieldWidth, "maxalloc (kB)"));
-        print(Serial, "\n");
-
-        // print heap stats
-        print(Serial, fmt::format("{1:<{0}}", fieldWidth, "Heap"));
-        print(Serial, fmt::format("{1:<{0}}", fieldWidth, ESP.getFreeHeap() / 1024));
-        print(Serial, fmt::format("{1:<{0}}", fieldWidth, ESP.getHeapSize() / 1024));
-        print(Serial, fmt::format("{1:<{0}.2f}", fieldWidth, usedHeapPercentage));
-        print(Serial, fmt::format("{1:<{0}}", fieldWidth, ESP.getMinFreeHeap() / 1024));
-        print(Serial, fmt::format("{1:<{0}}", fieldWidth, ESP.getMaxAllocHeap() / 1024));
-        print(Serial, "\n");
-
-        // print psram stats
-        float usedPsramPercentage = 100 * (float(ESP.getPsramSize() - ESP.getFreePsram()) / ESP.getPsramSize());
-        print(Serial, fmt::format("{1:<{0}}", fieldWidth, "PSRAM"));
-        print(Serial, fmt::format("{1:<{0}}", fieldWidth, ESP.getFreePsram() / 1024));
-        print(Serial, fmt::format("{1:<{0}}", fieldWidth, ESP.getPsramSize() / 1024));
-        print(Serial, fmt::format("{1:<{0}.2f}", fieldWidth, usedPsramPercentage));
-        print(Serial, fmt::format("{1:<{0}}", fieldWidth, ESP.getMinFreePsram() / 1024));
-        print(Serial, fmt::format("{1:<{0}}", fieldWidth, ESP.getMaxAllocPsram() / 1024));
-        print(Serial, "\n");
-
-        lastStatReportTime = millis();
-        loopTimeMin = std::numeric_limits<uint16_t>::max();
-        loopTimeMax = 0;
-    }
-
-    // ensure we yield at least once
-    yield();
-    while (millis() - lastLoopTime < desiredLoopDuration) {
-        // idle in this loop until desiredLoopDuration has elapsed
-        yield();
-    }
-    lastLoopTime = millis();
-}
-
-constexpr float LoopTimeManager::approxRollingAverage(float avg, float newSample, int N) const {
-    avg -= avg / N;
-    avg += newSample / N;
-    return avg;
-}
+ClockFaceTimeStruct timeCallbackFunction() { return timeCallbackFunction(TimeManagerSingleton::get().now()); }

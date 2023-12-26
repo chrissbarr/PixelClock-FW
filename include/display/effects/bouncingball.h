@@ -6,6 +6,9 @@
 #include "display/effects/utilities.h"
 #include <canvas.h>
 
+/* C++ Standard Library */
+#include <random>
+
 class BouncingBall : public DisplayEffect {
 public:
     BouncingBall(const canvas::Canvas& size, uint32_t updateInterval, colourGenerator::Generator colourGenerator);
@@ -23,6 +26,7 @@ private:
     uint32_t _updateInterval;
     colourGenerator::Generator _colourGenerator;
     bool _finished;
+    std::minstd_rand rand;
 };
 
 #endif // bouncingball_h

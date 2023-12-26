@@ -11,12 +11,17 @@ BouncingBall::BouncingBall(
       _updateInterval(updateInterval),
       _colourGenerator(colourGenerator) {
     reset();
+    rand.seed(0);
 }
 
 void BouncingBall::reset() {
     const int spawnInFromBorder = 1;
-    ballx = random(spawnInFromBorder, _c.getWidth() - 1 - spawnInFromBorder);
-    bally = random(spawnInFromBorder, _c.getHeight() - 1 - spawnInFromBorder);
+
+    std::uniform_int_distribution<uint16_t> horDist(spawnInFromBorder, _c.getWidth() - 1 - spawnInFromBorder);
+    std::uniform_int_distribution<uint16_t> vertDist(spawnInFromBorder, _c.getHeight() - 1 - spawnInFromBorder);
+
+    ballx = horDist(rand);
+    bally = vertDist(rand);
     xDir = 1;
     yDir = 1;
     _finished = false;

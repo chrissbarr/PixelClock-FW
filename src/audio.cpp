@@ -132,10 +132,10 @@ Audio::Audio() {
 
     acBuf = (AudioCharacteristics*)ps_calloc(audioHistorySize + 1, sizeof(AudioCharacteristics));
     if (acBuf) {
-        Serial.println("PSRAM buffer allocation success!");
+        printing::print("PSRAM buffer allocation success!\n");
         audioCharacteristics = new etl::circular_buffer_ext<AudioCharacteristics>(acBuf, audioHistorySize);
     } else {
-        Serial.println("PSRAM buffer allocation fail!");
+        printing::print("PSRAM buffer allocation fail!\n");
         audioCharacteristics = new etl::circular_buffer<AudioCharacteristics, audioHistorySize>();
     }
 }
@@ -147,11 +147,9 @@ Audio::~Audio() {
 }
 
 void Audio::begin() {
-    Serial.println("Audio.begin()");
+    printing::print("Audio.begin()\n");
     i2sOutput = std::make_unique<I2SStream>(0);
     a2dpSink = std::make_unique<BluetoothA2DPSink>();
-
-    Serial.println("after constructors");
 
     auto cfg = i2sOutput->defaultConfig();
     cfg.pin_data = pins::i2sDout;
@@ -167,13 +165,13 @@ void Audio::begin() {
     cfg.i2s_format = audio_tools::I2SFormat::I2S_STD_FORMAT, cfg.auto_clear = true;
     i2sOutput->begin(cfg);
 
-    Serial.println("after i2s");
+    printing::print("after i2s\n");
 
     a2dpSink->set_avrc_metadata_callback([](uint8_t id, const uint8_t* text) { avrc_metadata_callback(id, text); });
     a2dpSink->set_stream_reader(read_data_stream, false);
     a2dpSink->start("MyMusic");
 
-    Serial.println("after a2dp");
+    printing::print("after a2dp\n");
 
     FFT = std::make_unique<ArduinoFFT<float>>(vReal, vImag, fftSamples, fftSampleFreq, weighingFactors);
 
@@ -185,7 +183,7 @@ void Audio::update() {
     if (millis() - statReportLastTime > statReportInterval) {
 
         auto printAndReset = [](std::string name, InstrumentationTrace& t) {
-            printing::print(Serial, formatInstrumentationTrace(name, t));
+            printing::print(formatInstrumentationTrace(name, t));
             t.reset();
         };
 
@@ -195,12 +193,10 @@ void Audio::update() {
         printAndReset("Audio Callback - FFT", fftDuration);
         printAndReset("Audio Callback - Spectrum", specDuration);
 
-        printing::print(
-            Serial,
-            fmt::format(
-                "Volume: L={:.1f} R={:.1f}\n",
-                audioCharacteristics->back().volumeLeft,
-                audioCharacteristics->back().volumeRight));
+        printing::print(fmt::format(
+            "Volume: L={:.1f} R={:.1f}\n",
+            audioCharacteristics->back().volumeLeft,
+            audioCharacteristics->back().volumeRight));
 
         statReportLastTime = millis();
     }

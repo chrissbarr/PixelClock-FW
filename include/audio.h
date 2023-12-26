@@ -15,7 +15,7 @@
 #include <memory>
 
 inline void avrc_metadata_callback(uint8_t id, const uint8_t* text) {
-    printing::print(Serial, fmt::format("==> AVRC metadata rsp: attribute id {:#X}, {}\n", id, (char*)(text)));
+    printing::print(fmt::format("==> AVRC metadata rsp: attribute id {:#X}, {}\n", id, (char*)(text)));
 }
 
 // class ArduinoFFT;

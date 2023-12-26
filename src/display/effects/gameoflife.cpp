@@ -32,7 +32,6 @@ void GameOfLife::reset() {
     GoLScore lastScore = {_lastSeed, _lifespan};
     if (!_seeding) {
         printing::print(
-            Serial,
             fmt::format("GoL Reset. ID: {}, Score: {}, Seed: {}\n", iterationId, lastScore.lifespan, lastScore.seed));
     }
     iterationId++;
@@ -55,11 +54,10 @@ void GameOfLife::seedDisplay() {
     writeBuffer = 1;
 
     if (!_seeding && bestScores.size() >= bestScoresToKeep) {
-        Serial.println("Using seed from best scores...");
+        printing::print("Using seed from best scores...\n");
         int randomIndex = random(bestScores.size());
         auto randomScoreToRepeat = (*std::next(bestScores.begin(), randomIndex));
-        printing::print(
-            Serial, fmt::format("Using score: {}, Seed: {}\n", randomScoreToRepeat.lifespan, randomScoreToRepeat.seed));
+        printing::print(fmt::format("Using score: {}, Seed: {}\n", randomScoreToRepeat.lifespan, randomScoreToRepeat.seed));
         _lastSeed = randomScoreToRepeat.seed;
     } else {
         // Serial.println("Using random seed...");

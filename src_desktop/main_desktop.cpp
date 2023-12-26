@@ -1,3 +1,6 @@
+
+#ifdef PIXELCLOCK_DESKTOP
+
 #include "display/effects/gravityfill.h"
 #include "display/effects/utilities.h"
 
@@ -65,3 +68,5 @@ int main(int argc, char** argv) {
 
     return 0;
 }
+
+#endif
