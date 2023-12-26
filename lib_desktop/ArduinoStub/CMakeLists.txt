@@ -1,0 +1,2 @@
+add_library(ArduinoStub INTERFACE)
+target_include_directories(ArduinoStub INTERFACE include)

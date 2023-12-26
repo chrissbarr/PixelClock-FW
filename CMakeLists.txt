@@ -22,13 +22,11 @@ set(CMAKE_CXX_STANDARD 17)
 # Find packages go here.
 
 # You should usually split this into folders, but this is a simple example
-include(SFML.cmake)
+include(cmake/SFML.cmake)
 
-add_library(ArduinoStub INTERFACE)
-target_include_directories(ArduinoStub INTERFACE lib_desktop/ArduinoStub/include)
+add_subdirectory(lib_desktop/ArduinoStub)
 
-add_library(FastLEDMath STATIC lib/FastLEDMath/src/flm_hsv2rgb.cpp lib/FastLEDMath/src/flm_lib8tion.cpp)
-target_include_directories(FastLEDMath PUBLIC lib/FastLEDMath/include/)
+add_subdirectory(lib/FastLEDMath)
 target_link_libraries(FastLEDMath ArduinoStub)
 
 add_library(Display STATIC lib/display/src/canvas.cpp)
