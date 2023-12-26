@@ -27,6 +27,7 @@ include(cmake/SFML.cmake)
 include(cmake/FMT.cmake)
 include(cmake/Button2.cmake)
 include(cmake/ETL.cmake)
+include(cmake/ArduinoFFT.cmake)
 
 add_subdirectory(lib_desktop/ArduinoStub)
 
@@ -58,6 +59,7 @@ src/modes.cpp
 src/timekeeping.cpp
 src/utility.cpp
 src/audio.cpp
+src/audioDesktop.cpp
 )
 
 add_library(Main STATIC "${main_sources}")
@@ -65,7 +67,9 @@ target_include_directories(Main PUBLIC include)
 target_link_libraries(Main PUBLIC Display)
 target_link_libraries(Main PUBLIC fmt::fmt)
 target_link_libraries(Main PUBLIC Button2)
+target_link_libraries(Main PUBLIC ArduinoFFT)
 target_link_libraries(Main PUBLIC etl::etl)
+target_link_libraries(Main PUBLIC sfml-graphics sfml-audio)
 # Link each target with other targets or add options, etc.
 
 # Adding something we can run - Output name matches target name
@@ -76,7 +80,7 @@ add_executable(MyExample src/main.cpp)
 target_link_libraries(MyExample PRIVATE ArduinoStub)
 target_link_libraries(MyExample PRIVATE Display)
 target_link_libraries(MyExample PRIVATE Main)
-target_link_libraries(MyExample PRIVATE sfml-graphics)
+
 
 if(WIN32)
     add_custom_command(
