@@ -1,9 +1,9 @@
 /* Project Scope */
 #ifndef PIXELCLOCK_DESKTOP
 #include "audio.h"
-#include "brightnessSensor.h"
 #include "serialCommands.h"
 #endif
+#include "brightnessSensor.h"
 #include "loopTimeManager.h"
 #include "modes.h"
 #include "pinout.h"
@@ -64,16 +64,13 @@ Button2 buttonBrightness(pins::button5, INPUT_PULLUP);
 std::unique_ptr<ModeManager> modeManager;
 
 //// Brightness Handling
-#ifndef PIXELCLOCK_DESKTOP
 std::unique_ptr<BrightnessSensor> brightnessSensor;
-
 uint8_t brightnessFromSensor() {
     return uint8_t(std::clamp(
         uint8_t(utility::mapNumericRange(brightnessSensor->getBrightness() * 1000, 0, 1700, 0, 255)),
         uint8_t(1),
         uint8_t(255)));
 }
-#endif
 
 struct BrightnessMode {
     std::string name;
@@ -167,9 +164,11 @@ void setup() {
     // print all files in FS here?
 #endif
 
-#ifndef PIXELCLOCK_DESKTOP
     printCentred("Initialising Light Sensor", headingWidth);
-    brightnessSensor = std::make_unique<BrightnessSensor>();
+#ifdef PIXELCLOCK_DESKTOP
+    brightnessSensor = std::make_unique<BrightnessSensorDummy>(1.0f);
+#else
+    brightnessSensor = std::make_unique<BrightnessSensorTSL2591>();
 #endif
 
     printCentred("Initialising System Modes", headingWidth);
@@ -222,9 +221,11 @@ void loop() {
     display->setBrightness(brightnessModes[brightnessModeIndex].function());
     display->update(out);
 
+    brightnessSensor->update();
+
 #ifndef PIXELCLOCK_DESKTOP
     Audio::get().update();
-    brightnessSensor->update();
+
 #endif
 
     // processSerialCommands();
