@@ -35,14 +35,20 @@ typedef unsigned int word;
 
 // stub out Arduino functions in x86 environment
 inline unsigned long millis() {
-    // static unsigned long mil = 0;
-    // mil += 10;
-    // return mil;
-        auto m = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now().time_since_epoch()).count() % 1000;
-        return m;
+    using namespace std::chrono;
+    static auto start = steady_clock::now();
+    auto now = steady_clock::now();
+    auto m = duration_cast<milliseconds>(now - start).count();
+    return m;
 }
-inline unsigned long micros() { return 0; }
+
+inline unsigned long micros() {
+    using namespace std::chrono;
+    static auto start = steady_clock::now();
+    auto now = steady_clock::now();
+    auto m = duration_cast<microseconds>(now - start).count();
+    return m;
+}
 
 inline void delay(unsigned long d) {
     auto start = millis();

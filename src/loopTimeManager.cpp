@@ -23,16 +23,28 @@ void LoopTimeManager::idle() {
     if (loopTime < loopTimeMin) { loopTimeMin = loopTime; }
 
     if (millis() - lastStatReportTime > statReportInterval) {
-        // print timing stats
-        print(
-            fmt::format(
-                "Loop Timing Statistics (Min - Max - Avg): {} - {} - {:.2f}\n", loopTimeMin, loopTimeMax, loopTimeAvg));
-        // Serial.print("FastLED FPS:" ); Serial.println(FastLED.getFPS());
 
-        // print memory usage stats
-        #ifndef PIXELCLOCK_DESKTOP
-        float usedHeapPercentage = 100 * (float(ESP.getHeapSize() - ESP.getFreeHeap()) / ESP.getHeapSize());
-        uint8_t fieldWidth = 15;
+        const uint8_t fieldWidth = 15;
+
+        // print timing stats
+        print(fmt::format("{1:<{0}}", fieldWidth, "Loop Timing"));
+        print(fmt::format("{1:<{0}}", fieldWidth, "Now (ms)"));
+        print(fmt::format("{1:<{0}}", fieldWidth, "Min (ms)"));
+        print(fmt::format("{1:<{0}}", fieldWidth, "Max (ms)"));
+        print(fmt::format("{1:<{0}}", fieldWidth, "Avg (ms)"));
+        print("\n");
+
+        print(fmt::format("{1:<{0}}", fieldWidth, ""));
+        print(fmt::format("{1:<{0}}", fieldWidth, millis()));
+        print(fmt::format("{1:<{0}}", fieldWidth, loopTimeMin));
+        print(fmt::format("{1:<{0}}", fieldWidth, loopTimeMax));
+        print(fmt::format("{1:<{0}.2f}", fieldWidth, loopTimeAvg));
+        print("\n");
+
+// print memory usage stats
+#ifndef PIXELCLOCK_DESKTOP
+
+        // print header row
         print(fmt::format("{1:<{0}}", fieldWidth, "Memory"));
         print(fmt::format("{1:<{0}}", fieldWidth, "free (kB)"));
         print(fmt::format("{1:<{0}}", fieldWidth, "total (kB)"));
@@ -43,6 +55,7 @@ void LoopTimeManager::idle() {
 
         // print heap stats
         print(fmt::format("{1:<{0}}", fieldWidth, "Heap"));
+        float usedHeapPercentage = 100 * (float(ESP.getHeapSize() - ESP.getFreeHeap()) / ESP.getHeapSize());
         print(fmt::format("{1:<{0}}", fieldWidth, ESP.getFreeHeap() / 1024));
         print(fmt::format("{1:<{0}}", fieldWidth, ESP.getHeapSize() / 1024));
         print(fmt::format("{1:<{0}.2f}", fieldWidth, usedHeapPercentage));
@@ -59,7 +72,7 @@ void LoopTimeManager::idle() {
         print(fmt::format("{1:<{0}}", fieldWidth, ESP.getMinFreePsram() / 1024));
         print(fmt::format("{1:<{0}}", fieldWidth, ESP.getMaxAllocPsram() / 1024));
         print("\n");
-        #endif
+#endif
 
         lastStatReportTime = millis();
         loopTimeMin = std::numeric_limits<uint16_t>::max();
