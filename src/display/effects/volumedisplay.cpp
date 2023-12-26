@@ -17,7 +17,7 @@ void VolumeDisplay::reset() { _finished = false; }
 
 canvas::Canvas VolumeDisplay::run() {
 
-    auto& audioHist = Audio::get().getAudioCharacteristicsHistory();
+    auto& audioHist = AudioSingleton::get().getAudioCharacteristicsHistory();
 
     float vLeft = -60;
     float vRight = -60;

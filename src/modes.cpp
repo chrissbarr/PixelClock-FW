@@ -397,10 +397,10 @@ canvas::Canvas Mode_ClockFace::runCore() {
 
 Mode_Effects::Mode_Effects(const canvas::Canvas& size, ButtonReferences buttons)
     : MainModeFunction("Effects", buttons) {
-    //effects.push_back(std::make_unique<AudioWaterfall>(size));
-    //effects.push_back(std::make_unique<VolumeGraph>(size));
-    //effects.push_back(std::make_unique<VolumeDisplay>(size));
-    //effects.push_back(std::make_unique<SpectrumDisplay>(size));
+    effects.push_back(std::make_unique<AudioWaterfall>(size));
+    effects.push_back(std::make_unique<VolumeGraph>(size));
+    effects.push_back(std::make_unique<VolumeDisplay>(size));
+    effects.push_back(std::make_unique<SpectrumDisplay>(size));
     effects.push_back(std::make_unique<RandomFill>(size, 100, colourGenerator::randomHSV));
     effects.push_back(std::make_unique<BouncingBall>(size, 100, colourGenerator::cycleHSV));
     effects.push_back(std::make_unique<GravityFill>(size, 25, 25, colourGenerator::randomHSV));

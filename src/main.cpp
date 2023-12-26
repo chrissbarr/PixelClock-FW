@@ -1,6 +1,6 @@
 /* Project Scope */
-#ifndef PIXELCLOCK_DESKTOP
 #include "audio.h"
+#ifndef PIXELCLOCK_DESKTOP
 #include "serialCommands.h"
 #endif
 #include "brightnessSensor.h"
@@ -196,10 +196,8 @@ void setup() {
 #endif
     buttonBrightness.setTapHandler(brightnessButton_callback);
 
-#ifndef PIXELCLOCK_DESKTOP
     printCentred("Initialising Audio", headingWidth);
-    Audio::get().begin();
-#endif
+    AudioSingleton::get().begin();
 
     print(fmt::format("{1:<{0}} {2} ms\n", textPadding, "Runtime:", millis()));
     printSolidLine(headingWidth);
@@ -223,10 +221,8 @@ void loop() {
 
     brightnessSensor->update();
 
-#ifndef PIXELCLOCK_DESKTOP
-    Audio::get().update();
+    AudioSingleton::get().update();
 
-#endif
 
     // processSerialCommands();
 

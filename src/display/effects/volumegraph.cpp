@@ -14,7 +14,7 @@ void VolumeGraph::reset() { _finished = false; }
 canvas::Canvas VolumeGraph::run() {
 
     _c.fill(0);
-    auto& audioHist = Audio::get().getAudioCharacteristicsHistory();
+    auto& audioHist = AudioSingleton::get().getAudioCharacteristicsHistory();
 
     float volMin = 0;
     float volMax = -60;

@@ -10,8 +10,8 @@ canvas::Canvas AudioWaterfall::run() {
 
     _c.fill(0);
 
-    xSemaphoreTake(Audio::get().getAudioCharacteristicsSemaphore(), portMAX_DELAY);
-    const auto& hist = Audio::get().getAudioCharacteristicsHistory();
+    AudioSingleton::get().lockMutex();
+    const auto& hist = AudioSingleton::get().getAudioCharacteristicsHistory();
     if (!hist.empty()) {
 
         int xIdx = _c.getWidth() - 1;
@@ -27,7 +27,7 @@ canvas::Canvas AudioWaterfall::run() {
             if (xIdx < 0) { break; }
         }
     }
-    xSemaphoreGive(Audio::get().getAudioCharacteristicsSemaphore());
+    AudioSingleton::get().releaseMutex();
 
     return _c;
 }

@@ -16,12 +16,12 @@ SpectrumDisplay::SpectrumDisplay(const canvas::Canvas& size) : _c(size) {
 void SpectrumDisplay::reset() { _finished = false; }
 
 canvas::Canvas SpectrumDisplay::run() {
-    xSemaphoreTake(Audio::get().getAudioCharacteristicsSemaphore(), portMAX_DELAY);
+    AudioSingleton::get().lockMutex();
 
     // average this many spectrums max
     const std::size_t maxSamplesToAvg = 5;
     std::vector<float> totals;
-    const auto& hist = Audio::get().getAudioCharacteristicsHistory();
+    const auto& hist = AudioSingleton::get().getAudioCharacteristicsHistory();
     if (!hist.empty()) {
         totals = std::vector<float>(hist.back().spectrum.size(), 0);
 
@@ -42,9 +42,9 @@ canvas::Canvas SpectrumDisplay::run() {
             totals.begin(),
             totals.end(),
             totals.begin(),
-            std::bind(std::multiplies<float>(), std::placeholders::_1, 1.0 / samplesToAvg));
+            std::bind(std::multiplies<float>(), std::placeholders::_1, 1.0f / samplesToAvg));
     }
-    xSemaphoreGive(Audio::get().getAudioCharacteristicsSemaphore());
+    AudioSingleton::get().releaseMutex();
 
     uint8_t vertMax = _c.getHeight();
     if (!totals.empty()) {

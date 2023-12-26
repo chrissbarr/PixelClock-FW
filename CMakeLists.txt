@@ -26,6 +26,7 @@ add_compile_definitions(PIXELCLOCK_DESKTOP ARDUINO_ARCH_ESP32)
 include(cmake/SFML.cmake)
 include(cmake/FMT.cmake)
 include(cmake/Button2.cmake)
+include(cmake/ETL.cmake)
 
 add_subdirectory(lib_desktop/ArduinoStub)
 
@@ -41,6 +42,10 @@ target_link_libraries(Display FastLEDMath)
 set(main_sources
 src/display/effects/gravity.cpp
 src/display/effects/clockfaces.cpp
+src/display/effects/audiowaterfall.cpp
+src/display/effects/spectrumdisplay.cpp
+src/display/effects/volumedisplay.cpp
+src/display/effects/volumegraph.cpp
 src/display/effects/bouncingball.cpp
 src/display/effects/randomfill.cpp
 src/display/effects/filters.cpp
@@ -52,6 +57,7 @@ src/loopTimeManager.cpp
 src/modes.cpp
 src/timekeeping.cpp
 src/utility.cpp
+src/audio.cpp
 )
 
 add_library(Main STATIC "${main_sources}")
@@ -59,6 +65,7 @@ target_include_directories(Main PUBLIC include)
 target_link_libraries(Main PUBLIC Display)
 target_link_libraries(Main PUBLIC fmt::fmt)
 target_link_libraries(Main PUBLIC Button2)
+target_link_libraries(Main PUBLIC etl::etl)
 # Link each target with other targets or add options, etc.
 
 # Adding something we can run - Output name matches target name
