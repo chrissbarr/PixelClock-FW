@@ -23,7 +23,7 @@ bool TimeManagerEmbedded::initialise() {
         if (timeStatus() != timeSet) {
             print("Unable to sync with the RTC.\n");
         } else {
-            print("RTC has set the system time\n");
+            print("RTC has set the system time.\n");
         }
     } else {
         print("Setting time to placeholder value.\n");
@@ -77,7 +77,7 @@ void TimeManagerEmbedded::setTime(std::time_t newTime) {
         rtc->adjust(newTime);
     }
     print("Setting time...\n");
-    setTime(newTime);
+    ::setTime(newTime);
 }
 
 void TimeManagerEmbedded::update() {
@@ -106,16 +106,24 @@ void TimeManagerDesktop::setTime(std::time_t newTime) {}
 void TimeManagerDesktop::update() {}
 #endif
 
+int hour24to12(int hour) {
+    if (hour == 0) {
+        return 12; // 12 midnight
+    } else if (hour > 12) {
+        return hour - 12;
+    } else {
+        return hour;
+    }
+}
+
 ClockFaceTimeStruct timeCallbackFunction(std::time_t time) {
     // extract elements of time into struct
-
     const std::tm caltime = *localtime(&time);
-
-    ClockFaceTimeStruct val;
-    val.hour12 = caltime.tm_hour; // hourFormat12(time);
-    val.hour24 = caltime.tm_hour; // hour(time);
-    val.minute = caltime.tm_min;  // minute(time);
-    val.second = caltime.tm_sec;  // second(time);
+    ClockFaceTimeStruct val{};
+    val.hour12 = hour24to12(caltime.tm_hour);
+    val.hour24 = caltime.tm_hour;
+    val.minute = caltime.tm_min;
+    val.second = caltime.tm_sec;
     return val;
 }
 
