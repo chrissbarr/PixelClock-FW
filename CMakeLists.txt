@@ -6,7 +6,7 @@
 # You should always specify a range with the newest
 # and oldest tested versions of CMake. This will ensure
 # you pick up the best policies.
-cmake_minimum_required(VERSION 3.1...3.27)
+cmake_minimum_required(VERSION 3.2...3.27)
 
 # This is your project statement. You should always list languages;
 # Listing the version is nice here since it sets lots of useful variables
@@ -22,14 +22,10 @@ set(CMAKE_CXX_STANDARD 17)
 # Find packages go here.
 
 # You should usually split this into folders, but this is a simple example
-set(SFML_STATIC_LIBRARIES TRUE)
 include(SFML.cmake)
-
 
 add_library(ArduinoStub INTERFACE)
 target_include_directories(ArduinoStub INTERFACE lib_desktop/ArduinoStub/include)
-#set_target_properties(ArduinoStub PROPERTIES LINKER_LANGUAGE CXX)
-#target_compile_definitions(ArduinoStub PUBLIC DESKTOP)
 
 add_library(FastLEDMath STATIC lib/FastLEDMath/src/flm_hsv2rgb.cpp lib/FastLEDMath/src/flm_lib8tion.cpp)
 target_include_directories(FastLEDMath PUBLIC lib/FastLEDMath/include/)
@@ -38,14 +34,12 @@ target_link_libraries(FastLEDMath ArduinoStub)
 add_library(Display STATIC lib/display/src/canvas.cpp)
 target_include_directories(Display PUBLIC lib/display/include/)
 target_link_libraries(Display FastLEDMath)
-#target_link_libraries(Display FastLED)
 
 set(main_sources
 src/display/effects/gravity.cpp
 src/display/effects/randomfill.cpp
 src/display/effects/gravityfill.cpp
 )
-
 
 add_library(Main STATIC "${main_sources}")
 target_include_directories(Main PUBLIC include)
