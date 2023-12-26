@@ -142,19 +142,19 @@ void Mode_SettingsMenu_SetTime::moveIntoCore() {
         switch (currentlySettingTimeSegment) {
         case TimeSegment::hour: {
             int changeAmt = changeDir * 60 * 60;
-            print(fmt::format("Changing hour by: {}", changeAmt));
+            print(fmt::format("Changing hour by: {}\n", changeAmt));
             this->secondsOffset += changeAmt;
             break;
         }
         case TimeSegment::minute: {
             int changeAmt = changeDir * 60;
-            print(fmt::format("Changing minute by: {}", changeAmt));
+            print(fmt::format("Changing minute by: {}\n", changeAmt));
             this->secondsOffset += changeAmt;
             break;
         }
         case TimeSegment::second: {
             int changeAmt = changeDir;
-            print(fmt::format("Changing second by: {}", changeAmt));
+            print(fmt::format("Changing second by: {}\n", changeAmt));
             this->secondsOffset += changeAmt;
             break;
         }
@@ -438,7 +438,7 @@ void Mode_Effects::moveIntoCore() {
 
     auto cycleHandler = [this](Button2& btn) {
         print("Switching to next effect...\n");
-        print(fmt::format("Current Effect Index: {}", effectIndex));
+        print(fmt::format("Current Effect Index: {}\n", effectIndex));
         if (btn == buttons.left) {
             if (effectIndex == 0) {
                 effectIndex = effects.size() - 1;
@@ -452,7 +452,7 @@ void Mode_Effects::moveIntoCore() {
                 effectIndex++;
             }
         }
-        print(fmt::format("New Effect Index: {}", effectIndex));
+        print(fmt::format("New Effect Index: {}\n", effectIndex));
     };
 
     buttons.left.setTapHandler(cycleHandler);

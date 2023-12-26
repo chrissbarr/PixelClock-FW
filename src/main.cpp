@@ -12,8 +12,8 @@
 
 #ifdef PIXELCLOCK_DESKTOP
 #include "display/dummydisplay.h"
-#include <sfml_util.h>
 #include <SFML/Graphics.hpp>
+#include <sfml_util.h>
 #else
 #include "display/pixeldisplay.h"
 #endif
@@ -46,11 +46,19 @@ std::unique_ptr<Display> display;
 canvas::Canvas baseCanvas(matrixWidth, matrixHeight);
 
 // Buttons
+#ifdef PIXELCLOCK_DESKTOP
+Button2 buttonMode;
+Button2 buttonSelect;
+Button2 buttonLeft;
+Button2 buttonRight;
+Button2 buttonBrightness;
+#else
 Button2 buttonMode(pins::button1, INPUT_PULLUP);
 Button2 buttonSelect(pins::button2, INPUT_PULLUP);
 Button2 buttonLeft(pins::button3, INPUT_PULLUP);
 Button2 buttonRight(pins::button4, INPUT_PULLUP);
 Button2 buttonBrightness(pins::button5, INPUT_PULLUP);
+#endif
 
 // Modes
 std::unique_ptr<ModeManager> modeManager;
@@ -72,10 +80,10 @@ struct BrightnessMode {
     std::function<uint8_t()> function;
 };
 std::vector<BrightnessMode> brightnessModes = {
-    {"High", []() { return 255; }},
-    {"Med", []() { return 127; }},
-    {"Low", []() { return 10; }},
-    //{"Auto", brightnessFromSensor},
+    {"High", []() { return 255; }}, //
+    {"Med", []() { return 127; }},  //
+    {"Low", []() { return 10; }},   //
+    //{"Auto", brightnessFromSensor}, //
 };
 uint8_t brightnessModeIndex = 0;
 
@@ -139,9 +147,7 @@ void setup() {
         while (true) {}
     }
     const auto devices = utility::scanI2CDevices(Wire);
-    for (const auto& d : devices) {
-        print(fmt::format("{1:<{0}} {2:#X}\n", textPadding, "Found I2C Device:", d));
-    }
+    for (const auto& d : devices) { print(fmt::format("{1:<{0}} {2:#X}\n", textPadding, "Found I2C Device:", d)); }
 #endif
 
     // time
@@ -172,7 +178,6 @@ void setup() {
         std::make_unique<ModeManager>(baseCanvas, ButtonReferences{buttonMode, buttonSelect, buttonLeft, buttonRight});
 
     printCentred("Initialising Display", headingWidth);
-
 #ifdef PIXELCLOCK_DESKTOP
     display = std::make_unique<DummyDisplay>(matrixWidth, matrixHeight);
 #else
@@ -183,6 +188,13 @@ void setup() {
     // displayDiagnostic(display);
 
     printCentred("Initialising Input", headingWidth);
+#ifdef PIXELCLOCK_DESKTOP
+    buttonMode.begin(VIRTUAL_PIN);
+    buttonSelect.begin(VIRTUAL_PIN);
+    buttonLeft.begin(VIRTUAL_PIN);
+    buttonRight.begin(VIRTUAL_PIN);
+    buttonBrightness.begin(VIRTUAL_PIN);
+#endif
     buttonBrightness.setTapHandler(brightnessButton_callback);
 
 #ifndef PIXELCLOCK_DESKTOP
@@ -210,15 +222,12 @@ void loop() {
     display->setBrightness(brightnessModes[brightnessModeIndex].function());
     display->update(out);
 
-
 #ifndef PIXELCLOCK_DESKTOP
     Audio::get().update();
     brightnessSensor->update();
 #endif
 
-
-
-    //processSerialCommands();
+    // processSerialCommands();
 
     TimeManagerSingleton::get().update();
     loopTimeManager.idle();
@@ -230,16 +239,46 @@ int main(int argc, char** argv) {
     std::cout << "PixelClock main!\n";
     setup();
 
-    auto window = sf::RenderWindow{ { 800u, 400u }, "CMake SFML Project" };
+    sf::Font font;
+    if (!font.loadFromFile("Roboto-Regular.ttf")) { std::cout << "Font not found!\n"; }
+
+    std::vector<Button> buttons;
+    buttons.reserve(10);
+
+    buttons.push_back({"Mode", {200, 100}, 40, sf::Color::Black, sf::Color::White});
+    buttons.back().setFont(font);
+    buttonMode.setButtonStateFunction([&]() { return buttons[0].isClicked(); });
+
+    buttons.push_back({"Select", {200, 100}, 40, sf::Color::Black, sf::Color::White});
+    buttons.back().setFont(font);
+    buttonSelect.setButtonStateFunction([&]() { return buttons[1].isClicked(); });
+
+    buttons.push_back({"Left", {200, 100}, 40, sf::Color::Black, sf::Color::White});
+    buttons.back().setFont(font);
+    buttonLeft.setButtonStateFunction([&]() { return buttons[2].isClicked(); });
+
+    buttons.push_back({"Right", {200, 100}, 40, sf::Color::Black, sf::Color::White});
+    buttons.back().setFont(font);
+    buttonRight.setButtonStateFunction([&]() { return buttons[3].isClicked(); });
+
+    auto window = sf::RenderWindow{{800u, 400u}, "CMake SFML Project"};
     window.setFramerateLimit(60);
 
-    while (window.isOpen())
-    {
-        for (auto event = sf::Event{}; window.pollEvent(event);)
-        {
-            if (event.type == sf::Event::Closed)
-            {
-                window.close();
+    while (window.isOpen()) {
+        for (auto event = sf::Event{}; window.pollEvent(event);) {
+            if (event.type == sf::Event::Closed) { window.close(); }
+
+            if (event.type == sf::Event::MouseButtonPressed) {
+                for (auto& btn : buttons) {
+                    if (btn.isMouseOver(window)) {
+                        btn.click();
+                        std::cout << fmt::format("Button clicked! ({})\n", btn.getName());
+                    }
+                }
+            }
+
+            if (event.type == sf::Event::MouseButtonReleased) {
+                for (auto& btn : buttons) { btn.release(); }
             }
         }
 
@@ -250,8 +289,24 @@ int main(int argc, char** argv) {
         auto t = canvasToTex(static_cast<DummyDisplay*>(display.get())->getCanvas());
         sf::Sprite sprite(t);
         sprite.setPosition(sf::Vector2f(0.f, 0.f));
-        sprite.setScale(20.f, 20.f);
+
+        sf::Vector2f targetSize = window.getView().getSize();
+        targetSize.y -= 100;
+
+        sprite.setScale(targetSize.x / sprite.getLocalBounds().width, targetSize.y / sprite.getLocalBounds().height);
         window.draw(sprite);
+
+        int btnCount = buttons.size();
+        int windowWidth = window.getView().getSize().x;
+        int widthPerButton = windowWidth / btnCount;
+        int idx = 0;
+        for (auto& btn : buttons) {
+            btn.setSize({float(widthPerButton), 100});
+            btn.setPosition({float(idx * widthPerButton), 300});
+            idx++;
+        }
+
+        for (auto& btn : buttons) { btn.drawTo(window); }
 
         window.display();
     }
