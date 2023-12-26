@@ -23,7 +23,7 @@
 
 class SFMLRecorder : public sf::SoundRecorder {
 public:
-    SFMLRecorder() {}
+    SFMLRecorder() { this->setProcessingInterval(sf::milliseconds(20)); }
     ~SFMLRecorder() {}
 
     // optional
