@@ -23,7 +23,7 @@
 
 void AudioDesktop::begin() {
 
-    FFT = std::make_unique<ArduinoFFT<float>>(vReal, vImag, fftSamples, fftSampleFreq, weighingFactors);
+    FFT = std::make_unique<ArduinoFFT<float>>(vReal, vImag, fftSamples, float(fftSampleFreq), weighingFactors);
 
     printing::print("AudioDesktop::begin()!\n");
     std::vector<std::string> availableDevices = sf::SoundRecorder::getAvailableDevices();

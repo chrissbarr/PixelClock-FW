@@ -9,15 +9,11 @@ FetchContent_Declare(
 
 FetchContent_Populate(Button2)
 
-message("${button2_POPULATED}")
-message("${button2_SOURCE_DIR}")
-
 set(button2_sources
 /src/Button2.cpp
 )
 
 list(TRANSFORM button2_sources PREPEND ${button2_SOURCE_DIR})
-message("${button2_sources}")
 
 add_library(Button2)
 target_sources(Button2 PRIVATE ${button2_sources})
