@@ -2,8 +2,8 @@
 #define gravity_h
 
 /* Project Scope */
-#include "display/effects/effect.h"
 #include "display/canvas.h"
+#include "display/effects/effect.h"
 
 class Gravity : public DisplayEffect {
 public:

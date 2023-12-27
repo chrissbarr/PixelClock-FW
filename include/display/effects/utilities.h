@@ -2,8 +2,8 @@
 #define displayutilities_h
 
 /* Project Scope */
-#include <flm_pixeltypes.h>
 #include <flm_lib8tion.h>
+#include <flm_pixeltypes.h>
 
 /* C++ Standard Library */
 #include <functional>

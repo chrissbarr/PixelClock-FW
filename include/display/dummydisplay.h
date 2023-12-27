@@ -2,8 +2,8 @@
 #define dummydisplay_h
 
 /* Project Scope */
-#include "display/display.h"
 #include "display/canvas.h"
+#include "display/display.h"
 #include "flm_pixeltypes.h"
 
 /* C++ Standard Library */
@@ -11,8 +11,8 @@
 
 class DummyDisplay : public Display {
 public:
-    DummyDisplay(uint8_t width, uint8_t height) : width(width), height(height), size(width * height) {};
-    ~DummyDisplay() {};
+    DummyDisplay(uint8_t width, uint8_t height) : width(width), height(height), size(width * height){};
+    ~DummyDisplay(){};
     void setBrightness(uint8_t brightness) override final { this->brightness = brightness; }
     void update(const canvas::Canvas& canvas) override final { this->c = canvas; };
     uint8_t getWidth() const override final { return width; }

@@ -2,8 +2,8 @@
 #define audio_audio_h
 
 /* Libraries */
-#include <etl/circular_buffer.h>
 #include <etl/array.h>
+#include <etl/circular_buffer.h>
 
 constexpr int fftSamples = 2048;
 constexpr int fftSampleFreq = 44100;
@@ -41,6 +41,5 @@ public:
     AudioSingleton(const AudioSingleton&) = delete;
     void operator=(const AudioSingleton&) = delete;
 };
-
 
 #endif // audio_audio_h

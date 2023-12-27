@@ -1,6 +1,7 @@
 /* Project Scope */
 #include "modes.h"
 #include "FMTWrapper.h"
+#include "display/canvas.h"
 #include "display/effects/audiowaterfall.h"
 #include "display/effects/bouncingball.h"
 #include "display/effects/clockfaces.h"
@@ -12,7 +13,6 @@
 #include "display/effects/volumedisplay.h"
 #include "display/effects/volumegraph.h"
 #include "utility.h"
-#include "display/canvas.h"
 
 using namespace printing;
 
@@ -53,8 +53,8 @@ void MainModeFunction::moveOut() {
 
 Mode_SettingsMenu::Mode_SettingsMenu(const canvas::Canvas& size, ButtonReferences buttons)
     : MainModeFunction("Settings Menu", buttons) {
-    menuTextScroller =
-        std::make_unique<RepeatingTextScroller>(size, "Placeholder", std::vector<pixel::CRGB>{pixel::CRGB::Red}, 50, 2000, 1);
+    menuTextScroller = std::make_unique<RepeatingTextScroller>(
+        size, "Placeholder", std::vector<pixel::CRGB>{pixel::CRGB::Red}, 50, 2000, 1);
     menuPages.push_back(std::make_unique<Mode_SettingsMenu_SetTime>(size, buttons));
     menuPages.push_back(std::make_unique<Mode_SettingsMenu_SetBrightness>(size, buttons));
 }
@@ -128,7 +128,8 @@ canvas::Canvas Mode_SettingsMenu::runCore() {
 
 Mode_SettingsMenu_SetTime::Mode_SettingsMenu_SetTime(const canvas::Canvas& size, ButtonReferences buttons)
     : MainModeFunction("Set Time", buttons) {
-    textscroller = std::make_unique<TextScroller>(size, "12:34:56", std::vector<pixel::CRGB>{pixel::CRGB::White}, 10, 1000, 1);
+    textscroller =
+        std::make_unique<TextScroller>(size, "12:34:56", std::vector<pixel::CRGB>{pixel::CRGB::White}, 10, 1000, 1);
 }
 
 bool Mode_SettingsMenu_SetTime::finished() const { return currentlySettingTimeSegment == TimeSegment::done; }
@@ -360,8 +361,10 @@ canvas::Canvas Mode_SettingsMenu_SetTime::runCore() {
 }
 
 Mode_ClockFace::Mode_ClockFace(ButtonReferences buttons) : MainModeFunction("Clockface", buttons) {
-    faces.push_back(std::make_unique<ClockFace_Gravity>([]() { return timeCallbackFunction(TimeManagerSingleton::get().now()); }));
-    faces.push_back(std::make_unique<ClockFace_Simple>([]() { return timeCallbackFunction(TimeManagerSingleton::get().now()); }));
+    faces.push_back(
+        std::make_unique<ClockFace_Gravity>([]() { return timeCallbackFunction(TimeManagerSingleton::get().now()); }));
+    faces.push_back(
+        std::make_unique<ClockFace_Simple>([]() { return timeCallbackFunction(TimeManagerSingleton::get().now()); }));
     filters.push_back(std::make_unique<RainbowWave>(1.0f, 30, RainbowWave::Direction::horizontal, false));
     filters.push_back(std::make_unique<RainbowWave>(1.0f, 30, RainbowWave::Direction::vertical, false));
     timePrev = timeCallbackFunction();

@@ -7,10 +7,10 @@
 #include "audio/audio.h"
 
 /* Libraries */
+#include <SFML/Audio.hpp>
 #include <arduinoFFT.h>
 #include <etl/array.h>
 #include <etl/circular_buffer.h>
-#include <SFML/Audio.hpp>
 
 /* C++ Standard Library */
 #include <functional>

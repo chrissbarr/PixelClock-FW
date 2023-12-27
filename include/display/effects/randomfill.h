@@ -2,9 +2,9 @@
 #define randomfill_h
 
 /* Project Scope */
+#include "display/canvas.h"
 #include "display/effects/effect.h"
 #include "display/effects/utilities.h"
-#include "display/canvas.h"
 
 /* C++ Standard Library */
 #include <random>

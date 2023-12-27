@@ -15,7 +15,6 @@ RandomFill::RandomFill(const canvas::Canvas& size, uint32_t fillInterval, colour
       _colourGenerator(colourGenerator) {
     reset();
     rand.seed(0);
-
 }
 
 canvas::Canvas RandomFill::run() {

@@ -1,16 +1,15 @@
 /* Project Scope */
 #include "display/pixeldisplay.h"
+#include "display/canvas.h"
 #include "display/effects/textscroller.h"
 #include "pinout.h"
-#include "display/canvas.h"
 
 #include "flm_pixeltypes.h"
 
-
 /* Libraries */
-//#define FASTLED_NAMESPACE_BEGIN namespace NSFastLED {
-//#define FASTLED_NAMESPACE_END }
-//#define FASTLED_USING_NAMESPACE using namespace NSFastLED;
+// #define FASTLED_NAMESPACE_BEGIN namespace NSFastLED {
+// #define FASTLED_NAMESPACE_END }
+// #define FASTLED_USING_NAMESPACE using namespace NSFastLED;
 #include <FastLED.h>
 
 /* Hack to enable SK6812 RGBW strips to work with FastLED.
@@ -35,15 +34,12 @@ PixelDisplay::PixelDisplay(uint8_t width, uint8_t height, bool serpentine, bool 
       vertical(vertical),
       pixelOffset(pixelOffset) {
 
-        uint16_t dummyLEDCount = getRGBWsize(size);
-        leds = (CRGB*)calloc(dummyLEDCount, sizeof(CRGB));
-        FastLED.addLeds<WS2812, pins::matrixLED, RGB>(leds, dummyLEDCount);
-
-      }
-
-PixelDisplay::~PixelDisplay() {
-    free(leds);
+    uint16_t dummyLEDCount = getRGBWsize(size);
+    leds = (CRGB*)calloc(dummyLEDCount, sizeof(CRGB));
+    FastLED.addLeds<WS2812, pins::matrixLED, RGB>(leds, dummyLEDCount);
 }
+
+PixelDisplay::~PixelDisplay() { free(leds); }
 
 void PixelDisplay::update(const canvas::Canvas& canvas) {
     // Serial.println("Update...");
@@ -144,7 +140,8 @@ void displayDiagnostic(PixelDisplay& display) {
     // Scroll short test
     c.fill(0);
     display.update(c);
-    auto textScrollTest1 = RepeatingTextScroller(c, "Hello - Testing!", std::vector<pixel::CRGB>{pixel::CRGB(0, 0, 255)}, 50, 500, 1);
+    auto textScrollTest1 =
+        RepeatingTextScroller(c, "Hello - Testing!", std::vector<pixel::CRGB>{pixel::CRGB(0, 0, 255)}, 50, 500, 1);
     while (!textScrollTest1.finished()) {
         display.update(textScrollTest1.run());
         delay(1);

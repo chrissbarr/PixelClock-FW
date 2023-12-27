@@ -3,13 +3,13 @@
 
 /* Libraries */
 #ifndef PIXELCLOCK_DESKTOP
-#include <TimeLib.h>
 #include <RTClib.h>
+#include <TimeLib.h>
 #endif
 
 /* C++ Standard Library */
-#include <memory>
 #include <ctime>
+#include <memory>
 
 struct ClockFaceTimeStruct {
 
@@ -34,13 +34,13 @@ public:
     std::time_t now() const override final;
     void setTime(std::time_t newTime) override final;
     void update() override final;
+
 private:
     std::unique_ptr<RTC_DS3231> rtc;
     bool initialiseRTC();
     void syncRTC();
     uint32_t syncInterval{60};
     uint32_t syncLast{0};
-
 };
 #else
 class TimeManagerDesktop : public TimeManager {
@@ -55,11 +55,11 @@ public:
 class TimeManagerSingleton {
 public:
     static TimeManager& get() {
-        #ifdef PIXELCLOCK_DESKTOP
-            static TimeManagerDesktop instance;
-        #else
-            static TimeManagerEmbedded instance;
-        #endif
+#ifdef PIXELCLOCK_DESKTOP
+        static TimeManagerDesktop instance;
+#else
+        static TimeManagerEmbedded instance;
+#endif
         return instance;
     }
 

@@ -2,15 +2,15 @@
 #define audio_esp32_h
 
 /* Project Scope */
-#include "audio/audio.h"
 #include "FMTWrapper.h"
+#include "audio/audio.h"
 #include "instrumentation.h"
 #include "utility.h"
 
 /* Libraries */
 #include "arduinoFFT.h"
-#include <etl/circular_buffer.h>
 #include <etl/array.h>
+#include <etl/circular_buffer.h>
 
 /* C++ Standard Library */
 #include <memory>
@@ -27,10 +27,8 @@ class I2SStream;
 
 void read_data_stream(const uint8_t* data, uint32_t length);
 
-
 class AudioESP32 : public Audio {
 public:
-
     AudioESP32();
     ~AudioESP32();
 
@@ -39,10 +37,11 @@ public:
     void a2dp_callback(const uint8_t* data, uint32_t length) override final;
     void lockMutex() override final;
     void releaseMutex() override final;
-    etl::icircular_buffer<AudioCharacteristics>& getAudioCharacteristicsHistory() override final { return *audioCharacteristics; }
+    etl::icircular_buffer<AudioCharacteristics>& getAudioCharacteristicsHistory() override final {
+        return *audioCharacteristics;
+    }
 
 private:
-
     std::unique_ptr<ArduinoFFT<float>> FFT;
     std::unique_ptr<BluetoothA2DPSink> a2dpSink;
     std::unique_ptr<audio_tools::I2SStream> i2sOutput;

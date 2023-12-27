@@ -45,7 +45,6 @@ sf::Texture canvasToTex2(const canvas::Canvas& c) {
     sf::RectangleShape rect;
     rect.setSize({pixelWidth, pixelWidth});
 
-
     for (int x = 0; x < c.getWidth(); x++) {
         for (int y = 0; y < c.getHeight(); y++) {
             auto p = c.getXY(x, y);
@@ -87,17 +86,11 @@ public:
         text.setPosition(xPos, yPos);
     }
 
-    void setFont(sf::Font& font) {
-        text.setFont(font);
-    }
+    void setFont(sf::Font& font) { text.setFont(font); }
 
-    void setBackColor(sf::Color color) {
-        rectangle.setFillColor(color);
-    }
+    void setBackColor(sf::Color color) { rectangle.setFillColor(color); }
 
-    void setTextColor(sf::Color color) {
-        text.setColor(color);
-    }
+    void setTextColor(sf::Color color) { text.setColor(color); }
 
     void drawTo(sf::RenderWindow& window) {
         window.draw(rectangle);
@@ -119,20 +112,14 @@ public:
         return false;
     }
 
-    void registerCallback(std::function<void()> callback) {
-        callbacks.push_back(callback);
-    }
+    void registerCallback(std::function<void()> callback) { callbacks.push_back(callback); }
 
     void click() {
-        for (auto& callback : callbacks) {
-            callback();
-        }
+        for (auto& callback : callbacks) { callback(); }
         currentlyClicked = true;
     }
 
-    void release() {
-        currentlyClicked = false;
-    }
+    void release() { currentlyClicked = false; }
 
     bool isClicked() const { return currentlyClicked; }
 

@@ -2,8 +2,8 @@
 #define spectrumdisplay_h
 
 /* Project Scope */
-#include "display/effects/effect.h"
 #include "display/canvas.h"
+#include "display/effects/effect.h"
 
 class SpectrumDisplay : public DisplayEffect {
 public:

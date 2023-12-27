@@ -2,8 +2,8 @@
 #define effect_h
 
 /* Project Scope */
-#include "display/display.h"
 #include "display/canvas.h"
+#include "display/display.h"
 
 /* Arduino Core */
 #include <Arduino.h>

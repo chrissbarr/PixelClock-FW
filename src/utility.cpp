@@ -35,14 +35,14 @@ float mapNumericRange(float input, float fromMin, float fromMax, float toMin, fl
 namespace printing {
 
 void print(const std::string& s) {
-    #ifdef PIXELCLOCK_DESKTOP
+#ifdef PIXELCLOCK_DESKTOP
     std::cout << s;
-    #else
+#else
     Serial.print(s.c_str());
-    #endif
-    }
+#endif
+}
 
-void printSolidLine( uint8_t width) { print(fmt::format("{1:-^{0}}\n", width, "")); }
+void printSolidLine(uint8_t width) { print(fmt::format("{1:-^{0}}\n", width, "")); }
 
 void printCentred(const std::string& s, uint8_t width) {
     print(fmt::format("{1:-^{0}}\n", width, fmt::format(" {} ", s)));

@@ -57,7 +57,8 @@ void GameOfLife::seedDisplay() {
         printing::print("Using seed from best scores...\n");
         int randomIndex = random(bestScores.size());
         auto randomScoreToRepeat = (*std::next(bestScores.begin(), randomIndex));
-        printing::print(fmt::format("Using score: {}, Seed: {}\n", randomScoreToRepeat.lifespan, randomScoreToRepeat.seed));
+        printing::print(
+            fmt::format("Using score: {}, Seed: {}\n", randomScoreToRepeat.lifespan, randomScoreToRepeat.seed));
         _lastSeed = randomScoreToRepeat.seed;
     } else {
         // Serial.println("Using random seed...");
@@ -104,8 +105,9 @@ canvas::Canvas GameOfLife::run() {
                 _lastLoopTime = millis();
                 changedDisplay = true;
             }
-            bool empty = std::all_of(
-                buffers[readBuffer].begin(), buffers[readBuffer].end(), [](pixel::CRGB i) { return i == pixel::CRGB(0); });
+            bool empty = std::all_of(buffers[readBuffer].begin(), buffers[readBuffer].end(), [](pixel::CRGB i) {
+                return i == pixel::CRGB(0);
+            });
             if (empty) { _finished = true; }
         }
     } else {
