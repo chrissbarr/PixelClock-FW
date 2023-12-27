@@ -30,6 +30,34 @@ sf::Texture canvasToTex(const canvas::Canvas& c) {
     return tex;
 }
 
+sf::Texture canvasToTex2(const canvas::Canvas& c) {
+    sf::RenderTexture renderTexture;
+
+    float pixelWidth = 10.f;
+    float pixelGap = 1.0f;
+
+    float totalWidth = c.getWidth() * pixelWidth + (c.getWidth() - 1) * pixelGap;
+    float totalHeight = c.getHeight() * pixelWidth + (c.getHeight() - 1) * pixelGap;
+
+    renderTexture.create(totalWidth, totalHeight);
+    renderTexture.clear();
+
+    sf::RectangleShape rect;
+    rect.setSize({pixelWidth, pixelWidth});
+
+
+    for (int x = 0; x < c.getWidth(); x++) {
+        for (int y = 0; y < c.getHeight(); y++) {
+            auto p = c.getXY(x, y);
+            rect.setPosition({(x) * (pixelWidth + pixelGap), (c.getHeight() - 1 - y) * (pixelWidth + pixelGap)});
+            rect.setFillColor(sf::Color(p.r, p.g, p.b));
+            renderTexture.draw(rect);
+        }
+    }
+
+    return renderTexture.getTexture();
+}
+
 } // namespace canvas
 
 class Button {

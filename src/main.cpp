@@ -259,7 +259,7 @@ int main(int argc, char** argv) {
     buttonRight.setButtonStateFunction([&]() { return buttons[3].isClicked(); });
 
     auto window = sf::RenderWindow{{800u, 400u}, "CMake SFML Project"};
-    window.setFramerateLimit(60);
+    window.setFramerateLimit(300);
 
     while (window.isOpen()) {
         for (auto event = sf::Event{}; window.pollEvent(event);) {
@@ -283,7 +283,7 @@ int main(int argc, char** argv) {
 
         loop();
 
-        auto t = canvasToTex(static_cast<DummyDisplay*>(display.get())->getCanvas());
+        auto t = canvasToTex2(static_cast<DummyDisplay*>(display.get())->getCanvas());
         sf::Sprite sprite(t);
         sprite.setPosition(sf::Vector2f(0.f, 0.f));
 
