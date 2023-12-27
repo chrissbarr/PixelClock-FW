@@ -2,8 +2,7 @@
 #define filters_h
 
 /* Project Scope */
-#include <canvas.h>
-
+#include "display/canvas.h"
 #include "flm_pixeltypes.h"
 
 class FilterMethod {

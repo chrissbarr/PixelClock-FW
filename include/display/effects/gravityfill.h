@@ -6,7 +6,7 @@
 #include "display/effects/gravity.h"
 #include "display/effects/randomfill.h"
 #include "display/effects/utilities.h"
-#include <canvas.h>
+#include "display/canvas.h"
 
 /* C++ Standard Library */
 #include <memory>

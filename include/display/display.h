@@ -1,10 +1,11 @@
 #ifndef display_h
 #define display_h
 
+/* Project Scope */
+#include "flm_pixeltypes.h"
+
 /* C++ Standard Library */
 #include <cstdint>
-
-#include "flm_pixeltypes.h"
 
 /* Forward Declarations */
 namespace canvas {

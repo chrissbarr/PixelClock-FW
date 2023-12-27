@@ -5,7 +5,7 @@
 #include "display/effects/effect.h"
 #include "display/effects/gravity.h"
 #include "timekeeping.h"
-#include <canvas.h>
+#include "display/canvas.h"
 
 /* C++ Standard Library */
 #include <memory>

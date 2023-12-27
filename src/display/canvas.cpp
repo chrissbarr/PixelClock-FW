@@ -1,5 +1,5 @@
 /* Project Scope */
-#include "canvas.h"
+#include "display/canvas.h"
 
 /* Arduino Core */
 #include <assert.h>

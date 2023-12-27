@@ -3,7 +3,7 @@
 
 /* Project Scope */
 #include "display/effects/effect.h"
-#include <canvas.h>
+#include "display/canvas.h"
 
 class SpectrumDisplay : public DisplayEffect {
 public:

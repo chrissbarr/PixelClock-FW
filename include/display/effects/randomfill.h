@@ -4,7 +4,7 @@
 /* Project Scope */
 #include "display/effects/effect.h"
 #include "display/effects/utilities.h"
-#include <canvas.h>
+#include "display/canvas.h"
 
 /* C++ Standard Library */
 #include <random>

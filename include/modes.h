@@ -8,7 +8,7 @@
 #include "display/effects/gameoflife.h"
 #include "display/effects/textscroller.h"
 #include "timekeeping.h"
-#include <canvas.h>
+#include "display/canvas.h"
 
 /* Libraries */
 #include <Button2.h>

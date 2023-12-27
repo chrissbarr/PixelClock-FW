@@ -11,8 +11,8 @@
 #include <etl/circular_buffer.h>
 
 /* C++ Standard Library */
-#include <numeric>
 #include <cmath>
+#include <numeric>
 
 void AudioDesktop::begin() {
 
@@ -38,16 +38,8 @@ void AudioDesktop::begin() {
 
 void AudioDesktop::a2dp_callback(const uint8_t* data, uint32_t length) {
 
-    //callbackDuration.start();
-    //audioDuration.start();
-
     int16_t* samples = (int16_t*)data;
     uint32_t sample_count = length / 2;
-
-    //i2sOutput->write(data, length);
-
-    //audioDuration.stop();
-    //volDuration.start();
 
     float vLeftAvg = 0;
     float vRightAvg = 0;
@@ -74,9 +66,6 @@ void AudioDesktop::a2dp_callback(const uint8_t* data, uint32_t length) {
     vLeftAvg = mag2db(vLeftAvg);
     vRightAvg = mag2db(vRightAvg);
 
-    //volDuration.stop();
-    //fftDuration.start();
-
     int sourceIdx = 0;
     for (uint32_t i = 0; i < fftSamples; i++) {
 
@@ -94,9 +83,6 @@ void AudioDesktop::a2dp_callback(const uint8_t* data, uint32_t length) {
     FFT->windowing(FFTWindow::Hamming, FFTDirection::Forward); /* Weigh data */
     FFT->compute(FFTDirection::Forward);                       /* Compute FFT */
     FFT->complexToMagnitude();                                 /* Compute magnitudes */
-
-    //fftDuration.stop();
-    //specDuration.start();
 
     // Fill the audioSpectrum vector with data.
     auto spectrum = etl::array<float, audioSpectrumBins>();
@@ -131,20 +117,13 @@ void AudioDesktop::a2dp_callback(const uint8_t* data, uint32_t length) {
         spectrum.begin(),
         std::bind(std::multiplies<float>(), std::placeholders::_1, scaleFactor));
 
-    //specDuration.stop();
-
     AudioCharacteristics c{};
     c.volumeLeft = vLeftAvg;
     c.volumeRight = vRightAvg;
     c.spectrumMax = maxThisTime;
     c.spectrum = spectrum;
 
-    //xSemaphoreTake(audioCharacteristicsSemaphore, portMAX_DELAY);
     audioCharacteristics.push(c);
-    //xSemaphoreGive(audioCharacteristicsSemaphore);
-
-    //callbackDuration.stop();
 }
-
 
 #endif

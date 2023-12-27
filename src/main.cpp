@@ -1,21 +1,18 @@
 /* Project Scope */
 #include "audio/audio.h"
-#ifndef PIXELCLOCK_DESKTOP
-#include "serialCommands.h"
-#endif
 #include "brightnessSensor.h"
 #include "loopTimeManager.h"
 #include "modes.h"
 #include "pinout.h"
 #include "timekeeping.h"
 #include "utility.h"
-
 #ifdef PIXELCLOCK_DESKTOP
 #include "display/dummydisplay.h"
+#include "utility/sfml.h"
 #include <SFML/Graphics.hpp>
-#include <sfml_util.h>
 #else
 #include "display/pixeldisplay.h"
+#include "serialCommands.h"
 #endif
 
 /* Libraries */
@@ -30,12 +27,8 @@
 #include <algorithm>
 #include <functional>
 #include <memory>
-#include <random>
 #include <string>
 #include <vector>
-#ifdef PIXELCLOCK_DESKTOP
-#include <iostream>
-#endif
 
 using namespace printing;
 
@@ -80,7 +73,7 @@ std::vector<BrightnessMode> brightnessModes = {
     {"High", []() { return 255; }}, //
     {"Med", []() { return 127; }},  //
     {"Low", []() { return 10; }},   //
-    //{"Auto", brightnessFromSensor}, //
+    {"Auto", brightnessFromSensor}, //
 };
 uint8_t brightnessModeIndex = 0;
 
@@ -223,7 +216,6 @@ void loop() {
 
     AudioSingleton::get().update();
 
-
     // processSerialCommands();
 
     TimeManagerSingleton::get().update();
@@ -233,11 +225,11 @@ void loop() {
 #if defined PIXELCLOCK_DESKTOP
 int main(int argc, char** argv) {
 
-    std::cout << "PixelClock main!\n";
+    print("PixelClock main!\n");
     setup();
 
     sf::Font font;
-    if (!font.loadFromFile("Roboto-Regular.ttf")) { std::cout << "Font not found!\n"; }
+    if (!font.loadFromFile("Roboto-Regular.ttf")) { print("Font not found!\n"); }
 
     std::vector<Button> buttons;
     buttons.reserve(10);
@@ -258,7 +250,7 @@ int main(int argc, char** argv) {
     buttons.back().setFont(font);
     buttonRight.setButtonStateFunction([&]() { return buttons[3].isClicked(); });
 
-    auto window = sf::RenderWindow{{800u, 400u}, "CMake SFML Project"};
+    auto window = sf::RenderWindow{{800u, 400u}, "PixelClock-FW"};
     window.setFramerateLimit(300);
 
     while (window.isOpen()) {
@@ -269,7 +261,7 @@ int main(int argc, char** argv) {
                 for (auto& btn : buttons) {
                     if (btn.isMouseOver(window)) {
                         btn.click();
-                        std::cout << fmt::format("Button clicked! ({})\n", btn.getName());
+                        print(fmt::format("Button clicked! ({})\n", btn.getName()));
                     }
                 }
             }

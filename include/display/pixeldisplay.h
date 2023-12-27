@@ -1,19 +1,18 @@
 #ifndef pixeldisplay_h
 #define pixeldisplay_h
 
-#include "display.h"
+/* Project Scope */
+#include "display/display.h"
+#include "flm_pixeltypes.h"
 
 /* C++ Standard Library */
 #include <cstdint>
-
-#include "flm_pixeltypes.h"
 
 /* Forward Declarations */
 class CRGB;
 namespace canvas {
 class Canvas;
 }
-
 
 class PixelDisplay : public Display {
 public:

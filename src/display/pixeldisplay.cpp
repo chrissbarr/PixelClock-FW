@@ -2,7 +2,7 @@
 #include "display/pixeldisplay.h"
 #include "display/effects/textscroller.h"
 #include "pinout.h"
-#include <canvas.h>
+#include "display/canvas.h"
 
 #include "flm_pixeltypes.h"
 

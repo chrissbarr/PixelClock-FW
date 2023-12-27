@@ -6,8 +6,6 @@
 #include "audio/ESP32.h"
 #endif
 
-
-
 Audio& AudioSingleton::get() {
 #ifdef PIXELCLOCK_DESKTOP
     static AudioDesktop instance;

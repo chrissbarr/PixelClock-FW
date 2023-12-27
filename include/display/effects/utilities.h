@@ -1,6 +1,7 @@
 #ifndef displayutilities_h
 #define displayutilities_h
 
+/* Project Scope */
 #include <flm_pixeltypes.h>
 #include <flm_lib8tion.h>
 

@@ -26,10 +26,6 @@ target_link_libraries(FastLEDMath ArduinoStub)
 
 target_link_libraries(Button2 ArduinoStub)
 
-add_library(Display STATIC lib/display/src/canvas.cpp)
-target_include_directories(Display PUBLIC lib/display/include/)
-target_link_libraries(Display FastLEDMath)
-
 set(main_sources
 src/display/effects/gravity.cpp
 src/display/effects/clockfaces.cpp
@@ -44,6 +40,7 @@ src/display/effects/gravity.cpp
 src/display/effects/gravityfill.cpp
 src/display/effects/textscroller.cpp
 src/display/effects/utilities.cpp
+src/display/canvas.cpp
 src/loopTimeManager.cpp
 src/modes.cpp
 src/timekeeping.cpp
@@ -54,7 +51,7 @@ src/audio/desktop.cpp
 
 add_library(Main STATIC "${main_sources}")
 target_include_directories(Main PUBLIC include)
-target_link_libraries(Main PUBLIC Display)
+target_link_libraries(Main PUBLIC FastLEDMath)
 target_link_libraries(Main PUBLIC fmt::fmt)
 target_link_libraries(Main PUBLIC Button2)
 target_link_libraries(Main PUBLIC ArduinoFFT)
@@ -66,7 +63,6 @@ add_executable(PixelClock src/main.cpp)
 
 # Link libraries
 target_link_libraries(PixelClock PRIVATE ArduinoStub)
-target_link_libraries(PixelClock PRIVATE Display)
 target_link_libraries(PixelClock PRIVATE Main)
 
 if(WIN32)

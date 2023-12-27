@@ -1,14 +1,13 @@
 #ifndef dummydisplay_h
 #define dummydisplay_h
 
-#include "display.h"
-
-#include <canvas.h>
+/* Project Scope */
+#include "display/display.h"
+#include "display/canvas.h"
+#include "flm_pixeltypes.h"
 
 /* C++ Standard Library */
 #include <cstdint>
-
-#include "flm_pixeltypes.h"
 
 class DummyDisplay : public Display {
 public:

@@ -3,7 +3,7 @@
 
 /* Project Scope */
 #include "display/display.h"
-#include <canvas.h>
+#include "display/canvas.h"
 
 /* Arduino Core */
 #include <Arduino.h>

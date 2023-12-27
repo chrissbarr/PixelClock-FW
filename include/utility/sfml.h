@@ -1,10 +1,10 @@
-#ifndef sfml_util_h
-#define sfml_util_h
+#ifndef util_sfml_h
+#define util_sfml_h
 
 #ifdef PIXELCLOCK_DESKTOP
 
 /* Project Scope */
-#include "canvas.h"
+#include "display/canvas.h"
 
 /* SFML */
 #include <SFML/Graphics.hpp>
@@ -149,4 +149,4 @@ private:
 
 #endif
 
-#endif // sfml_util_h
+#endif // util_sfml_h

@@ -12,7 +12,7 @@
 #include "display/effects/volumedisplay.h"
 #include "display/effects/volumegraph.h"
 #include "utility.h"
-#include <canvas.h>
+#include "display/canvas.h"
 
 using namespace printing;
 
