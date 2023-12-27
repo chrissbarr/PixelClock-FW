@@ -1,6 +1,6 @@
 /* Project Scope */
 #include "display/effects/audiowaterfall.h"
-#include "audio.h"
+#include "audio/audio.h"
 
 AudioWaterfall::AudioWaterfall(const canvas::Canvas& size) : _c(size) {}
 

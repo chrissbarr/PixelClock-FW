@@ -5,9 +5,6 @@
 #include "display/effects/effect.h"
 #include <canvas.h>
 
-/* Libraries */
-//#include <FastLED.h>
-
 class VolumeGraph : public DisplayEffect {
 public:
     VolumeGraph(const canvas::Canvas& size);

@@ -1,9 +1,9 @@
 /* Project Scope */
-#include "audio.h"
+#include "audio/audio.h"
 #ifdef PIXELCLOCK_DESKTOP
-#include "audioDesktop.h"
+#include "audio/desktop.h"
 #else
-#include "audioESP32.h"
+#include "audio/ESP32.h"
 #endif
 
 

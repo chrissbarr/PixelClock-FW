@@ -1,14 +1,9 @@
-#ifndef audiofft_h
-#define audiofft_h
-
-/* Project Scope */
+#ifndef audio_audio_h
+#define audio_audio_h
 
 /* Libraries */
 #include <etl/circular_buffer.h>
 #include <etl/array.h>
-
-/* C++ Standard Library */
-
 
 constexpr int fftSamples = 2048;
 constexpr int fftSampleFreq = 44100;
@@ -48,4 +43,4 @@ public:
 };
 
 
-#endif // audiofft_h
+#endif // audio_audio_h

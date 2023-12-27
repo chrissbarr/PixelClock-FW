@@ -1,24 +1,19 @@
-#ifndef audiodesktop_h
-#define audiodesktop_h
+#ifndef audio_desktop_h
+#define audio_desktop_h
 
 #ifdef PIXELCLOCK_DESKTOP
 
 /* Project Scope */
-#include "audio.h"
-// #include "FMTWrapper.h"
-// #include "instrumentation.h"
-// #include "utility.h"
-
-#include <SFML/Audio.hpp>
+#include "audio/audio.h"
 
 /* Libraries */
 #include <arduinoFFT.h>
 #include <etl/array.h>
 #include <etl/circular_buffer.h>
+#include <SFML/Audio.hpp>
 
 /* C++ Standard Library */
 #include <functional>
-#include <iostream>
 #include <memory>
 
 class SFMLRecorder : public sf::SoundRecorder {
@@ -75,4 +70,4 @@ private:
 
 #endif
 
-#endif // audiodesktop_h
+#endif // audio_desktop_h

@@ -2,7 +2,7 @@
 #include "display/effects/volumedisplay.h"
 #include "EMA.h"
 #include "FMTWrapper.h"
-#include "audio.h"
+#include "audio/audio.h"
 #include "display/display.h"
 #include "display/effects/utilities.h"
 #include "utility.h"

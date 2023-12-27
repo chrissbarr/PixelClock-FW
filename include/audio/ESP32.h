@@ -1,8 +1,8 @@
-#ifndef audioesp32_h
-#define audioesp32_h
+#ifndef audio_esp32_h
+#define audio_esp32_h
 
 /* Project Scope */
-#include "audio.h"
+#include "audio/audio.h"
 #include "FMTWrapper.h"
 #include "instrumentation.h"
 #include "utility.h"
@@ -65,4 +65,4 @@ private:
     etl::icircular_buffer<AudioCharacteristics>* audioCharacteristics;
 };
 
-#endif // audioesp32_h
+#endif // audio_esp32_h

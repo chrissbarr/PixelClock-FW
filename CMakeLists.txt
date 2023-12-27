@@ -48,8 +48,8 @@ src/loopTimeManager.cpp
 src/modes.cpp
 src/timekeeping.cpp
 src/utility.cpp
-src/audio.cpp
-src/audioDesktop.cpp
+src/audio/audio.cpp
+src/audio/desktop.cpp
 )
 
 add_library(Main STATIC "${main_sources}")

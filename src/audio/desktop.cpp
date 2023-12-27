@@ -1,20 +1,13 @@
 #ifdef PIXELCLOCK_DESKTOP
 
 /* Project Scope */
-#include "audioDesktop.h"
+#include "audio/desktop.h"
 #include "FMTWrapper.h"
-#include "instrumentation.h"
-#include "pinout.h"
 #include "utility.h"
 
 /* Libraries */
-
 #include <SFML/Audio.hpp>
-// #include "AudioTools.h"
-// #include "BluetoothA2DPSink.h"
-//  #define FFT_SPEED_OVER_PRECISION
-//  #define FFT_SQRT_APPROXIMATION
-// #include <arduinoFFT.h>
+#include <arduinoFFT.h>
 #include <etl/circular_buffer.h>
 
 /* C++ Standard Library */

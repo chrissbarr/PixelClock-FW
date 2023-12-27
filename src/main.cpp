@@ -1,5 +1,5 @@
 /* Project Scope */
-#include "audio.h"
+#include "audio/audio.h"
 #ifndef PIXELCLOCK_DESKTOP
 #include "serialCommands.h"
 #endif
