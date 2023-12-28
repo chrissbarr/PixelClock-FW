@@ -55,7 +55,8 @@ void GameOfLife::seedDisplay() {
 
     if (!_seeding && bestScores.size() >= bestScoresToKeep) {
         printing::print("Using seed from best scores...\n");
-        int randomIndex = random(bestScores.size());
+        std::uniform_int_distribution<std::size_t> dist(0, bestScores.size() - 1);
+        int randomIndex = dist(rand);
         auto randomScoreToRepeat = (*std::next(bestScores.begin(), randomIndex));
         printing::print(
             fmt::format("Using score: {}, Seed: {}\n", randomScoreToRepeat.lifespan, randomScoreToRepeat.seed));
@@ -67,7 +68,7 @@ void GameOfLife::seedDisplay() {
 
     std::minstd_rand simple_rand;
     simple_rand.seed(_lastSeed);
-    std::uniform_int_distribution<uint8_t> dist(0, 10);
+    std::uniform_int_distribution<int> dist(0, 10);
 
     int xMin = 0;
     int xMax = _c.getWidth() - 1;

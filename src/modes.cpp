@@ -408,32 +408,32 @@ Mode_Effects::Mode_Effects(const canvas::Canvas& size, ButtonReferences buttons)
     effects.push_back(std::make_unique<BouncingBall>(size, 100, colourGenerator::cycleHSV));
     effects.push_back(std::make_unique<GravityFill>(size, 25, 25, colourGenerator::randomHSV));
 
-    // print("Pregenerating GoL seeds...\n");
-    // uint32_t startTime = millis();
-    // golTrainer = std::make_unique<GameOfLife>(size, 0, 0, colourGenerator::white, false);
-    // golTrainer->setFadeOnDeath(false);
-    // golTrainer->setSeedingMode(true);
+    print("Pregenerating GoL seeds...\n");
+    uint32_t startTime = millis();
+    golTrainer = std::make_unique<GameOfLife>(size, 0, 0, colourGenerator::white, false);
+    golTrainer->setFadeOnDeath(false);
+    golTrainer->setSeedingMode(true);
 
-    // // run until we have a few initial states
-    // while (golTrainer->getSeededCount() < 3) {
-    //     while (!golTrainer->finished()) {
-    //         golTrainer->run();
-    //         // catch any infinite-running seeds
-    //         if (golTrainer->getLifespan() > 500) { break; }
-    //     }
-    //     golTrainer->reset();
-    // }
-    // print("GoL scores: \n");
-    // for (const auto& score : golTrainer->getScores()) {
-    //     print(fmt::format("{} - {}\n", score.lifespan, score.seed));
-    // }
-    // uint32_t stopTime = millis();
-    // print(fmt::format("Seeding duration: {}", (stopTime - startTime)));
+    // run until we have a few initial states
+    while (golTrainer->getSeededCount() < 3) {
+        while (!golTrainer->finished()) {
+            golTrainer->run();
+            // catch any infinite-running seeds
+            if (golTrainer->getLifespan() > 500) { break; }
+        }
+        golTrainer->reset();
+    }
+    print("GoL scores: \n");
+    for (const auto& score : golTrainer->getScores()) {
+        print(fmt::format("{} - {}\n", score.lifespan, score.seed));
+    }
+    uint32_t stopTime = millis();
+    print(fmt::format("Seeding duration: {}", (stopTime - startTime)));
 
-    // golActual = std::make_shared<GameOfLife>(size, 250, 50, colourGenerator::cycleHSV, false);
-    // golActual->setScores(golTrainer->getScores());
+    golActual = std::make_shared<GameOfLife>(size, 250, 50, colourGenerator::cycleHSV, false);
+    golActual->setScores(golTrainer->getScores());
 
-    // effects.push_back(golActual);
+    effects.push_back(golActual);
 }
 
 void Mode_Effects::moveIntoCore() {
@@ -467,21 +467,19 @@ canvas::Canvas Mode_Effects::runCore() {
     auto c = effects[effectIndex]->run();
     if (effects[effectIndex]->finished()) { effects[effectIndex]->reset(); }
 
-    // if (effects[effectIndex] == golActual) {
-    //     golTrainer->run();
-    //     if (golTrainer->finished()) {
-    //         golTrainer->reset();
-    //         if (golTrainer->getIterations() % 100 == 0) {
-    //             golActual->setScores(golTrainer->getScores());
-    //             Serial.println("GoL scores: ");
-    //             for (const auto& score : golActual->getScores()) {
-    //                 Serial.print(score.lifespan);
-    //                 Serial.print("\t");
-    //                 Serial.println(score.seed);
-    //             }
-    //         }
-    //     }
-    // }
+    if (effects[effectIndex] == golActual) {
+        golTrainer->run();
+        if (golTrainer->finished()) {
+            golTrainer->reset();
+            if (golTrainer->getIterations() % 100 == 0) {
+                golActual->setScores(golTrainer->getScores());
+                print("GoL scores: \n");
+                for (const auto& score : golActual->getScores()) {
+                    print(fmt::format("{} - {}\n", score.lifespan, score.seed));
+                }
+            }
+        }
+    }
     return c;
 }
 

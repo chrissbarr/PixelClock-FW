@@ -8,6 +8,7 @@
 
 /* C++ Standard Library */
 #include <deque>
+#include <random>
 #include <set>
 #include <vector>
 
@@ -68,6 +69,7 @@ private:
     std::deque<std::size_t> bufferHashes;
 
     std::size_t hashBuffer(const std::vector<pixel::CRGB>& vec) const;
+    std::minstd_rand rand;
 };
 
 #endif // gameoflife_h

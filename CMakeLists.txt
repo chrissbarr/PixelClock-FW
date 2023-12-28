@@ -27,26 +27,27 @@ target_link_libraries(FastLEDMath ArduinoStub)
 target_link_libraries(Button2 ArduinoStub)
 
 set(main_sources
-src/display/effects/gravity.cpp
-src/display/effects/clockfaces.cpp
+src/audio/audio.cpp
+src/audio/desktop.cpp
+src/display/canvas.cpp
 src/display/effects/audiowaterfall.cpp
-src/display/effects/spectrumdisplay.cpp
-src/display/effects/volumedisplay.cpp
-src/display/effects/volumegraph.cpp
 src/display/effects/bouncingball.cpp
-src/display/effects/randomfill.cpp
+src/display/effects/clockfaces.cpp
 src/display/effects/filters.cpp
+src/display/effects/gameoflife.cpp
+src/display/effects/gravity.cpp
 src/display/effects/gravity.cpp
 src/display/effects/gravityfill.cpp
+src/display/effects/randomfill.cpp
+src/display/effects/spectrumdisplay.cpp
 src/display/effects/textscroller.cpp
 src/display/effects/utilities.cpp
-src/display/canvas.cpp
+src/display/effects/volumedisplay.cpp
+src/display/effects/volumegraph.cpp
 src/loopTimeManager.cpp
 src/modes.cpp
 src/timekeeping.cpp
 src/utility.cpp
-src/audio/audio.cpp
-src/audio/desktop.cpp
 )
 
 add_library(Main STATIC "${main_sources}")
