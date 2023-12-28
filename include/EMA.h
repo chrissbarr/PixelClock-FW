@@ -1,14 +1,6 @@
 #ifndef EMA_h
 #define EMA_h
 
-/* Arduino Core */
-#include <Arduino.h>
-#include <Wire.h>
-
-/* C++ Standard Library */
-#include <iterator>
-#include <numeric>
-
 namespace utility {
 
 /* Exponential Moving Average */

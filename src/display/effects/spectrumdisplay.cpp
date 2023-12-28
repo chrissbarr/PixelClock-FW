@@ -1,6 +1,6 @@
 /* Project Scope */
 #include "display/effects/spectrumdisplay.h"
-#include "audio.h"
+#include "audio/audio.h"
 #include "display/effects/utilities.h"
 
 /* C++ Standard Library */
@@ -9,19 +9,19 @@
 #include <vector>
 
 SpectrumDisplay::SpectrumDisplay(const canvas::Canvas& size) : _c(size) {
-    colMin = CRGB::Blue;
-    colMax = CRGB::Purple;
+    colMin = flm::CRGB::Blue;
+    colMax = flm::CRGB::Purple;
 }
 
 void SpectrumDisplay::reset() { _finished = false; }
 
 canvas::Canvas SpectrumDisplay::run() {
-    xSemaphoreTake(Audio::get().getAudioCharacteristicsSemaphore(), portMAX_DELAY);
+    AudioSingleton::get().lockMutex();
 
     // average this many spectrums max
     const std::size_t maxSamplesToAvg = 5;
     std::vector<float> totals;
-    const auto& hist = Audio::get().getAudioCharacteristicsHistory();
+    const auto& hist = AudioSingleton::get().getAudioCharacteristicsHistory();
     if (!hist.empty()) {
         totals = std::vector<float>(hist.back().spectrum.size(), 0);
 
@@ -42,9 +42,9 @@ canvas::Canvas SpectrumDisplay::run() {
             totals.begin(),
             totals.end(),
             totals.begin(),
-            std::bind(std::multiplies<float>(), std::placeholders::_1, 1.0 / samplesToAvg));
+            std::bind(std::multiplies<float>(), std::placeholders::_1, 1.0f / samplesToAvg));
     }
-    xSemaphoreGive(Audio::get().getAudioCharacteristicsSemaphore());
+    AudioSingleton::get().releaseMutex();
 
     uint8_t vertMax = _c.getHeight();
     if (!totals.empty()) {
@@ -53,9 +53,9 @@ canvas::Canvas SpectrumDisplay::run() {
             // we need to scale the value from 0 - valMax to 0 - vertMax
             auto barHeight = calculateBarHeight(totals[x], 0, maxScale, vertMax);
             for (int y = 0; y < _c.getHeight(); y++) {
-                CRGB colour = CRGB::Black;
+                flm::CRGB colour = flm::CRGB::Black;
                 if (y <= barHeight) {
-                    colour = CRGB(colMin).lerp16(colMax, fract16((barHeight / float(vertMax)) * 65535));
+                    colour = flm::CRGB(colMin).lerp16(colMax, flm::fract16((barHeight / float(vertMax)) * 65535));
                 }
                 if (y == std::floor(barHeight)) {
                     float remainder = barHeight - std::floor(barHeight);

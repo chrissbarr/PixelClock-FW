@@ -3,9 +3,7 @@
 
 /* Project Scope */
 #include "characters.h"
-
-/* Libraries */
-#include "FastLED.h"
+#include "flm_pixeltypes.h"
 
 /* C++ Standard Library */
 #include <cstdint>
@@ -24,25 +22,25 @@ public:
     uint16_t getSize() const { return length; }
     uint16_t XYToIndex(uint8_t x, uint8_t y) const;
 
-    CRGB& operator[](std::size_t idx) { return data[idx]; }
-    const CRGB& operator[](std::size_t idx) const { return data[idx]; }
+    flm::CRGB& operator[](std::size_t idx) { return data[idx]; }
+    const flm::CRGB& operator[](std::size_t idx) const { return data[idx]; }
 
     /* Drawing Functions */
-    void setXY(uint8_t x, uint8_t y, CRGB colour);
-    const CRGB& getXY(uint8_t x, uint8_t y) const;
-    void fill(const CRGB& colour);
+    void setXY(uint8_t x, uint8_t y, flm::CRGB colour);
+    const flm::CRGB& getXY(uint8_t x, uint8_t y) const;
+    void fill(const flm::CRGB& colour);
 
-    bool containsColour(const CRGB& colour = 0) const;
+    bool containsColour(const flm::CRGB& colour = 0) const;
 
-    void showCharacters(const std::string& string, const std::vector<CRGB>& colours, int xOffset, uint8_t spacing = 0);
-    void showCharacter(char character, CRGB colour, int xOffset);
-    void showCharacter(const FontGlyph& character, CRGB colour, int xOffset);
+    void showCharacters(const std::string& string, const std::vector<flm::CRGB>& colours, int xOffset, uint8_t spacing = 0);
+    void showCharacter(char character, flm::CRGB colour, int xOffset);
+    void showCharacter(const FontGlyph& character, flm::CRGB colour, int xOffset);
 
 private:
     uint8_t width;
     uint8_t height;
     uint16_t length;
-    std::vector<CRGB> data;
+    std::vector<flm::CRGB> data;
 };
 
 Canvas blit(const Canvas& background, const Canvas& foreground, int xOffset, int yOffset);

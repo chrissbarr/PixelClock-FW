@@ -1,10 +1,30 @@
 /* Project Scope */
-#include "display/display.h"
+#include "display/pixeldisplay.h"
+#include "display/canvas.h"
 #include "display/effects/textscroller.h"
-#include <canvas.h>
+#include "pinout.h"
+
+#include "flm_pixeltypes.h"
 
 /* Libraries */
+// #define FASTLED_NAMESPACE_BEGIN namespace NSFastLED {
+// #define FASTLED_NAMESPACE_END }
+// #define FASTLED_USING_NAMESPACE using namespace NSFastLED;
 #include <FastLED.h>
+
+/* Hack to enable SK6812 RGBW strips to work with FastLED.
+ *
+ * Original code by Jim Bumgardner (http://krazydad.com).
+ * Modified by David Madison (http://partsnotincluded.com).
+ */
+constexpr uint16_t getRGBWsize(uint16_t nleds) {
+    uint16_t nbytes = nleds * 4;
+    if (nbytes % 3 > 0) {
+        return nbytes / 3 + 1;
+    } else {
+        return nbytes / 3;
+    }
+}
 
 PixelDisplay::PixelDisplay(uint8_t width, uint8_t height, bool serpentine, bool vertical, uint32_t pixelOffset)
     : width(width),
@@ -12,15 +32,20 @@ PixelDisplay::PixelDisplay(uint8_t width, uint8_t height, bool serpentine, bool 
       size(width * height),
       serpentine(serpentine),
       vertical(vertical),
-      pixelOffset(pixelOffset) {}
+      pixelOffset(pixelOffset) {
 
-PixelDisplay::~PixelDisplay() {}
+    uint16_t dummyLEDCount = getRGBWsize(size);
+    leds = (CRGB*)calloc(dummyLEDCount, sizeof(CRGB));
+    FastLED.addLeds<WS2812, pins::matrixLED, RGB>(leds, dummyLEDCount);
+}
+
+PixelDisplay::~PixelDisplay() { free(leds); }
 
 void PixelDisplay::update(const canvas::Canvas& canvas) {
     // Serial.println("Update...");
     if (leds) {
 
-        auto buff = std::vector<CRGB>(size, 0);
+        auto buff = std::vector<flm::CRGB>(size, 0);
 
         for (int x = 0; x < canvas.getWidth(); x++) {
             if (x >= getWidth()) { break; }
@@ -32,13 +57,16 @@ void PixelDisplay::update(const canvas::Canvas& canvas) {
 
         uint8_t* byteToWrite = (uint8_t*)leds;
 
-        for (const CRGB& pixel : buff) {
+        for (const flm::CRGB& pixel : buff) {
             // Serial.println("Writing pixel...");
             *byteToWrite++ = pixel.green;
             *byteToWrite++ = pixel.red;
             *byteToWrite++ = pixel.blue;
             *byteToWrite++ = 0;
         }
+
+        FastLED.setBrightness(brightness);
+        FastLED.setDither(1);
         FastLED.show();
     }
 }
@@ -84,18 +112,18 @@ void displayDiagnostic(PixelDisplay& display) {
     delay(250);
 
     // Show Pixel 0
-    c.setXY(0, 0, CRGB(255, 0, 0));
+    c.setXY(0, 0, flm::CRGB(255, 0, 0));
     display.update(c);
     delay(250);
 
     // Solid Red, Green, Blue
-    c.fill(CRGB(255, 0, 0));
+    c.fill(flm::CRGB(255, 0, 0));
     display.update(c);
     delay(250);
-    c.fill(CRGB(0, 255, 0));
+    c.fill(flm::CRGB(0, 255, 0));
     display.update(c);
     delay(250);
-    c.fill(CRGB(0, 0, 255));
+    c.fill(flm::CRGB(0, 0, 255));
     display.update(c);
     delay(250);
 
@@ -103,7 +131,7 @@ void displayDiagnostic(PixelDisplay& display) {
     for (uint8_t y = 0; y < c.getHeight(); y++) {
         for (uint8_t x = 0; x < c.getWidth(); x++) {
             c.fill(0);
-            c.setXY(x, y, CRGB(100, 0, 0));
+            c.setXY(x, y, flm::CRGB(100, 0, 0));
             display.update(c);
             delay(1);
         }
@@ -112,7 +140,8 @@ void displayDiagnostic(PixelDisplay& display) {
     // Scroll short test
     c.fill(0);
     display.update(c);
-    auto textScrollTest1 = RepeatingTextScroller(c, "Hello - Testing!", std::vector<CRGB>{CRGB(0, 0, 255)}, 50, 500, 1);
+    auto textScrollTest1 =
+        RepeatingTextScroller(c, "Hello - Testing!", std::vector<flm::CRGB>{flm::CRGB(0, 0, 255)}, 50, 500, 1);
     while (!textScrollTest1.finished()) {
         display.update(textScrollTest1.run());
         delay(1);
@@ -124,7 +153,7 @@ void displayDiagnostic(PixelDisplay& display) {
     auto textScrollTest = RepeatingTextScroller(
         c,
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 !\"#$%&'()*+'-./:;<=>?@",
-        std::vector<CRGB>{CRGB(0, 255, 0)},
+        std::vector<flm::CRGB>{flm::CRGB(0, 255, 0)},
         50,
         500,
         1);

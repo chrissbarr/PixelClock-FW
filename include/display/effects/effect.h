@@ -2,11 +2,8 @@
 #define effect_h
 
 /* Project Scope */
+#include "display/canvas.h"
 #include "display/display.h"
-#include <canvas.h>
-
-/* Libraries */
-#include <FastLED.h>
 
 /* Arduino Core */
 #include <Arduino.h>

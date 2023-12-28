@@ -2,13 +2,13 @@
 #define modes_h
 
 /* Project Scope */
+#include "display/canvas.h"
 #include "display/display.h"
 #include "display/effects/effect.h"
 #include "display/effects/filters.h"
 #include "display/effects/gameoflife.h"
 #include "display/effects/textscroller.h"
 #include "timekeeping.h"
-#include <canvas.h>
 
 /* Libraries */
 #include <Button2.h>

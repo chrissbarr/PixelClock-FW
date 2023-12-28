@@ -1,6 +1,7 @@
 /* Project Scope */
 #include "modes.h"
 #include "FMTWrapper.h"
+#include "display/canvas.h"
 #include "display/effects/audiowaterfall.h"
 #include "display/effects/bouncingball.h"
 #include "display/effects/clockfaces.h"
@@ -12,7 +13,8 @@
 #include "display/effects/volumedisplay.h"
 #include "display/effects/volumegraph.h"
 #include "utility.h"
-#include <canvas.h>
+
+using namespace printing;
 
 void MainModeFunction::clearAllButtonCallbacks(Button2& button) {
     button.setChangedHandler(nullptr);
@@ -51,8 +53,8 @@ void MainModeFunction::moveOut() {
 
 Mode_SettingsMenu::Mode_SettingsMenu(const canvas::Canvas& size, ButtonReferences buttons)
     : MainModeFunction("Settings Menu", buttons) {
-    menuTextScroller =
-        std::make_unique<RepeatingTextScroller>(size, "Placeholder", std::vector<CRGB>{CRGB::Red}, 50, 2000, 1);
+    menuTextScroller = std::make_unique<RepeatingTextScroller>(
+        size, "Placeholder", std::vector<flm::CRGB>{flm::CRGB::Red}, 50, 2000, 1);
     menuPages.push_back(std::make_unique<Mode_SettingsMenu_SetTime>(size, buttons));
     menuPages.push_back(std::make_unique<Mode_SettingsMenu_SetBrightness>(size, buttons));
 }
@@ -73,8 +75,8 @@ void Mode_SettingsMenu::cycleActiveSetting(Button2& btn) {
 
     using namespace printing;
 
-    print(Serial, "Switching to next setting...\n");
-    print(Serial, fmt::format("Previous Setting: {} - {}\n", menuIndex, menuPages[menuIndex]->getName()));
+    print("Switching to next setting...\n");
+    print(fmt::format("Previous Setting: {} - {}\n", menuIndex, menuPages[menuIndex]->getName()));
 
     if (btn == buttons.left) {
         if (menuIndex == 0) {
@@ -90,7 +92,7 @@ void Mode_SettingsMenu::cycleActiveSetting(Button2& btn) {
         }
     }
 
-    print(Serial, fmt::format("New Setting: {} - {}\n", menuIndex, menuPages[menuIndex]->getName()));
+    print(fmt::format("New Setting: {} - {}\n", menuIndex, menuPages[menuIndex]->getName()));
     menuTextScroller->setText(menuPages[menuIndex]->getName());
     menuTextScroller->reset();
 }
@@ -105,7 +107,7 @@ void Mode_SettingsMenu::registerButtonCallbacks() {
     };
     buttons.select.setTapHandler(moveIntoSetting);
     buttons.mode.setTapHandler([this](Button2& btn) { this->_finished = true; });
-    Serial.println("Registered settings button callbacks");
+    print("Registered settings button callbacks\n");
 }
 
 canvas::Canvas Mode_SettingsMenu::runCore() {
@@ -126,36 +128,34 @@ canvas::Canvas Mode_SettingsMenu::runCore() {
 
 Mode_SettingsMenu_SetTime::Mode_SettingsMenu_SetTime(const canvas::Canvas& size, ButtonReferences buttons)
     : MainModeFunction("Set Time", buttons) {
-    textscroller = std::make_unique<TextScroller>(size, "12:34:56", std::vector<CRGB>{CRGB::White}, 10, 1000, 1);
+    textscroller =
+        std::make_unique<TextScroller>(size, "12:34:56", std::vector<flm::CRGB>{flm::CRGB::White}, 10, 1000, 1);
 }
 
 bool Mode_SettingsMenu_SetTime::finished() const { return currentlySettingTimeSegment == TimeSegment::done; }
 
 void Mode_SettingsMenu_SetTime::moveIntoCore() {
     auto changeTimeCallback = [this](Button2& btn) {
-        Serial.println("Inc/Dec Current Time");
+        print("Inc/Dec Current Time\n");
         int changeDir = 1;
         if (btn == buttons.left) { changeDir = -1; }
 
         switch (currentlySettingTimeSegment) {
         case TimeSegment::hour: {
             int changeAmt = changeDir * 60 * 60;
-            Serial.print("Changing hour by: ");
-            Serial.println(changeAmt);
+            print(fmt::format("Changing hour by: {}\n", changeAmt));
             this->secondsOffset += changeAmt;
             break;
         }
         case TimeSegment::minute: {
             int changeAmt = changeDir * 60;
-            Serial.print("Changing minute by: ");
-            Serial.println(changeAmt);
+            print(fmt::format("Changing minute by: {}\n", changeAmt));
             this->secondsOffset += changeAmt;
             break;
         }
         case TimeSegment::second: {
             int changeAmt = changeDir;
-            Serial.print("Changing second by: ");
-            Serial.println(changeAmt);
+            print(fmt::format("Changing second by: {}\n", changeAmt));
             this->secondsOffset += changeAmt;
             break;
         }
@@ -172,7 +172,7 @@ void Mode_SettingsMenu_SetTime::moveIntoCore() {
     buttons.right.setLongClickDetectedRetriggerable(true);
 
     auto advanceTimeSegment = [this](Button2& btn) {
-        Serial.println("Moving to next time segment...");
+        print("Moving to next time segment...\n");
 
         bool forward = (btn == buttons.select);
 
@@ -212,7 +212,7 @@ void Mode_SettingsMenu_SetTime::moveIntoCore() {
         case TimeSegment::confirm: {
             if (forward) {
                 currentlySettingTimeSegment = TimeSegment::done;
-                setTimeGlobally(now() + this->secondsOffset);
+                TimeManagerSingleton::get().setTime(TimeManagerSingleton::get().now() + this->secondsOffset);
             } else {
                 currentlySettingTimeSegment = TimeSegment::second;
             }
@@ -234,14 +234,14 @@ void Mode_SettingsMenu_SetTime::moveIntoCore() {
 
 canvas::Canvas Mode_SettingsMenu_SetTime::runCore() {
     // update the scroller text
-    auto times = timeCallbackFunction(now() + this->secondsOffset);
+    auto times = timeCallbackFunction(TimeManagerSingleton::get().now() + this->secondsOffset);
     std::string timestr = fmt::format("back {:2d}:{:2d}:{:2d} ok", times.hour24, times.minute, times.second);
     textscroller->setText(timestr);
 
     // move to and highlight the active part of the time
-    CRGB colourSel = CRGB(CRGB::Red).fadeLightBy(scale8(sin8(millis() / 5), 200));
+    flm::CRGB colourSel = flm::CRGB(flm::CRGB::Red).fadeLightBy(flm::scale8(flm::sin8(millis() / 5), 200));
     // 255 - scale8(sin8(millis()/5), 128), 0, 0);
-    CRGB colourIdle = CRGB(100, 100, 100);
+    flm::CRGB colourIdle = flm::CRGB(100, 100, 100);
     switch (currentlySettingTimeSegment) {
     case TimeSegment::cancel: {
         textscroller->setTargetOffset(0);
@@ -361,10 +361,12 @@ canvas::Canvas Mode_SettingsMenu_SetTime::runCore() {
 }
 
 Mode_ClockFace::Mode_ClockFace(ButtonReferences buttons) : MainModeFunction("Clockface", buttons) {
-    faces.push_back(std::make_unique<ClockFace_Gravity>([]() { return timeCallbackFunction(now()); }));
-    faces.push_back(std::make_unique<ClockFace_Simple>([]() { return timeCallbackFunction(now()); }));
-    filters.push_back(std::make_unique<RainbowWave>(1, 30, RainbowWave::Direction::horizontal, false));
-    filters.push_back(std::make_unique<RainbowWave>(1, 30, RainbowWave::Direction::vertical, false));
+    faces.push_back(
+        std::make_unique<ClockFace_Gravity>([]() { return timeCallbackFunction(TimeManagerSingleton::get().now()); }));
+    faces.push_back(
+        std::make_unique<ClockFace_Simple>([]() { return timeCallbackFunction(TimeManagerSingleton::get().now()); }));
+    filters.push_back(std::make_unique<RainbowWave>(1.0f, 30, RainbowWave::Direction::horizontal, false));
+    filters.push_back(std::make_unique<RainbowWave>(1.0f, 30, RainbowWave::Direction::vertical, false));
     timePrev = timeCallbackFunction();
 }
 
@@ -406,7 +408,7 @@ Mode_Effects::Mode_Effects(const canvas::Canvas& size, ButtonReferences buttons)
     effects.push_back(std::make_unique<BouncingBall>(size, 100, colourGenerator::cycleHSV));
     effects.push_back(std::make_unique<GravityFill>(size, 25, 25, colourGenerator::randomHSV));
 
-    Serial.println("Pregenerating GoL seeds...");
+    print("Pregenerating GoL seeds...\n");
     uint32_t startTime = millis();
     golTrainer = std::make_unique<GameOfLife>(size, 0, 0, colourGenerator::white, false);
     golTrainer->setFadeOnDeath(false);
@@ -421,15 +423,12 @@ Mode_Effects::Mode_Effects(const canvas::Canvas& size, ButtonReferences buttons)
         }
         golTrainer->reset();
     }
-    Serial.println("GoL scores: ");
+    print("GoL scores: \n");
     for (const auto& score : golTrainer->getScores()) {
-        Serial.print(score.lifespan);
-        Serial.print("\t");
-        Serial.println(score.seed);
+        print(fmt::format("{} - {}\n", score.lifespan, score.seed));
     }
     uint32_t stopTime = millis();
-    Serial.print("Seeding duration: ");
-    Serial.println(stopTime - startTime);
+    print(fmt::format("Seeding duration: {}", (stopTime - startTime)));
 
     golActual = std::make_shared<GameOfLife>(size, 250, 50, colourGenerator::cycleHSV, false);
     golActual->setScores(golTrainer->getScores());
@@ -441,9 +440,8 @@ void Mode_Effects::moveIntoCore() {
     effects[effectIndex]->reset();
 
     auto cycleHandler = [this](Button2& btn) {
-        Serial.println("Switching to next effect...");
-        Serial.print("Current Effect Index: ");
-        Serial.println(effectIndex);
+        print("Switching to next effect...\n");
+        print(fmt::format("Current Effect Index: {}\n", effectIndex));
         if (btn == buttons.left) {
             if (effectIndex == 0) {
                 effectIndex = effects.size() - 1;
@@ -457,8 +455,7 @@ void Mode_Effects::moveIntoCore() {
                 effectIndex++;
             }
         }
-        Serial.print("New Effect Index: ");
-        Serial.println(effectIndex);
+        print(fmt::format("New Effect Index: {}\n", effectIndex));
     };
 
     buttons.left.setTapHandler(cycleHandler);
@@ -470,21 +467,19 @@ canvas::Canvas Mode_Effects::runCore() {
     auto c = effects[effectIndex]->run();
     if (effects[effectIndex]->finished()) { effects[effectIndex]->reset(); }
 
-    // if (effects[effectIndex] == golActual) {
-    //     golTrainer->run();
-    //     if (golTrainer->finished()) {
-    //         golTrainer->reset();
-    //         if (golTrainer->getIterations() % 100 == 0) {
-    //             golActual->setScores(golTrainer->getScores());
-    //             Serial.println("GoL scores: ");
-    //             for (const auto& score : golActual->getScores()) {
-    //                 Serial.print(score.lifespan);
-    //                 Serial.print("\t");
-    //                 Serial.println(score.seed);
-    //             }
-    //         }
-    //     }
-    // }
+    if (effects[effectIndex] == golActual) {
+        golTrainer->run();
+        if (golTrainer->finished()) {
+            golTrainer->reset();
+            if (golTrainer->getIterations() % 100 == 0) {
+                golActual->setScores(golTrainer->getScores());
+                print("GoL scores: \n");
+                for (const auto& score : golActual->getScores()) {
+                    print(fmt::format("{} - {}\n", score.lifespan, score.seed));
+                }
+            }
+        }
+    }
     return c;
 }
 
@@ -504,13 +499,13 @@ canvas::Canvas ModeManager::run() {
 void ModeManager::cycleMode() {
     using namespace printing;
 
-    print(Serial, "Switching to next mode...\n");
-    print(Serial, fmt::format("Previous Mode: {} - {}\n", modeIndex, modes[modeIndex]->getName()));
+    print("Switching to next mode...\n");
+    print(fmt::format("Previous Mode: {} - {}\n", modeIndex, modes[modeIndex]->getName()));
 
     modes[modeIndex]->moveOut();
     modeIndex++;
     if (modeIndex == modes.size()) { modeIndex = 0; }
     modes[modeIndex]->moveInto();
 
-    print(Serial, fmt::format("New Mode: {} - {}\n", modeIndex, modes[modeIndex]->getName()));
+    print(fmt::format("New Mode: {} - {}\n", modeIndex, modes[modeIndex]->getName()));
 }

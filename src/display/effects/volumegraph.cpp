@@ -2,7 +2,7 @@
 #include "display/effects/volumegraph.h"
 #include "EMA.h"
 #include "FMTWrapper.h"
-#include "audio.h"
+#include "audio/audio.h"
 #include "display/display.h"
 #include "display/effects/utilities.h"
 #include "utility.h"
@@ -14,7 +14,7 @@ void VolumeGraph::reset() { _finished = false; }
 canvas::Canvas VolumeGraph::run() {
 
     _c.fill(0);
-    auto& audioHist = Audio::get().getAudioCharacteristicsHistory();
+    auto& audioHist = AudioSingleton::get().getAudioCharacteristicsHistory();
 
     float volMin = 0;
     float volMax = -60;
@@ -29,8 +29,8 @@ canvas::Canvas VolumeGraph::run() {
         float vol = (it->volumeLeft + it->volumeRight) / 2;
         float barHeight = calculateBarHeight(vol, volMin * 0.9, volMax * 0.9, 5);
         for (int yIdx = 0; yIdx < _c.getHeight(); yIdx++) {
-            CRGB colour = CRGB::Black;
-            if (yIdx <= barHeight) { colour = CRGB::Blue; }
+            flm::CRGB colour = flm::CRGB::Black;
+            if (yIdx <= barHeight) { colour = flm::CRGB::Blue; }
             _c.setXY(xIdx, _c.getHeight() - 1 - yIdx, colour);
         }
         xIdx -= 1;

@@ -3,15 +3,20 @@
 
 /* Arduino Core */
 #include <Arduino.h>
+#ifndef PIXELCLOCK_DESKTOP
 #include <Wire.h>
+#endif
 
 /* C++ Standard Library */
 #include <iterator>
 #include <numeric>
+#include <string>
 
 namespace utility {
 
+#ifndef PIXELCLOCK_DESKTOP
 std::vector<uint8_t> scanI2CDevices(TwoWire& wire);
+#endif
 
 template <class T, class M> auto sum_members(const T& container, M member) {
     // Deduce the type of the member
@@ -25,6 +30,8 @@ template <class T, class M> auto sum_members(const T& container, M member) {
         });
 }
 
+float mapNumericRange(float input, float fromMin, float fromMax, float toMin, float toMax);
+
 } // namespace utility
 
 namespace printing {
@@ -32,9 +39,9 @@ namespace printing {
 constexpr uint8_t headingWidth = 40;
 constexpr uint8_t textPadding = 20;
 
-inline void print(Print& p, const std::string& s) { p.print(s.c_str()); }
-void printCentred(Print& p, const std::string& s, uint8_t width);
-void printSolidLine(Print& p, uint8_t width);
+void print(const std::string& s);
+void printCentred(const std::string& s, uint8_t width);
+void printSolidLine(uint8_t width);
 
 } // namespace printing
 

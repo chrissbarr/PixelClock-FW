@@ -30,7 +30,7 @@ void processSerialCommands() {
 
         if (!substrings.empty()) {
             Serial.print("Received command: ");
-            for (const auto& str : substrings) { printing::print(Serial, fmt::to_string(str)); }
+            for (const auto& str : substrings) { printing::print(fmt::to_string(str)); }
             Serial.print("\n");
 
             if (substrings[0] == "T") {
@@ -50,7 +50,7 @@ void processSerialCommands() {
                     time.Hour = uint8_t(hour);
                     time.Minute = uint8_t(min);
                     time.Second = uint8_t(sec);
-                    setTimeGlobally(makeTime(time));
+                    TimeManagerSingleton::get().setTime(makeTime(time));
                 }
             }
         }

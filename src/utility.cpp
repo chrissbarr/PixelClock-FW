@@ -2,11 +2,18 @@
 #include "utility.h"
 #include "FMTWrapper.h"
 
+#ifndef PIXELCLOCK_DESKTOP
+#include <Wire.h>
+#endif
 /* C++ Standard Library */
 #include <vector>
+#ifdef PIXELCLOCK_DESKTOP
+#include <iostream>
+#endif
 
 namespace utility {
 
+#ifndef PIXELCLOCK_DESKTOP
 std::vector<uint8_t> scanI2CDevices(TwoWire& wire) {
     std::vector<uint8_t> devices;
     for (uint8_t address = 1; address < 127; address++) {
@@ -15,15 +22,30 @@ std::vector<uint8_t> scanI2CDevices(TwoWire& wire) {
     }
     return devices;
 }
+#endif
+
+float mapNumericRange(float input, float fromMin, float fromMax, float toMin, float toMax) {
+    float slope = 1.0 * (toMax - toMin) / (fromMax - fromMin);
+    float output = toMin + std::round(slope * (input - fromMin));
+    return output;
+}
 
 } // namespace utility
 
 namespace printing {
 
-void printSolidLine(Print& p, uint8_t width) { print(p, fmt::format("{1:-^{0}}\n", width, "")); }
+void print(const std::string& s) {
+#ifdef PIXELCLOCK_DESKTOP
+    std::cout << s;
+#else
+    Serial.print(s.c_str());
+#endif
+}
 
-void printCentred(Print& p, const std::string& s, uint8_t width) {
-    print(p, fmt::format("{1:-^{0}}\n", width, fmt::format(" {} ", s)));
+void printSolidLine(uint8_t width) { print(fmt::format("{1:-^{0}}\n", width, "")); }
+
+void printCentred(const std::string& s, uint8_t width) {
+    print(fmt::format("{1:-^{0}}\n", width, fmt::format(" {} ", s)));
 }
 
 } // namespace printing

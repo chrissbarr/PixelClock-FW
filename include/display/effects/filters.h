@@ -2,10 +2,8 @@
 #define filters_h
 
 /* Project Scope */
-#include <canvas.h>
-
-/* Libraries */
-#include <FastLED.h>
+#include "display/canvas.h"
+#include "flm_pixeltypes.h"
 
 class FilterMethod {
 public:
@@ -20,11 +18,13 @@ public:
 
 class SolidColour : public FilterMethod {
 public:
-    SolidColour(CRGB colour, bool maintainBrightness = true) : colour(colour), maintainBrightness(maintainBrightness) {}
+    SolidColour(flm::CRGB colour, bool maintainBrightness = true)
+        : colour(colour),
+          maintainBrightness(maintainBrightness) {}
     void apply(canvas::Canvas& c) override;
 
 private:
-    CRGB colour;
+    flm::CRGB colour;
     bool maintainBrightness;
 };
 

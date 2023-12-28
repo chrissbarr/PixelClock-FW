@@ -1,8 +1,7 @@
 /* Project Scope */
 #include "display/effects/filters.h"
 
-/* Libraries */
-#include <FastLED.h>
+using namespace flm;
 
 void HSVTestPattern::apply(canvas::Canvas& c) {
     for (uint8_t x = 0; x < c.getWidth(); x++) {

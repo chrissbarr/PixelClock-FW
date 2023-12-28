@@ -1,5 +1,5 @@
 /* Project Scope */
-#include "canvas.h"
+#include "display/canvas.h"
 
 /* Arduino Core */
 #include <assert.h>
@@ -10,13 +10,13 @@
 namespace canvas {
 
 Canvas::Canvas(uint8_t width, uint8_t height) : width(width), height(height), length(width * height) {
-    data = std::vector<CRGB>(length, CRGB::Black);
+    data = std::vector<flm::CRGB>(length, flm::CRGB::Black);
 }
 
-void Canvas::setXY(uint8_t x, uint8_t y, CRGB colour) { data[XYToIndex(x, y)] = colour; }
-const CRGB& Canvas::getXY(uint8_t x, uint8_t y) const { return data[XYToIndex(x, y)]; }
+void Canvas::setXY(uint8_t x, uint8_t y, flm::CRGB colour) { data[XYToIndex(x, y)] = colour; }
+const flm::CRGB& Canvas::getXY(uint8_t x, uint8_t y) const { return data[XYToIndex(x, y)]; }
 
-void Canvas::fill(const CRGB& colour) {
+void Canvas::fill(const flm::CRGB& colour) {
     for (auto& v : data) { v = colour; }
 }
 
@@ -25,7 +25,8 @@ uint16_t Canvas::XYToIndex(uint8_t x, uint8_t y) const {
     return (y * width) + x;
 }
 
-void Canvas::showCharacters(const std::string& string, const std::vector<CRGB>& colours, int xOffset, uint8_t spacing) {
+void Canvas::showCharacters(
+    const std::string& string, const std::vector<flm::CRGB>& colours, int xOffset, uint8_t spacing) {
     int xOffsetLocal = 0;
     int colourIndex = 0;
     for (const auto& character : string) {
@@ -38,11 +39,11 @@ void Canvas::showCharacters(const std::string& string, const std::vector<CRGB>& 
     }
 }
 
-void Canvas::showCharacter(char character, CRGB colour, int xOffset) {
+void Canvas::showCharacter(char character, flm::CRGB colour, int xOffset) {
     showCharacter(characterFontArray[charToIndex(character)], colour, xOffset);
 }
 
-void Canvas::showCharacter(const FontGlyph& character, CRGB colour, int xOffset) {
+void Canvas::showCharacter(const FontGlyph& character, flm::CRGB colour, int xOffset) {
     for (uint8_t x = 0; x < character.width; x++) {
         int xPos = xOffset + x;
         for (uint8_t y = 0; y < 5; y++) {
@@ -55,7 +56,7 @@ void Canvas::showCharacter(const FontGlyph& character, CRGB colour, int xOffset)
     }
 }
 
-bool Canvas::containsColour(const CRGB& colour) const {
+bool Canvas::containsColour(const flm::CRGB& colour) const {
     bool contains = false;
     for (std::size_t i = 0; i < getSize(); i++) {
         if (this->operator[](i) == colour) {
@@ -69,12 +70,7 @@ bool Canvas::containsColour(const CRGB& colour) const {
 Canvas blit(const Canvas& background, const Canvas& foreground, int xOffset, int yOffset) {
 
     // create new canvas to hold result
-    // int newWidth = std::max(int(background.getWidth()), int(foreground.getWidth()) + xOffset);
-    // int newHeight = std::max(int(background.getHeight()), int(foreground.getHeight()) + yOffset);
-    // Canvas c(newWidth, newHeight);
     Canvas c(background);
-
-    // c.fill(CRGB::Black);
 
     for (uint8_t x = 0; x < c.getWidth(); x++) {
         for (uint8_t y = 0; y < c.getHeight(); y++) {

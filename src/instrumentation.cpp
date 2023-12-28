@@ -43,9 +43,5 @@ void InstrumentationTrace::reset() {
 
 std::string formatInstrumentationTrace(std::string name, const InstrumentationTrace& trace) {
     return fmt::format(
-        "{:<20} (Min - Max - Avg): {:5d} - {:5d} - {:5d}\n",
-        name,
-        trace.getMin(),
-        trace.getMax(),
-        trace.getAvg());
+        "{:<20} (Min - Max - Avg): {:5d} - {:5d} - {:5d}\n", name, trace.getMin(), trace.getMax(), trace.getAvg());
 };

@@ -4,7 +4,7 @@
 /* Libraries */
 #include <TSL2591I2C.h>
 
-BrightnessSensor::BrightnessSensor() {
+BrightnessSensorTSL2591::BrightnessSensorTSL2591() {
     Serial.print("Initialising TSL2591: ");
     sensor = std::make_unique<TSL2591I2C>();
 
@@ -39,9 +39,9 @@ BrightnessSensor::BrightnessSensor() {
     }
 }
 
-BrightnessSensor::~BrightnessSensor() {}
+BrightnessSensorTSL2591::~BrightnessSensorTSL2591() {}
 
-void BrightnessSensor::update() {
+void BrightnessSensorTSL2591::update() {
     if (millis() - lastPollingTime > pollingInterval) {
         if (sensor) {
             if (sensor->hasValue()) {

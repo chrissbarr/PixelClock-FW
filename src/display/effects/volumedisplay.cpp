@@ -2,22 +2,22 @@
 #include "display/effects/volumedisplay.h"
 #include "EMA.h"
 #include "FMTWrapper.h"
-#include "audio.h"
+#include "audio/audio.h"
 #include "display/display.h"
 #include "display/effects/utilities.h"
 #include "utility.h"
 
 VolumeDisplay::VolumeDisplay(const canvas::Canvas& size) : _c(size) {
-    colourMap.push_back({0, CRGB::Green});
-    colourMap.push_back({0.4, CRGB::Yellow});
-    colourMap.push_back({0.6, CRGB::Red});
+    colourMap.push_back({0, flm::CRGB::Green});
+    colourMap.push_back({0.4, flm::CRGB::Yellow});
+    colourMap.push_back({0.6, flm::CRGB::Red});
 }
 
 void VolumeDisplay::reset() { _finished = false; }
 
 canvas::Canvas VolumeDisplay::run() {
 
-    auto& audioHist = Audio::get().getAudioCharacteristicsHistory();
+    auto& audioHist = AudioSingleton::get().getAudioCharacteristicsHistory();
 
     float vLeft = -60;
     float vRight = -60;
@@ -41,7 +41,7 @@ canvas::Canvas VolumeDisplay::run() {
 
     auto drawBar = [&](float barHeight, int y) {
         for (int x = 0; x < _c.getWidth(); x++) {
-            CRGB colour = CRGB::Black;
+            flm::CRGB colour = flm::CRGB::Black;
 
             float pct = float(x) / horMax;
 

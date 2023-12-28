@@ -2,15 +2,13 @@
 #define clockfaces_h
 
 /* Project Scope */
+#include "display/canvas.h"
 #include "display/effects/effect.h"
 #include "display/effects/gravity.h"
 #include "timekeeping.h"
-#include <canvas.h>
-
-/* Libraries */
-#include <FastLED.h>
 
 /* C++ Standard Library */
+#include <functional>
 #include <memory>
 
 class ClockFace_Base : public DisplayEffect {

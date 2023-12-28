@@ -2,12 +2,13 @@
 #define gameoflife_h
 
 /* Project Scope */
+#include "display/canvas.h"
 #include "display/effects/effect.h"
 #include "display/effects/utilities.h"
-#include <canvas.h>
 
 /* C++ Standard Library */
 #include <deque>
+#include <random>
 #include <set>
 #include <vector>
 
@@ -64,10 +65,11 @@ private:
 
     uint8_t readBuffer = 0;
     uint8_t writeBuffer = 1;
-    std::vector<std::vector<CRGB>> buffers;
+    std::vector<std::vector<flm::CRGB>> buffers;
     std::deque<std::size_t> bufferHashes;
 
-    std::size_t hashBuffer(const std::vector<CRGB>& vec) const;
+    std::size_t hashBuffer(const std::vector<flm::CRGB>& vec) const;
+    std::minstd_rand rand;
 };
 
 #endif // gameoflife_h

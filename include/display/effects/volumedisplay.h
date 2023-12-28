@@ -2,18 +2,15 @@
 #define volumedisplay_h
 
 /* Project Scope */
+#include "display/canvas.h"
 #include "display/effects/effect.h"
-#include <canvas.h>
-
-/* Libraries */
-#include <FastLED.h>
 
 /* C++ Standard Library */
 #include <vector>
 
 struct VolumeDisplayColourMap {
     double percentage;
-    CRGB colour;
+    flm::CRGB colour;
 };
 
 class VolumeDisplay : public DisplayEffect {

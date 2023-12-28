@@ -2,11 +2,8 @@
 #define spectrumdisplay_h
 
 /* Project Scope */
+#include "display/canvas.h"
 #include "display/effects/effect.h"
-#include <canvas.h>
-
-/* Libraries */
-#include <FastLED.h>
 
 class SpectrumDisplay : public DisplayEffect {
 public:
@@ -17,8 +14,8 @@ public:
 
 private:
     canvas::Canvas _c;
-    CRGB colMin;
-    CRGB colMax;
+    flm::CRGB colMin;
+    flm::CRGB colMax;
     float maxScale = 5000;
     bool _finished = false;
 };

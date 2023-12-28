@@ -2,13 +2,13 @@
 #define timekeeping_h
 
 /* Libraries */
+#ifndef PIXELCLOCK_DESKTOP
 #include <RTClib.h>
 #include <TimeLib.h>
-
-/* Arduino Core */
-#include <Arduino.h>
+#endif
 
 /* C++ Standard Library */
+#include <ctime>
 #include <memory>
 
 struct ClockFaceTimeStruct {
@@ -19,32 +19,58 @@ struct ClockFaceTimeStruct {
     uint8_t second;
 };
 
-ClockFaceTimeStruct timeCallbackFunction(time_t time);
+class TimeManager {
+public:
+    virtual bool initialise() = 0;
+    virtual std::time_t now() const = 0;
+    virtual void setTime(std::time_t newTime) = 0;
+    virtual void update() = 0;
+};
+
+#ifndef PIXELCLOCK_DESKTOP
+class TimeManagerEmbedded : public TimeManager {
+public:
+    bool initialise() override final;
+    std::time_t now() const override final;
+    void setTime(std::time_t newTime) override final;
+    void update() override final;
+
+private:
+    std::unique_ptr<RTC_DS3231> rtc;
+    bool initialiseRTC();
+    void syncRTC();
+    uint32_t syncInterval{60};
+    uint32_t syncLast{0};
+};
+#else
+class TimeManagerDesktop : public TimeManager {
+public:
+    bool initialise() override final;
+    std::time_t now() const override final;
+    void setTime(std::time_t newTime) override final;
+    void update() override final;
+};
+#endif
+
+class TimeManagerSingleton {
+public:
+    static TimeManager& get() {
+#ifdef PIXELCLOCK_DESKTOP
+        static TimeManagerDesktop instance;
+#else
+        static TimeManagerEmbedded instance;
+#endif
+        return instance;
+    }
+
+    // delete constructors
+    TimeManagerSingleton(const TimeManagerSingleton&) = delete;
+    void operator=(const TimeManagerSingleton&) = delete;
+};
+
+ClockFaceTimeStruct timeCallbackFunction(std::time_t time);
 ClockFaceTimeStruct timeCallbackFunction();
 
 constexpr char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-
-bool initialiseTime();
-
-bool initialiseRTC();
-
-// Sets the time to the RTC (if available) and time library
-void setTimeGlobally(uint32_t timeToSet);
-
-class LoopTimeManager {
-public:
-    LoopTimeManager(uint32_t desiredLoopDuration, uint32_t statReportInterval);
-    void idle();
-
-private:
-    const uint32_t desiredLoopDuration;
-    uint32_t lastLoopTime = 0;
-    const uint32_t statReportInterval;
-    uint32_t lastStatReportTime = 0;
-    float loopTimeAvg = 0;
-    uint16_t loopTimeMin = 0;
-    uint16_t loopTimeMax = 0;
-    constexpr float approxRollingAverage(float avg, float newSample, int N) const;
-};
 
 #endif

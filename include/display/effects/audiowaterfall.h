@@ -2,8 +2,8 @@
 #define audiowaterfall_h
 
 /* Project Scope */
+#include "display/canvas.h"
 #include "display/effects/effect.h"
-#include <canvas.h>
 
 class AudioWaterfall : public DisplayEffect {
 public:

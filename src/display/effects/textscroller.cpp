@@ -11,7 +11,7 @@
 TextScroller::TextScroller(
     const canvas::Canvas& size,
     std::string textString,
-    std::vector<CRGB> colours,
+    std::vector<flm::CRGB> colours,
     uint16_t stepDelay,
     uint16_t timeToHoldAtEnd,
     uint8_t characterSpacing)
@@ -46,7 +46,7 @@ canvas::Canvas TextScroller::run() {
             lastUpdateTime = millis();
         }
     }
-    _c.fill(CRGB::Black);
+    _c.fill(flm::CRGB::Black);
     _c.showCharacters(text, colours, -currentOffset, charSpacing);
     return _c;
 }
@@ -76,7 +76,7 @@ uint32_t TextScroller::calculateOffset(int targetCharIndex) const {
 RepeatingTextScroller::RepeatingTextScroller(
     const canvas::Canvas& size,
     std::string textString,
-    std::vector<CRGB> colours,
+    std::vector<flm::CRGB> colours,
     uint16_t stepDelay,
     uint16_t timeToHoldAtEnd,
     uint8_t characterSpacing)

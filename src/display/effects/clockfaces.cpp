@@ -12,7 +12,7 @@ canvas::Canvas ClockFace_Simple::run() {
     std::string timestr = fmt::format("{:2d}:{:2d}", times.hour12, times.minute);
     auto c = canvas::Canvas(17, 5);
     c.fill(0);
-    c.showCharacters(timestr, {CRGB::White}, 0, 1);
+    c.showCharacters(timestr, {flm::CRGB::White}, 0, 1);
     return c;
 }
 

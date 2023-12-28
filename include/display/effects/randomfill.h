@@ -2,12 +2,12 @@
 #define randomfill_h
 
 /* Project Scope */
+#include "display/canvas.h"
 #include "display/effects/effect.h"
 #include "display/effects/utilities.h"
-#include <canvas.h>
 
-/* Libraries */
-#include <FastLED.h>
+/* C++ Standard Library */
+#include <random>
 
 class RandomFill : public DisplayEffect {
 public:
@@ -28,6 +28,7 @@ private:
     bool _finished;
     uint32_t _lastSpawnTime = 0;
     canvas::Canvas _c;
+    std::minstd_rand rand;
 };
 
 #endif // randomfill_h
