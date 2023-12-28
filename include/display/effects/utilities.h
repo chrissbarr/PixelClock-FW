@@ -12,13 +12,13 @@ float calculateBarHeight(float val, float valMin, float valMax, float barMax);
 
 namespace colourGenerator {
 
-using Generator = std::function<pixel::CRGB()>;
+using Generator = std::function<flm::CRGB()>;
 
 // Colour generating functions
-inline Generator randomHSV = []() { return pixel::CHSV(pixel::random8(), 255, 255); };
-inline Generator cycleHSV = []() { return pixel::CHSV((millis() / 10), 255, 255); };
+inline Generator randomHSV = []() { return flm::CHSV(flm::random8(), 255, 255); };
+inline Generator cycleHSV = []() { return flm::CHSV((millis() / 10), 255, 255); };
 inline Generator black = []() { return 0; };
-inline Generator white = []() { return pixel::CRGB::White; };
+inline Generator white = []() { return flm::CRGB::White; };
 
 } // namespace colourGenerator
 

@@ -7,8 +7,7 @@
 #define FASTLED_INTERNAL
 #include <stdint.h>
 
-//#include "FastLED.h"
-namespace pixel {
+namespace flm {
 
 /// HSV to RGB implementation in raw C, platform independent
 void hsv2rgb_raw_C (const struct CHSV & hsv, struct CRGB & rgb);

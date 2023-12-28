@@ -18,13 +18,13 @@ public:
 
 class SolidColour : public FilterMethod {
 public:
-    SolidColour(pixel::CRGB colour, bool maintainBrightness = true)
+    SolidColour(flm::CRGB colour, bool maintainBrightness = true)
         : colour(colour),
           maintainBrightness(maintainBrightness) {}
     void apply(canvas::Canvas& c) override;
 
 private:
-    pixel::CRGB colour;
+    flm::CRGB colour;
     bool maintainBrightness;
 };
 

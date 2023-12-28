@@ -22,25 +22,25 @@ public:
     uint16_t getSize() const { return length; }
     uint16_t XYToIndex(uint8_t x, uint8_t y) const;
 
-    pixel::CRGB& operator[](std::size_t idx) { return data[idx]; }
-    const pixel::CRGB& operator[](std::size_t idx) const { return data[idx]; }
+    flm::CRGB& operator[](std::size_t idx) { return data[idx]; }
+    const flm::CRGB& operator[](std::size_t idx) const { return data[idx]; }
 
     /* Drawing Functions */
-    void setXY(uint8_t x, uint8_t y, pixel::CRGB colour);
-    const pixel::CRGB& getXY(uint8_t x, uint8_t y) const;
-    void fill(const pixel::CRGB& colour);
+    void setXY(uint8_t x, uint8_t y, flm::CRGB colour);
+    const flm::CRGB& getXY(uint8_t x, uint8_t y) const;
+    void fill(const flm::CRGB& colour);
 
-    bool containsColour(const pixel::CRGB& colour = 0) const;
+    bool containsColour(const flm::CRGB& colour = 0) const;
 
-    void showCharacters(const std::string& string, const std::vector<pixel::CRGB>& colours, int xOffset, uint8_t spacing = 0);
-    void showCharacter(char character, pixel::CRGB colour, int xOffset);
-    void showCharacter(const FontGlyph& character, pixel::CRGB colour, int xOffset);
+    void showCharacters(const std::string& string, const std::vector<flm::CRGB>& colours, int xOffset, uint8_t spacing = 0);
+    void showCharacter(char character, flm::CRGB colour, int xOffset);
+    void showCharacter(const FontGlyph& character, flm::CRGB colour, int xOffset);
 
 private:
     uint8_t width;
     uint8_t height;
     uint16_t length;
-    std::vector<pixel::CRGB> data;
+    std::vector<flm::CRGB> data;
 };
 
 Canvas blit(const Canvas& background, const Canvas& foreground, int xOffset, int yOffset);

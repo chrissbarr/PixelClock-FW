@@ -1,8 +1,7 @@
 #ifndef p_color_h
 #define p_color_h
 
-//ASTLED_NAMESPACE_BEGIN
-namespace pixel {
+namespace flm {
 
 /// @file color.h
 /// Contains definitions for color correction and temperature
@@ -94,7 +93,6 @@ typedef enum {
     UncorrectedTemperature=0xFFFFFF /* 255, 255, 255 */
 } ColorTemperature;
 
-//FASTLED_NAMESPACE_END
 }
 
 ///@}

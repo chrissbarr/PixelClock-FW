@@ -24,12 +24,12 @@ canvas::Canvas RandomFill::run() {
     std::uniform_int_distribution<uint16_t> vertDist(0, _c.getHeight() - 1);
 
     if (timeNow - _lastSpawnTime >= _fillInterval) {
-        if (_c.containsColour(pixel::CRGB::Black)) {
+        if (_c.containsColour(flm::CRGB::Black)) {
             bool filledPixel = false;
             while (!filledPixel) {
                 uint8_t x = horDist(rand);
                 uint8_t y = vertDist(rand);
-                if (_c.getXY(x, y) == pixel::CRGB::Black) {
+                if (_c.getXY(x, y) == flm::CRGB::Black) {
                     _c.setXY(x, y, _colourGenerator());
                     filledPixel = true;
                     _lastSpawnTime = timeNow;

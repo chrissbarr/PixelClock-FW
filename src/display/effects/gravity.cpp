@@ -23,9 +23,9 @@ canvas::Canvas Gravity::run() {
 
         auto movePixel = [&](canvas::Canvas& c, int x, int y, int xMove, int yMove, bool empty) {
             auto currentIndex = c.XYToIndex(x, y);
-            pixel::CRGB cellColour = c[currentIndex];
+            flm::CRGB cellColour = c[currentIndex];
 
-            if (cellColour != pixel::CRGB(0)) {
+            if (cellColour != flm::CRGB(0)) {
                 // if this is the last row
                 if ((yMove == 1 && y == yMax) || (yMove == -1 && y == yMin) || (xMove == 1 && x == xMin) ||
                     (xMove == -1 && x == xMin)) {
@@ -36,7 +36,7 @@ canvas::Canvas Gravity::run() {
                     return false;
                 }
                 auto moveIntoIndex = c.XYToIndex(x + xMove, y + yMove);
-                if (c[moveIntoIndex] == pixel::CRGB(0)) {
+                if (c[moveIntoIndex] == flm::CRGB(0)) {
                     c[moveIntoIndex] = cellColour;
                     c[currentIndex] = 0;
                     return true;

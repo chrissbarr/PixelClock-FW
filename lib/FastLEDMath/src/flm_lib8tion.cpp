@@ -8,7 +8,7 @@
 #include "flm_lib8tion.h"
 #include <stdint.h>
 
-namespace pixel {
+namespace flm {
 
 /// @copydoc ::rand16seed
 #define RAND16_SEED  1337

@@ -10,13 +10,13 @@
 namespace canvas {
 
 Canvas::Canvas(uint8_t width, uint8_t height) : width(width), height(height), length(width * height) {
-    data = std::vector<pixel::CRGB>(length, pixel::CRGB::Black);
+    data = std::vector<flm::CRGB>(length, flm::CRGB::Black);
 }
 
-void Canvas::setXY(uint8_t x, uint8_t y, pixel::CRGB colour) { data[XYToIndex(x, y)] = colour; }
-const pixel::CRGB& Canvas::getXY(uint8_t x, uint8_t y) const { return data[XYToIndex(x, y)]; }
+void Canvas::setXY(uint8_t x, uint8_t y, flm::CRGB colour) { data[XYToIndex(x, y)] = colour; }
+const flm::CRGB& Canvas::getXY(uint8_t x, uint8_t y) const { return data[XYToIndex(x, y)]; }
 
-void Canvas::fill(const pixel::CRGB& colour) {
+void Canvas::fill(const flm::CRGB& colour) {
     for (auto& v : data) { v = colour; }
 }
 
@@ -26,7 +26,7 @@ uint16_t Canvas::XYToIndex(uint8_t x, uint8_t y) const {
 }
 
 void Canvas::showCharacters(
-    const std::string& string, const std::vector<pixel::CRGB>& colours, int xOffset, uint8_t spacing) {
+    const std::string& string, const std::vector<flm::CRGB>& colours, int xOffset, uint8_t spacing) {
     int xOffsetLocal = 0;
     int colourIndex = 0;
     for (const auto& character : string) {
@@ -39,11 +39,11 @@ void Canvas::showCharacters(
     }
 }
 
-void Canvas::showCharacter(char character, pixel::CRGB colour, int xOffset) {
+void Canvas::showCharacter(char character, flm::CRGB colour, int xOffset) {
     showCharacter(characterFontArray[charToIndex(character)], colour, xOffset);
 }
 
-void Canvas::showCharacter(const FontGlyph& character, pixel::CRGB colour, int xOffset) {
+void Canvas::showCharacter(const FontGlyph& character, flm::CRGB colour, int xOffset) {
     for (uint8_t x = 0; x < character.width; x++) {
         int xPos = xOffset + x;
         for (uint8_t y = 0; y < 5; y++) {
@@ -56,7 +56,7 @@ void Canvas::showCharacter(const FontGlyph& character, pixel::CRGB colour, int x
     }
 }
 
-bool Canvas::containsColour(const pixel::CRGB& colour) const {
+bool Canvas::containsColour(const flm::CRGB& colour) const {
     bool contains = false;
     for (std::size_t i = 0; i < getSize(); i++) {
         if (this->operator[](i) == colour) {

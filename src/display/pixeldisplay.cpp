@@ -45,7 +45,7 @@ void PixelDisplay::update(const canvas::Canvas& canvas) {
     // Serial.println("Update...");
     if (leds) {
 
-        auto buff = std::vector<pixel::CRGB>(size, 0);
+        auto buff = std::vector<flm::CRGB>(size, 0);
 
         for (int x = 0; x < canvas.getWidth(); x++) {
             if (x >= getWidth()) { break; }
@@ -57,7 +57,7 @@ void PixelDisplay::update(const canvas::Canvas& canvas) {
 
         uint8_t* byteToWrite = (uint8_t*)leds;
 
-        for (const pixel::CRGB& pixel : buff) {
+        for (const flm::CRGB& pixel : buff) {
             // Serial.println("Writing pixel...");
             *byteToWrite++ = pixel.green;
             *byteToWrite++ = pixel.red;
@@ -112,18 +112,18 @@ void displayDiagnostic(PixelDisplay& display) {
     delay(250);
 
     // Show Pixel 0
-    c.setXY(0, 0, pixel::CRGB(255, 0, 0));
+    c.setXY(0, 0, flm::CRGB(255, 0, 0));
     display.update(c);
     delay(250);
 
     // Solid Red, Green, Blue
-    c.fill(pixel::CRGB(255, 0, 0));
+    c.fill(flm::CRGB(255, 0, 0));
     display.update(c);
     delay(250);
-    c.fill(pixel::CRGB(0, 255, 0));
+    c.fill(flm::CRGB(0, 255, 0));
     display.update(c);
     delay(250);
-    c.fill(pixel::CRGB(0, 0, 255));
+    c.fill(flm::CRGB(0, 0, 255));
     display.update(c);
     delay(250);
 
@@ -131,7 +131,7 @@ void displayDiagnostic(PixelDisplay& display) {
     for (uint8_t y = 0; y < c.getHeight(); y++) {
         for (uint8_t x = 0; x < c.getWidth(); x++) {
             c.fill(0);
-            c.setXY(x, y, pixel::CRGB(100, 0, 0));
+            c.setXY(x, y, flm::CRGB(100, 0, 0));
             display.update(c);
             delay(1);
         }
@@ -141,7 +141,7 @@ void displayDiagnostic(PixelDisplay& display) {
     c.fill(0);
     display.update(c);
     auto textScrollTest1 =
-        RepeatingTextScroller(c, "Hello - Testing!", std::vector<pixel::CRGB>{pixel::CRGB(0, 0, 255)}, 50, 500, 1);
+        RepeatingTextScroller(c, "Hello - Testing!", std::vector<flm::CRGB>{flm::CRGB(0, 0, 255)}, 50, 500, 1);
     while (!textScrollTest1.finished()) {
         display.update(textScrollTest1.run());
         delay(1);
@@ -153,7 +153,7 @@ void displayDiagnostic(PixelDisplay& display) {
     auto textScrollTest = RepeatingTextScroller(
         c,
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 !\"#$%&'()*+'-./:;<=>?@",
-        std::vector<pixel::CRGB>{pixel::CRGB(0, 255, 0)},
+        std::vector<flm::CRGB>{flm::CRGB(0, 255, 0)},
         50,
         500,
         1);

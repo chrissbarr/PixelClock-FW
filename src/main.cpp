@@ -165,7 +165,7 @@ void setup() {
 #endif
 
     printCentred("Initialising System Modes", headingWidth);
-    baseCanvas.fill(pixel::CRGB::Black);
+    baseCanvas.fill(flm::CRGB::Black);
     modeManager =
         std::make_unique<ModeManager>(baseCanvas, ButtonReferences{buttonMode, buttonSelect, buttonLeft, buttonRight});
 

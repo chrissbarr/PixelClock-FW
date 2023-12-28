@@ -54,7 +54,7 @@ void MainModeFunction::moveOut() {
 Mode_SettingsMenu::Mode_SettingsMenu(const canvas::Canvas& size, ButtonReferences buttons)
     : MainModeFunction("Settings Menu", buttons) {
     menuTextScroller = std::make_unique<RepeatingTextScroller>(
-        size, "Placeholder", std::vector<pixel::CRGB>{pixel::CRGB::Red}, 50, 2000, 1);
+        size, "Placeholder", std::vector<flm::CRGB>{flm::CRGB::Red}, 50, 2000, 1);
     menuPages.push_back(std::make_unique<Mode_SettingsMenu_SetTime>(size, buttons));
     menuPages.push_back(std::make_unique<Mode_SettingsMenu_SetBrightness>(size, buttons));
 }
@@ -129,7 +129,7 @@ canvas::Canvas Mode_SettingsMenu::runCore() {
 Mode_SettingsMenu_SetTime::Mode_SettingsMenu_SetTime(const canvas::Canvas& size, ButtonReferences buttons)
     : MainModeFunction("Set Time", buttons) {
     textscroller =
-        std::make_unique<TextScroller>(size, "12:34:56", std::vector<pixel::CRGB>{pixel::CRGB::White}, 10, 1000, 1);
+        std::make_unique<TextScroller>(size, "12:34:56", std::vector<flm::CRGB>{flm::CRGB::White}, 10, 1000, 1);
 }
 
 bool Mode_SettingsMenu_SetTime::finished() const { return currentlySettingTimeSegment == TimeSegment::done; }
@@ -239,9 +239,9 @@ canvas::Canvas Mode_SettingsMenu_SetTime::runCore() {
     textscroller->setText(timestr);
 
     // move to and highlight the active part of the time
-    pixel::CRGB colourSel = pixel::CRGB(pixel::CRGB::Red).fadeLightBy(pixel::scale8(pixel::sin8(millis() / 5), 200));
+    flm::CRGB colourSel = flm::CRGB(flm::CRGB::Red).fadeLightBy(flm::scale8(flm::sin8(millis() / 5), 200));
     // 255 - scale8(sin8(millis()/5), 128), 0, 0);
-    pixel::CRGB colourIdle = pixel::CRGB(100, 100, 100);
+    flm::CRGB colourIdle = flm::CRGB(100, 100, 100);
     switch (currentlySettingTimeSegment) {
     case TimeSegment::cancel: {
         textscroller->setTargetOffset(0);

@@ -3,7 +3,7 @@
 
 #include "flm_pixeltypes.h"
 
-namespace pixel {
+namespace flm {
 
 /// @file hsv2rgb.h
 /// Functions to convert from the HSV colorspace to the RGB colorspace
@@ -160,7 +160,6 @@ void hsv2rgb_raw(const struct CHSV* phsv, struct CRGB * prgb, int numLeds);
 /// @param rgb an RGB value to convert
 /// @returns the approximate HSV equivalent of the RGB value
 CHSV rgb2hsv_approximate( const CRGB& rgb);
-
 
 }
 

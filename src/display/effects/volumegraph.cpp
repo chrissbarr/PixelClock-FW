@@ -29,8 +29,8 @@ canvas::Canvas VolumeGraph::run() {
         float vol = (it->volumeLeft + it->volumeRight) / 2;
         float barHeight = calculateBarHeight(vol, volMin * 0.9, volMax * 0.9, 5);
         for (int yIdx = 0; yIdx < _c.getHeight(); yIdx++) {
-            pixel::CRGB colour = pixel::CRGB::Black;
-            if (yIdx <= barHeight) { colour = pixel::CRGB::Blue; }
+            flm::CRGB colour = flm::CRGB::Black;
+            if (yIdx <= barHeight) { colour = flm::CRGB::Blue; }
             _c.setXY(xIdx, _c.getHeight() - 1 - yIdx, colour);
         }
         xIdx -= 1;

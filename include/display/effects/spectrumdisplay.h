@@ -14,8 +14,8 @@ public:
 
 private:
     canvas::Canvas _c;
-    pixel::CRGB colMin;
-    pixel::CRGB colMax;
+    flm::CRGB colMin;
+    flm::CRGB colMax;
     float maxScale = 5000;
     bool _finished = false;
 };

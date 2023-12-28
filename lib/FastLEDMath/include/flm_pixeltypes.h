@@ -8,7 +8,7 @@
 /// @file pixeltypes.h
 /// Definitions for pixel color data structs
 
-namespace pixel {
+namespace flm {
 
 struct CRGB;
 struct CHSV;
@@ -406,9 +406,9 @@ struct CRGB {
     /// @see ::scale8
     inline CRGB& nscale8 (const CRGB & scaledown )
     {
-        r = pixel::scale8(r, scaledown.r);
-        g = pixel::scale8(g, scaledown.g);
-        b = pixel::scale8(b, scaledown.b);
+        r = flm::scale8(r, scaledown.r);
+        g = flm::scale8(g, scaledown.g);
+        b = flm::scale8(b, scaledown.b);
         return *this;
     }
 
@@ -424,9 +424,9 @@ struct CRGB {
     inline CRGB scale8 (const CRGB & scaledown ) const
     {
         CRGB out;
-        out.r = pixel::scale8(r, scaledown.r);
-        out.g = pixel::scale8(g, scaledown.g);
-        out.b = pixel::scale8(b, scaledown.b);
+        out.r = flm::scale8(r, scaledown.r);
+        out.g = flm::scale8(g, scaledown.g);
+        out.b = flm::scale8(b, scaledown.b);
         return out;
     }
 
@@ -955,7 +955,6 @@ enum EOrder {
 
 }
 
-//FASTLED_NAMESPACE_END
 ///@}
 
 

@@ -10,7 +10,7 @@
 
 struct VolumeDisplayColourMap {
     double percentage;
-    pixel::CRGB colour;
+    flm::CRGB colour;
 };
 
 class VolumeDisplay : public DisplayEffect {

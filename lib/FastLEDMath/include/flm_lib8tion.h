@@ -9,10 +9,6 @@
 /// Fast, efficient 8-bit math functions specifically
 /// designed for high-performance LED programming.
 
-
-//FASTLED_NAMESPACE_BEGIN
-
-
 #include <stdint.h>
 
 #include <Arduino.h>
@@ -185,7 +181,7 @@
 
 #endif
 
-namespace pixel {
+namespace flm {
 
 /// @defgroup lib8tion Fast Math Functions
 /// Fast, efficient 8-bit math functions specifically
@@ -1438,7 +1434,6 @@ typedef CEveryNTimePeriods<uint8_t,hours8> CEveryNHours;
 #define USE_GET_MILLISECOND_TIMER
 #endif
 
-//FASTLED_NAMESPACE_END
 }
 
 #endif

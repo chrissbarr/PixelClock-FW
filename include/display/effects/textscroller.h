@@ -14,7 +14,7 @@ public:
     TextScroller(
         const canvas::Canvas& size,
         std::string textString,
-        std::vector<pixel::CRGB> colours,
+        std::vector<flm::CRGB> colours,
         uint16_t stepDelay = 100,
         uint16_t timeToHoldAtEnd = 1000,
         uint8_t characterSpacing = 1);
@@ -30,12 +30,12 @@ public:
     void setText(const std::string& textIn) { text = textIn; }
     void setTargetOffset(int targetCharacterIndex = -1);
     void setCurrentOffset(int targetCharacterIndex = -1);
-    void setColours(std::vector<pixel::CRGB> colours) { this->colours = colours; }
+    void setColours(std::vector<flm::CRGB> colours) { this->colours = colours; }
 
 private:
     canvas::Canvas _c;
     std::string text;
-    std::vector<pixel::CRGB> colours;
+    std::vector<flm::CRGB> colours;
     uint16_t timeToHoldAtEnd;
     uint8_t charSpacing;
 
@@ -56,7 +56,7 @@ public:
     RepeatingTextScroller(
         const canvas::Canvas& size,
         std::string textString,
-        std::vector<pixel::CRGB> colours,
+        std::vector<flm::CRGB> colours,
         uint16_t stepDelay = 100,
         uint16_t timeToHoldAtEnd = 1000,
         uint8_t characterSpacing = 1);
