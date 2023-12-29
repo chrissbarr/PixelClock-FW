@@ -9,18 +9,19 @@
 
 namespace canvas {
 
-Canvas::Canvas(uint8_t width, uint8_t height) : width(width), height(height), length(width * height) {
+Canvas::Canvas(int width, int height) : width(width), height(height), length(width * height) {
     data = std::vector<flm::CRGB>(length, flm::CRGB::Black);
 }
 
-void Canvas::setXY(uint8_t x, uint8_t y, flm::CRGB colour) { data[XYToIndex(x, y)] = colour; }
-const flm::CRGB& Canvas::getXY(uint8_t x, uint8_t y) const { return data[XYToIndex(x, y)]; }
+void Canvas::setXY(int x, int y, flm::CRGB colour) { data[XYToIndex(x, y)] = colour; }
+
+const flm::CRGB& Canvas::getXY(int x, int y) const { return data[XYToIndex(x, y)]; }
 
 void Canvas::fill(const flm::CRGB& colour) {
     for (auto& v : data) { v = colour; }
 }
 
-uint16_t Canvas::XYToIndex(uint8_t x, uint8_t y) const {
+std::size_t Canvas::XYToIndex(int x, int y) const {
     assert(((y * width) + x) < data.size());
     return (y * width) + x;
 }
@@ -48,9 +49,9 @@ void Canvas::showCharacter(const FontGlyph& character, flm::CRGB colour, int xOf
         int xPos = xOffset + x;
         for (uint8_t y = 0; y < 5; y++) {
             if (bitRead(character.glyph[y], character.width - 1 - x) == 1) {
-                if (uint32_t(xPos) >= getWidth()) { continue; }
+                if (xPos >= getWidth()) { continue; }
                 if (xPos < 0) { continue; }
-                setXY(uint8_t(xPos), y, colour);
+                setXY(xPos, y, colour);
             }
         }
     }
@@ -72,10 +73,10 @@ Canvas blit(const Canvas& background, const Canvas& foreground, int xOffset, int
     // create new canvas to hold result
     Canvas c(background);
 
-    for (uint8_t x = 0; x < c.getWidth(); x++) {
-        for (uint8_t y = 0; y < c.getHeight(); y++) {
-            int xInFore = int(x) - xOffset;
-            int yInFore = int(y) - yOffset;
+    for (int x = 0; x < c.getWidth(); x++) {
+        for (int y = 0; y < c.getHeight(); y++) {
+            int xInFore = x - xOffset;
+            int yInFore = y - yOffset;
             if (xInFore >= 0 && xInFore < foreground.getWidth() && yInFore >= 0 && yInFore < foreground.getHeight()) {
                 c.setXY(x, y, foreground.getXY(xInFore, yInFore));
             }

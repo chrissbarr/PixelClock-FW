@@ -15,19 +15,19 @@ namespace canvas {
 class Canvas {
 public:
     Canvas() : Canvas(0, 0) {}
-    Canvas(uint8_t width, uint8_t height);
+    Canvas(int width, int height);
 
-    uint8_t getWidth() const { return width; }
-    uint8_t getHeight() const { return height; }
-    uint16_t getSize() const { return length; }
-    uint16_t XYToIndex(uint8_t x, uint8_t y) const;
+    int getWidth() const { return width; }
+    int getHeight() const { return height; }
+    int getSize() const { return length; }
+    std::size_t XYToIndex(int x, int y) const;
 
     flm::CRGB& operator[](std::size_t idx) { return data[idx]; }
     const flm::CRGB& operator[](std::size_t idx) const { return data[idx]; }
 
     /* Drawing Functions */
-    void setXY(uint8_t x, uint8_t y, flm::CRGB colour);
-    const flm::CRGB& getXY(uint8_t x, uint8_t y) const;
+    void setXY(int x, int y, flm::CRGB colour);
+    const flm::CRGB& getXY(int x, int y) const;
     void fill(const flm::CRGB& colour);
 
     bool containsColour(const flm::CRGB& colour = 0) const;
@@ -37,9 +37,9 @@ public:
     void showCharacter(const FontGlyph& character, flm::CRGB colour, int xOffset);
 
 private:
-    uint8_t width;
-    uint8_t height;
-    uint16_t length;
+    int width;
+    int height;
+    int length;
     std::vector<flm::CRGB> data;
 };
 

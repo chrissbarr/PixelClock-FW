@@ -25,7 +25,7 @@ std::vector<uint8_t> scanI2CDevices(TwoWire& wire) {
 #endif
 
 float mapNumericRange(float input, float fromMin, float fromMax, float toMin, float toMax) {
-    float slope = 1.0 * (toMax - toMin) / (fromMax - fromMin);
+    float slope = 1.0f * (toMax - toMin) / (fromMax - fromMin);
     float output = toMin + std::round(slope * (input - fromMin));
     return output;
 }

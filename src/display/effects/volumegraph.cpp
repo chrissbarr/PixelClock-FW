@@ -27,7 +27,7 @@ canvas::Canvas VolumeGraph::run() {
     int xIdx = _c.getWidth() - 1;
     for (auto it = audioHist.rbegin(); it != audioHist.rend(); ++it) {
         float vol = (it->volumeLeft + it->volumeRight) / 2;
-        float barHeight = calculateBarHeight(vol, volMin * 0.9, volMax * 0.9, 5);
+        float barHeight = calculateBarHeight(vol, volMin * 0.9f, volMax * 0.9f, static_cast<float>(_c.getHeight()));
         for (int yIdx = 0; yIdx < _c.getHeight(); yIdx++) {
             flm::CRGB colour = flm::CRGB::Black;
             if (yIdx <= barHeight) { colour = flm::CRGB::Blue; }

@@ -31,7 +31,7 @@ public:
     uint32_t getLifespan() const { return lifespan; }
     std::vector<uint32_t>& getData() { return data; }
     GoLRules& getRules() { return rules; }
-    std::size_t getSeed() { return seed; }
+    uint32_t getSeed() { return seed; }
     std::size_t XYToIndex(int x, int y) const;
 
 private:
@@ -48,7 +48,7 @@ private:
     uint32_t lifespan{0};
 
     etl::circular_buffer<std::size_t, 100> previousStateHashes;
-    uint32_t notUniqueForNSteps = 0;
+    int notUniqueForNSteps = 0;
 };
 
 struct GoLScore {

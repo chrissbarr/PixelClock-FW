@@ -71,7 +71,7 @@ void AudioDesktop::a2dp_callback(const uint8_t* data, uint32_t length) {
 
         if (sourceIdx < sample_count) {
             // convert stereo samples to mono
-            vReal[i] = (uint32_t(samples[sourceIdx]) + samples[sourceIdx + 1]) / 2;
+            vReal[i] = static_cast<float>((uint32_t(samples[sourceIdx]) + samples[sourceIdx + 1]) / 2);
         } else {
             vReal[i] = 0;
         }
@@ -93,8 +93,8 @@ void AudioDesktop::a2dp_callback(const uint8_t* data, uint32_t length) {
 
     // Bin FFT results
     for (int i = 5; i < (fftSamples / 2) - 1; i++) {
-        float freq = i * fftFrequencyResolution;
-        int binIdx = std::floor(freq / audioSpectrumBinWidth);
+        float freq = static_cast<float>(i * fftFrequencyResolution);
+        int binIdx = static_cast<int>(std::floor(freq / audioSpectrumBinWidth));
         // int binIdx = i / audioSpectrumBinSize;
         if (binIdx < spectrum.size()) {
             float val = vReal[i] / audioSpectrumBinSize;

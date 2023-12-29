@@ -102,7 +102,7 @@ std::time_t TimeManagerDesktop::now() const {
     const std::time_t tc = std::chrono::system_clock::to_time_t(tnow);
     return tc;
 }
-void TimeManagerDesktop::setTime(std::time_t newTime) {}
+void TimeManagerDesktop::setTime([[maybe_unused]] std::time_t newTime) {}
 void TimeManagerDesktop::update() {}
 #endif
 
@@ -120,10 +120,10 @@ ClockFaceTimeStruct timeCallbackFunction(std::time_t time) {
     // extract elements of time into struct
     const std::tm caltime = *localtime(&time);
     ClockFaceTimeStruct val{};
-    val.hour12 = hour24to12(caltime.tm_hour);
-    val.hour24 = caltime.tm_hour;
-    val.minute = caltime.tm_min;
-    val.second = caltime.tm_sec;
+    val.hour12 = static_cast<uint8_t>(hour24to12(caltime.tm_hour));
+    val.hour24 = static_cast<uint8_t>(caltime.tm_hour);
+    val.minute = static_cast<uint8_t>(caltime.tm_min);
+    val.second = static_cast<uint8_t>(caltime.tm_sec);
     return val;
 }
 

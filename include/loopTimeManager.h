@@ -15,8 +15,8 @@ private:
     const uint32_t statReportInterval;
     uint32_t lastStatReportTime = 0;
     float loopTimeAvg = 0;
-    uint16_t loopTimeMin = 0;
-    uint16_t loopTimeMax = 0;
+    uint32_t loopTimeMin = 0;
+    uint32_t loopTimeMax = 0;
     constexpr float approxRollingAverage(float avg, float newSample, int N) const;
 };
 

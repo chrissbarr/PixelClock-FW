@@ -46,12 +46,12 @@ canvas::Canvas SpectrumDisplay::run() {
     }
     AudioSingleton::get().releaseMutex();
 
-    uint8_t vertMax = _c.getHeight();
+    int vertMax = _c.getHeight();
     if (!totals.empty()) {
-        for (uint8_t x = 0; x < totals.size(); x++) {
+        for (int x = 0; x < totals.size(); x++) {
             if (x >= _c.getWidth()) { break; }
             // we need to scale the value from 0 - valMax to 0 - vertMax
-            auto barHeight = calculateBarHeight(totals[x], 0, maxScale, vertMax);
+            auto barHeight = calculateBarHeight(totals[x], 0, maxScale, static_cast<float>(vertMax));
             for (int y = 0; y < _c.getHeight(); y++) {
                 flm::CRGB colour = flm::CRGB::Black;
                 if (y <= barHeight) {

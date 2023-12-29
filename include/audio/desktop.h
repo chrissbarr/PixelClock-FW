@@ -32,8 +32,8 @@ public:
         return true;
     }
 
-    void registerCallback(std::function<void(const uint8_t* data, uint32_t length)> callback) {
-        this->callback = callback;
+    void registerCallback(std::function<void(const uint8_t* data, uint32_t length)> newCallback) {
+        this->callback = newCallback;
     }
 
 private:

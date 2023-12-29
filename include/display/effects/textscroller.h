@@ -30,7 +30,7 @@ public:
     void setText(const std::string& textIn) { text = textIn; }
     void setTargetOffset(int targetCharacterIndex = -1);
     void setCurrentOffset(int targetCharacterIndex = -1);
-    void setColours(std::vector<flm::CRGB> colours) { this->colours = colours; }
+    void setColours(std::vector<flm::CRGB> newColours) { this->colours = newColours; }
 
 private:
     canvas::Canvas _c;

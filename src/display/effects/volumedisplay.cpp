@@ -23,8 +23,8 @@ canvas::Canvas VolumeDisplay::run() {
     float vRight = -60;
 
     if (!audioHist.empty()) {
-        utility::EMA leftAvg(0.8);
-        utility::EMA rightAvg(0.8);
+        utility::EMA leftAvg(0.8f);
+        utility::EMA rightAvg(0.8f);
         for (const auto& v : audioHist) {
             leftAvg.update(v.volumeLeft);
             rightAvg.update(v.volumeRight);
@@ -34,7 +34,7 @@ canvas::Canvas VolumeDisplay::run() {
     }
     // printing::print(Serial, fmt::format("Volume: L={:.1f} R={:.1f}\n", vLeft, vRight));
 
-    uint8_t horMax = _c.getWidth();
+    float horMax = static_cast<float>(_c.getWidth());
 
     float leftBarHeight = calculateBarHeight(vLeft, -40.0, 0.0, horMax);
     float rightBarHeight = calculateBarHeight(vRight, -40.0, 0.0, horMax);
@@ -43,7 +43,7 @@ canvas::Canvas VolumeDisplay::run() {
         for (int x = 0; x < _c.getWidth(); x++) {
             flm::CRGB colour = flm::CRGB::Black;
 
-            float pct = float(x) / horMax;
+            float pct = static_cast<float>(x) / horMax;
 
             if (x <= barHeight) {
                 for (const auto& m : colourMap) {

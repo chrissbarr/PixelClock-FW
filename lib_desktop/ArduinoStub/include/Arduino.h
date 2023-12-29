@@ -39,7 +39,7 @@ inline unsigned long millis() {
     static auto start = steady_clock::now();
     auto now = steady_clock::now();
     auto m = duration_cast<milliseconds>(now - start).count();
-    return m;
+    return static_cast<unsigned long>(m);
 }
 
 inline unsigned long micros() {
@@ -47,7 +47,7 @@ inline unsigned long micros() {
     static auto start = steady_clock::now();
     auto now = steady_clock::now();
     auto m = duration_cast<microseconds>(now - start).count();
-    return m;
+    return static_cast<unsigned long>(m);
 }
 
 inline void delay(unsigned long d) {
@@ -55,9 +55,9 @@ inline void delay(unsigned long d) {
     while (millis() - start < d) {}
 }
 
-inline void pinMode(uint8_t pin, uint8_t mode) {}
-inline void digitalWrite(uint8_t pin, uint8_t val) {}
-inline int digitalRead(uint8_t pin) { return 0; }
+inline void pinMode([[maybe_unused]] uint8_t pin, [[maybe_unused]] uint8_t mode) {}
+inline void digitalWrite([[maybe_unused]] uint8_t pin, [[maybe_unused]] uint8_t val) {}
+inline int digitalRead([[maybe_unused]] uint8_t pin) { return 0; }
 
 inline void yield() {}
 

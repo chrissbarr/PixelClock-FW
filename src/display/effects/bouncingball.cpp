@@ -3,6 +3,7 @@
 #include "display/effects/utilities.h"
 
 /* C++ Standard Library */
+#include <cmath>
 #include <random>
 
 BouncingBall::BouncingBall(
@@ -17,11 +18,11 @@ BouncingBall::BouncingBall(
 void BouncingBall::reset() {
     const int spawnInFromBorder = 1;
 
-    std::uniform_int_distribution<uint16_t> horDist(spawnInFromBorder, _c.getWidth() - 1 - spawnInFromBorder);
-    std::uniform_int_distribution<uint16_t> vertDist(spawnInFromBorder, _c.getHeight() - 1 - spawnInFromBorder);
+    std::uniform_int_distribution<int> horDist(spawnInFromBorder, _c.getWidth() - 1 - spawnInFromBorder);
+    std::uniform_int_distribution<int> vertDist(spawnInFromBorder, _c.getHeight() - 1 - spawnInFromBorder);
 
-    ballx = horDist(rand);
-    bally = vertDist(rand);
+    ballx = static_cast<float>(horDist(rand));
+    bally = static_cast<float>(vertDist(rand));
     xDir = 1;
     yDir = 1;
     _finished = false;
@@ -39,8 +40,8 @@ canvas::Canvas BouncingBall::run() {
         if (bally <= 0 || bally >= _c.getHeight() - 1) { yDir = -yDir; }
 
         _c.fill(flm::CRGB::Black);
-        uint8_t pixelx = uint8_t(round(ballx));
-        uint8_t pixely = uint8_t(round(bally));
+        int pixelx = int(std::round(ballx));
+        int pixely = int(std::round(bally));
         // printing::print(Serial, fmt::format("Ball (x={:.2f}({}), y={:.2f}({}))\n", ballx, pixelx, bally, pixely));
         _c.setXY(pixelx, pixely, _colourGenerator());
 

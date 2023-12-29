@@ -77,7 +77,7 @@ void GameOfLife::reset() {
 
     // pick a random score from the best scores container to use for the actual display game
     std::uniform_int_distribution<std::size_t> dist(0, bestScores.size() - 1);
-    int randomIndex = dist(rand);
+    std::size_t randomIndex = dist(rand);
     auto randomScoreToRepeat = (*std::next(bestScores.begin(), randomIndex));
     printing::print(fmt::format("GoL Repeating Score: {}\n", randomScoreToRepeat));
     game = std::make_unique<GameOfLifeGame>(rules, randomScoreToRepeat.seed);
@@ -238,8 +238,8 @@ void GameOfLifeGame::tick() {
 std::size_t GameOfLifeGame::XYToIndex(int x, int y) const { return (y * rules.width) + x; }
 
 int GameOfLifeGame::neighbourCount(
-    int xPos, int yPos, int width, int height, const std::vector<uint32_t>& data, bool wrap) const {
-    uint8_t alive = 0;
+    int xPos, int yPos, int width, int height, const std::vector<uint32_t>& dataIn, bool wrap) const {
+    uint8_t aliveCount = 0;
 
     const int xMin = 0;
     const int xMax = width - 1;
@@ -279,18 +279,18 @@ int GameOfLifeGame::neighbourCount(
                 }
             }
             if (testX == xPos && testY == yPos) { continue; }
-            if (data.at(XYToIndex(testX, testY)) != 0) { alive++; }
+            if (dataIn.at(XYToIndex(testX, testY)) != 0) { aliveCount++; }
         }
     }
-    return alive;
+    return aliveCount;
 }
 
 std::size_t GameOfLifeGame::hashState(const std::vector<uint32_t>& state) const {
-    std::size_t seed = state.size();
+    std::size_t seedVal = state.size();
     for (const auto i : state) {
         uint8_t val = 0;
         if (i > 0) { val = 1; }
-        seed ^= val + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seedVal ^= val + 0x9e3779b9 + (seedVal << 6) + (seedVal >> 2);
     }
-    return seed;
+    return seedVal;
 }

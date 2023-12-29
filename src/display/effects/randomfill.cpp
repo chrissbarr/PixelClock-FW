@@ -20,15 +20,15 @@ RandomFill::RandomFill(const canvas::Canvas& size, uint32_t fillInterval, colour
 canvas::Canvas RandomFill::run() {
     uint32_t timeNow = millis();
 
-    std::uniform_int_distribution<uint16_t> horDist(0, _c.getWidth() - 1);
-    std::uniform_int_distribution<uint16_t> vertDist(0, _c.getHeight() - 1);
+    std::uniform_int_distribution<int> horDist(0, _c.getWidth() - 1);
+    std::uniform_int_distribution<int> vertDist(0, _c.getHeight() - 1);
 
     if (timeNow - _lastSpawnTime >= _fillInterval) {
         if (_c.containsColour(flm::CRGB::Black)) {
             bool filledPixel = false;
             while (!filledPixel) {
-                uint8_t x = horDist(rand);
-                uint8_t y = vertDist(rand);
+                int x = horDist(rand);
+                int y = vertDist(rand);
                 if (_c.getXY(x, y) == flm::CRGB::Black) {
                     _c.setXY(x, y, _colourGenerator());
                     filledPixel = true;
