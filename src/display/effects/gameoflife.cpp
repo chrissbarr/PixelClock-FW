@@ -16,233 +16,270 @@ GameOfLife::GameOfLife(
       _updateInterval(updateInterval),
       _fadeInterval(fadeInterval),
       _colourGenerator(colourGenerator),
-      _wrap(wrap) {
-
-    int bufferSize = _c.getSize();
-    buffers.push_back(std::vector<flm::CRGB>(bufferSize, flm::CRGB::Black));
-    buffers.push_back(std::vector<flm::CRGB>(bufferSize, flm::CRGB::Black));
-}
+      _wrap(wrap) {}
 
 void GameOfLife::reset() {
     _lastLoopTime = 0;
     _finished = false;
-    _dead = false;
-    _notUniqueForNSteps = 0;
 
-    GoLScore lastScore = {_lastSeed, _lifespan};
-    if (!_seeding) {
-        printing::print(
-            fmt::format("GoL Reset. ID: {}, Score: {}, Seed: {}\n", iterationId, lastScore.lifespan, lastScore.seed));
-    }
-    iterationId++;
-    if (_seeding) {
-        if (lastScore.lifespan > 10) {
-            // Serial.println("saved score");
-            bestScores.insert(lastScore);
-            if (bestScores.size() > bestScoresToKeep) { bestScores.erase(bestScores.begin()); }
-            // Serial.println(bestScores.size());
-        }
-    }
-    _lifespan = 0;
-    seedDisplay();
-}
+    printing::print("GoL Reset\n");
 
-void GameOfLife::seedDisplay() {
-    //_display.fill(0);
-    for (auto& buffer : buffers) { std::fill(buffer.begin(), buffer.end(), 0); }
-    readBuffer = 0;
-    writeBuffer = 1;
-
-    if (!_seeding && bestScores.size() >= bestScoresToKeep) {
-        printing::print("Using seed from best scores...\n");
-        std::uniform_int_distribution<std::size_t> dist(0, bestScores.size() - 1);
-        int randomIndex = dist(rand);
-        auto randomScoreToRepeat = (*std::next(bestScores.begin(), randomIndex));
-        printing::print(
-            fmt::format("Using score: {}, Seed: {}\n", randomScoreToRepeat.lifespan, randomScoreToRepeat.seed));
-        _lastSeed = randomScoreToRepeat.seed;
-    } else {
-        // Serial.println("Using random seed...");
-        _lastSeed = micros();
+    if (game) {
+        // collect stats from last run
+        GoLScore prevScore{};
+        prevScore.seed = game->getSeed();
+        prevScore.lifespan = game->getLifespan();
+        printing::print(fmt::format("GoL Last Game Score: {}\n", prevScore));
     }
 
-    std::minstd_rand simple_rand;
-    simple_rand.seed(_lastSeed);
-    std::uniform_int_distribution<int> dist(0, 10);
+    GOLRules rules{};
+    rules.height = _c.getHeight();
+    rules.width = _c.getWidth();
+    rules.wrap = _wrap;
+    rules.staleStateStepsAllowed = 20;
 
-    int xMin = 0;
-    int xMax = _c.getWidth() - 1;
-    int yMin = 0;
-    int yMax = _c.getHeight() - 1;
+    const uint32_t millisecondsAllowedForSeedSimulation = 50;
+    const uint32_t seedSimStartTime = millis();
+    uint32_t seedSimEndTime = seedSimStartTime;
+    uint32_t seedSimDuration = 0;
+    uint32_t iterations = 0;
 
-    for (uint8_t x = xMin; x <= xMax; x++) {
-        for (uint8_t y = yMin; y <= yMax; y++) {
-            int chance = dist(simple_rand);
-            if (chance == 0) { buffers[readBuffer][_c.XYToIndex(x, y)] = _colourGenerator(); }
-        }
+    printing::print(fmt::format("GoL Running Seed Simulation, start = {} ms\n", seedSimStartTime));
+
+    while (seedSimDuration < millisecondsAllowedForSeedSimulation) {
+
+        // create a dummy game and run it until it dies (or times out)
+        auto seedGame = std::make_unique<GameOfLifeGame>(rules, millis());
+        const uint32_t maxLifespan = 5000;
+        while (seedGame->getAlive() && seedGame->getLifespan() < maxLifespan) { seedGame->tick(); }
+
+        // collect stats from dummy game
+        GoLScore score{};
+        score.seed = seedGame->getSeed();
+        score.lifespan = seedGame->getLifespan();
+        // add them to the best scores container
+        bestScores.insert(score);
+        // if container at max capacity, remove the lowest score
+        if (bestScores.size() > bestScoresToKeep) { bestScores.erase(bestScores.begin()); }
+        // printing::print(
+        //     fmt::format("GoL Seed Simulation Score: {}\n", score));
+
+        seedSimEndTime = millis();
+        seedSimDuration = seedSimEndTime - seedSimStartTime;
+        iterations++;
     }
+
+    printing::print(
+        fmt::format("GoL Seed Simulation Finished, duration = {} ms, iterations = {}\n", seedSimDuration, iterations));
+
+    printing::print("GoL Saved Scores: \n");
+    for (const auto& s : bestScores) { printing::print(fmt::format("  {}\n", s)); }
+
+    // pick a random score from the best scores container to use for the actual display game
+    std::uniform_int_distribution<std::size_t> dist(0, bestScores.size() - 1);
+    int randomIndex = dist(rand);
+    auto randomScoreToRepeat = (*std::next(bestScores.begin(), randomIndex));
+    printing::print(fmt::format("GoL Repeating Score: {}\n", randomScoreToRepeat));
+    game = std::make_unique<GameOfLifeGame>(rules, randomScoreToRepeat.seed);
 }
 
 canvas::Canvas GameOfLife::run() {
-    bool changedDisplay = false;
 
-    int xMin = 0;
-    int xMax = _c.getWidth() - 1;
-    int yMin = 0;
-    int yMax = _c.getHeight() - 1;
+    // this shouldn't happen, exit early if it does
+    if (!game) {
+        _finished = true;
+        return _c;
+    }
 
-    if (_dead) {
+    if (game->getAlive()) {
+        if (millis() - _lastLoopTime >= _updateInterval) {
+
+            game->tick();
+
+            int width = game->getRules().width;
+            int height = game->getRules().height;
+            _c = canvas::Canvas(width, height);
+            _c.fill(flm::CRGB::Black);
+            for (int x = 0; x < width; x++) {
+                for (int y = 0; y < height; y++) {
+                    if (game->getData().at(game->XYToIndex(x, y)) != 0) { _c.setXY(x, y, flm::CRGB::White); }
+                }
+            }
+
+            //_lifespan++;
+            _lastLoopTime = millis();
+        }
+
+    } else {
         if (!_fadeOnDeath) {
             _finished = true;
         } else {
             if (millis() - _lastLoopTime >= _fadeInterval) {
 
-                for (uint8_t x = xMin; x <= xMax; x++) {
-                    for (uint8_t y = yMin; y <= yMax; y++) {
-                        buffers[writeBuffer][_c.XYToIndex(x, y)] =
-                            buffers[readBuffer][_c.XYToIndex(x, y)].fadeToBlackBy(10);
-                    }
-                }
+                // fade all pixels
+                for (std::size_t i = 0; i < _c.getSize(); i++) { _c[i] = _c[i].fadeToBlackBy(10); }
                 _lastLoopTime = millis();
-                changedDisplay = true;
             }
-            bool empty = std::all_of(buffers[readBuffer].begin(), buffers[readBuffer].end(), [](flm::CRGB i) {
-                return i == flm::CRGB(0);
-            });
+            bool empty = true;
+            for (std::size_t i = 0; i < _c.getSize(); i++) {
+                if (_c[i] != flm::CRGB(0)) {
+                    empty = false;
+                    break;
+                }
+            }
+
             if (empty) { _finished = true; }
         }
-    } else {
-        if (_seeding || millis() - _lastLoopTime >= _updateInterval) {
-            auto neighbourCount = [](uint8_t xPos,
-                                     uint8_t yPos,
-                                     const canvas::Canvas& _c,
-                                     const std::vector<flm::CRGB>& buffer,
-                                     bool wrap) -> uint8_t {
-                uint8_t alive = 0;
-
-                int xMin = 0;
-                int xMax = _c.getWidth() - 1;
-                int yMin = 0;
-                int yMax = _c.getHeight() - 1;
-
-                for (int x = xPos - 1; x <= xPos + 1; x++) {
-                    int testX = x;
-                    if (testX < xMin) {
-                        if (wrap) {
-                            testX = xMax;
-                        } else {
-                            continue;
-                        }
-                    }
-                    if (testX > xMax) {
-                        if (wrap) {
-                            testX = xMin;
-                        } else {
-                            continue;
-                        }
-                    }
-                    for (int y = yPos - 1; y <= yPos + 1; y++) {
-                        int testY = y;
-                        if (testY < yMin) {
-                            if (wrap) {
-                                testY = yMax;
-                            } else {
-                                continue;
-                            }
-                        }
-                        if (testY > yMax) {
-                            if (wrap) {
-                                testY = yMin;
-                            } else {
-                                continue;
-                            }
-                        }
-                        if (testX == xPos && testY == yPos) { continue; }
-                        if (buffer[_c.XYToIndex(testX, testY)] != flm::CRGB(0)) { alive++; }
-                    }
-                }
-                return alive;
-            };
-
-            std::fill(buffers[writeBuffer].begin(), buffers[writeBuffer].end(), 0);
-
-            // Serial.println("Neighbours");
-            for (uint8_t x = xMin; x <= xMax; x++) {
-                for (uint8_t y = yMin; y <= yMax; y++) {
-                    uint8_t neighbours = neighbourCount(x, y, _c, buffers[readBuffer], _wrap);
-                    // Serial.println(neighbours);
-                    const flm::CRGB currentVal = buffers[readBuffer][_c.XYToIndex(x, y)];
-                    bool currentlyAlive = (currentVal != flm::CRGB(0));
-                    if (currentlyAlive) {
-                        if (neighbours == 2 || neighbours == 3) {
-                            // keep on living
-                            buffers[writeBuffer][_c.XYToIndex(x, y)] = currentVal;
-                        } else {
-                            // kill this cell
-                            buffers[writeBuffer][_c.XYToIndex(x, y)] = flm::CRGB(0);
-                        }
-                    } else {
-                        if (neighbours == 3) {
-                            // come to life!
-                            buffers[writeBuffer][_c.XYToIndex(x, y)] = _colourGenerator();
-                        }
-                    }
-                }
-            }
-
-            // copy buffer into display and count living cells
-            uint32_t livingCells = 0;
-            for (uint32_t i = 0; i < buffers[writeBuffer].size(); i++) {
-                if (buffers[writeBuffer][i] != flm::CRGB(0)) { livingCells++; }
-            }
-
-            // Serial.print("Living cells this timestep: "); Serial.println(livingCells);
-            // Serial.print("State is unique: "); Serial.println(unique);
-            // Serial.print("State not unique for N steps: "); Serial.println(_notUniqueForNSteps);
-
-            if (livingCells == 0) {
-                // test for simplest death state first to avoid expensive checks later
-                _dead = true;
-            } else {
-                // convert the current state to a hash and compare against previous states
-                auto currentStateHash = hashBuffer(buffers[writeBuffer]);
-                if (bufferHashes.size() > 0) {
-                    bool unique = true;
-                    for (const auto& hash : bufferHashes) {
-                        if (currentStateHash == hash) { unique = false; }
-                    }
-                    if (!unique) {
-                        _notUniqueForNSteps++;
-                    } else {
-                        _notUniqueForNSteps = 0;
-                    }
-
-                    if (currentStateHash == bufferHashes.back() || _notUniqueForNSteps >= 20) { _dead = true; }
-                }
-                bufferHashes.push_back(currentStateHash);
-                if (bufferHashes.size() > 100) { bufferHashes.pop_front(); }
-            }
-            _lifespan++;
-            _lastLoopTime = millis();
-            changedDisplay = true;
-        }
     }
-    if (changedDisplay) {
-        if (!_seeding) {
-            for (uint32_t i = 0; i < buffers[writeBuffer].size(); i++) { _c[i] = buffers[writeBuffer][i]; }
-        }
-        uint8_t tempIdx = readBuffer;
-        readBuffer = writeBuffer;
-        writeBuffer = tempIdx;
-    }
+
     return _c;
 }
 
-std::size_t GameOfLife::hashBuffer(const std::vector<flm::CRGB>& vec) const {
-    std::size_t seed = vec.size();
-    for (const flm::CRGB& i : vec) {
-        uint8_t val = 1;
-        if (i == flm::CRGB(0)) { val = 0; }
+GameOfLifeGame::GameOfLifeGame(GOLRules rules, uint32_t seed) : rules(rules), seed(seed) {
+    // zero the data
+    data = std::vector<uint32_t>(rules.width * rules.height, 0);
+
+    // setup RNG
+    rand.seed(seed);
+
+    // seed initial state
+    std::uniform_int_distribution<int> dist(0, 10);
+    for (auto& v : data) {
+        int chance = dist(rand);
+        if (chance == 0) { v = 1; }
+    }
+
+    alive = true;
+}
+
+void GameOfLifeGame::tick() {
+
+    currentTick++;
+
+    auto newData = std::vector<uint32_t>(rules.width * rules.height, 0);
+
+    int xMin = 0;
+    int xMax = rules.width - 1;
+    int yMin = 0;
+    int yMax = rules.height - 1;
+
+    for (int x = xMin; x <= xMax; x++) {
+        for (int y = yMin; y <= yMax; y++) {
+            const int neighbours = neighbourCount(x, y, rules.width, rules.height, data, rules.wrap);
+            const auto currentVal = data[XYToIndex(x, y)];
+            bool currentlyAlive = (currentVal != 0);
+
+            if (currentlyAlive) {
+                if (neighbours == 2 || neighbours == 3) {
+                    // keep on living
+                    newData[XYToIndex(x, y)] = currentVal;
+                } else {
+                    // kill this cell
+                    newData[XYToIndex(x, y)] = 0;
+                }
+            } else {
+                if (neighbours == 3) {
+                    // come to life!
+                    newData[XYToIndex(x, y)] = currentTick;
+                }
+            }
+        }
+    }
+
+    data = newData;
+
+    // count living cells
+    uint32_t livingCells = 0;
+    for (std::size_t i = 0; i < data.size(); i++) {
+        if (data[i] != 0) { livingCells++; }
+    }
+
+    // test for simplest death state first to avoid expensive checks later
+    if (livingCells == 0) { alive = false; }
+
+    // test for more complex death states (frozen or repetitive pattern)
+    if (alive) {
+
+        lifespan = currentTick;
+
+        // convert the current state to a hash and compare against previous states
+        auto currentStateHash = hashState(data);
+        if (previousStateHashes.size() > 0) {
+            bool unique = true;
+            for (const auto& hash : previousStateHashes) {
+                if (currentStateHash == hash) { unique = false; }
+            }
+            if (!unique) {
+                notUniqueForNSteps++;
+            } else {
+                notUniqueForNSteps = 0;
+            }
+
+            // if state is identical two steps in a row, then we are frozen.
+            if (currentStateHash == previousStateHashes.back()) { alive = false; }
+
+            // if there has been no new state for X steps, consider stale.
+            if (notUniqueForNSteps >= rules.staleStateStepsAllowed) { alive = false; }
+        }
+        previousStateHashes.push(currentStateHash);
+    }
+}
+
+std::size_t GameOfLifeGame::XYToIndex(int x, int y) const { return (y * rules.width) + x; }
+
+int GameOfLifeGame::neighbourCount(
+    int xPos, int yPos, int width, int height, const std::vector<uint32_t>& data, bool wrap) const {
+    uint8_t alive = 0;
+
+    const int xMin = 0;
+    const int xMax = width - 1;
+    const int yMin = 0;
+    const int yMax = height - 1;
+
+    for (int x = xPos - 1; x <= xPos + 1; x++) {
+        int testX = x;
+        if (testX < xMin) {
+            if (wrap) {
+                testX = xMax;
+            } else {
+                continue;
+            }
+        }
+        if (testX > xMax) {
+            if (wrap) {
+                testX = xMin;
+            } else {
+                continue;
+            }
+        }
+        for (int y = yPos - 1; y <= yPos + 1; y++) {
+            int testY = y;
+            if (testY < yMin) {
+                if (wrap) {
+                    testY = yMax;
+                } else {
+                    continue;
+                }
+            }
+            if (testY > yMax) {
+                if (wrap) {
+                    testY = yMin;
+                } else {
+                    continue;
+                }
+            }
+            if (testX == xPos && testY == yPos) { continue; }
+            if (data.at(XYToIndex(testX, testY)) != 0) { alive++; }
+        }
+    }
+    return alive;
+}
+
+std::size_t GameOfLifeGame::hashState(const std::vector<uint32_t>& state) const {
+    std::size_t seed = state.size();
+    for (const auto i : state) {
+        uint8_t val = 0;
+        if (i > 0) { val = 1; }
         seed ^= val + 0x9e3779b9 + (seed << 6) + (seed >> 2);
     }
     return seed;
