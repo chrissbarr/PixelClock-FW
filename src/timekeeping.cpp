@@ -3,13 +3,16 @@
 #include "FMTWrapper.h"
 #include "utility.h"
 
-#ifdef PIXELCLOCK_DESKTOP
-#include <chrono>
-#endif
-
+/* Libraries */
+#include <fmt/chrono.h>
 #ifndef PIXELCLOCK_DESKTOP
 #include <RTClib.h>
 #include <TimeLib.h>
+#endif
+
+/* C++ Standard Library */
+#ifdef PIXELCLOCK_DESKTOP
+#include <chrono>
 #endif
 
 using namespace printing;
@@ -118,7 +121,7 @@ int hour24to12(int hour) {
 
 ClockFaceTimeStruct timeCallbackFunction(std::time_t time) {
     // extract elements of time into struct
-    const std::tm caltime = *localtime(&time);
+    std::tm caltime = fmt::localtime(time);
     ClockFaceTimeStruct val{};
     val.hour12 = static_cast<uint8_t>(hour24to12(caltime.tm_hour));
     val.hour24 = static_cast<uint8_t>(caltime.tm_hour);
