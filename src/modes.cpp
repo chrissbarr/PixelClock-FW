@@ -38,7 +38,7 @@ void MainModeFunction::moveInto() {
 }
 
 void MainModeFunction::moveIntoCore() {
-    buttons.mode.setTapHandler([this](Button2& btn) { _finished = true; });
+    buttons.mode.setTapHandler([this]([[maybe_unused]] Button2& btn) { _finished = true; });
 }
 
 canvas::Canvas MainModeFunction::run() { return this->runCore(); }
@@ -101,12 +101,12 @@ void Mode_SettingsMenu::registerButtonCallbacks() {
     buttons.left.setTapHandler([this](Button2& btn) { cycleActiveSetting(btn); });
     buttons.right.setTapHandler([this](Button2& btn) { cycleActiveSetting(btn); });
 
-    auto moveIntoSetting = [this](Button2& btn) {
+    auto moveIntoSetting = [this]([[maybe_unused]] Button2& btn) {
         activeMenuPage = menuPages[menuIndex];
         activeMenuPage->moveInto();
     };
     buttons.select.setTapHandler(moveIntoSetting);
-    buttons.mode.setTapHandler([this](Button2& btn) { this->_finished = true; });
+    buttons.mode.setTapHandler([this]([[maybe_unused]] Button2& btn) { this->_finished = true; });
     print("Registered settings button callbacks\n");
 }
 
@@ -239,7 +239,8 @@ canvas::Canvas Mode_SettingsMenu_SetTime::runCore() {
     textscroller->setText(timestr);
 
     // move to and highlight the active part of the time
-    flm::CRGB colourSel = flm::CRGB(flm::CRGB::Red).fadeLightBy(flm::scale8(flm::sin8(millis() / 5), 200));
+    flm::CRGB colourSel =
+        flm::CRGB(flm::CRGB::Red).fadeLightBy(flm::scale8(flm::sin8(static_cast<uint8_t>(millis() / 5)), 200));
     // 255 - scale8(sin8(millis()/5), 128), 0, 0);
     flm::CRGB colourIdle = flm::CRGB(100, 100, 100);
     switch (currentlySettingTimeSegment) {
@@ -373,12 +374,12 @@ Mode_ClockFace::Mode_ClockFace(ButtonReferences buttons) : MainModeFunction("Clo
 void Mode_ClockFace::moveIntoCore() {
     faces[clockfaceIndex]->reset();
 
-    auto cycleClockface = [this](Button2& btn) {
+    auto cycleClockface = [this]([[maybe_unused]] Button2& btn) {
         clockfaceIndex++;
         if (clockfaceIndex == faces.size()) { clockfaceIndex = 0; }
     };
     buttons.select.setTapHandler(cycleClockface);
-    buttons.mode.setTapHandler([this](Button2& btn) { this->_finished = true; });
+    buttons.mode.setTapHandler([this]([[maybe_unused]] Button2& btn) { this->_finished = true; });
 }
 
 canvas::Canvas Mode_ClockFace::runCore() {
@@ -437,7 +438,7 @@ void Mode_Effects::moveIntoCore() {
 
     buttons.left.setTapHandler(cycleHandler);
     buttons.right.setTapHandler(cycleHandler);
-    buttons.mode.setTapHandler([this](Button2& btn) { this->_finished = true; });
+    buttons.mode.setTapHandler([this]([[maybe_unused]] Button2& btn) { this->_finished = true; });
 }
 
 canvas::Canvas Mode_Effects::runCore() {

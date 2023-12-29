@@ -66,9 +66,9 @@ protected:
 
 private:
     std::vector<std::unique_ptr<DisplayEffect>> faces;
-    uint8_t clockfaceIndex = 0;
+    std::size_t clockfaceIndex = 0;
     std::vector<std::unique_ptr<FilterMethod>> filters;
-    uint8_t filterIndex = 0;
+    std::size_t filterIndex = 0;
     uint32_t lastFilterChangeTime = 0;
     uint32_t filterChangePeriod = 10000;
     ClockFaceTimeStruct timePrev;
@@ -85,7 +85,7 @@ protected:
 
 private:
     std::vector<std::shared_ptr<DisplayEffect>> effects;
-    uint8_t effectIndex = 0;
+    std::size_t effectIndex = 0;
 };
 
 class Mode_SettingsMenu : public MainModeFunction {
@@ -103,7 +103,7 @@ private:
     std::unique_ptr<TextScroller> menuTextScroller;
     std::vector<std::shared_ptr<MainModeFunction>> menuPages;
     std::shared_ptr<MainModeFunction> activeMenuPage = nullptr;
-    uint8_t menuIndex = 0;
+    std::size_t menuIndex = 0;
 };
 
 class Mode_SettingsMenu_SetTime : public MainModeFunction {
