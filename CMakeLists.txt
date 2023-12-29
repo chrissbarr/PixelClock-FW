@@ -74,4 +74,9 @@ if(WIN32)
         VERBATIM)
 endif()
 
+add_custom_command(TARGET PixelClock POST_BUILD
+  COMMENT "Copy Data Folder"
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/data $<TARGET_FILE_DIR:PixelClock>/data
+)
+
 install(TARGETS PixelClock)

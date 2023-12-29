@@ -229,7 +229,7 @@ int main(int argc, char** argv) {
     setup();
 
     sf::Font font;
-    if (!font.loadFromFile("Roboto-Regular.ttf")) { print("Font not found!\n"); }
+    if (!font.loadFromFile("data/Roboto-Regular.ttf")) { print("Font not found!\n"); }
 
     std::vector<Button> buttons;
     buttons.reserve(10);
