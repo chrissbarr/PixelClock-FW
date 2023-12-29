@@ -10,4 +10,4 @@ FetchContent_Declare(
 FetchContent_Populate(ArduinoFFT)
 
 add_library(ArduinoFFT INTERFACE)
-target_include_directories(Button2 INTERFACE "${arduinofft_SOURCE_DIR}/src")
+target_include_directories(ArduinoFFT SYSTEM INTERFACE "${arduinofft_SOURCE_DIR}/src")

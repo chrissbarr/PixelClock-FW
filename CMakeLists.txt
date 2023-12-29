@@ -52,6 +52,7 @@ src/utility.cpp
 
 add_library(Main STATIC "${main_sources}")
 target_include_directories(Main PUBLIC include)
+target_link_libraries(Main PUBLIC ArduinoStub)
 target_link_libraries(Main PUBLIC FastLEDMath)
 target_link_libraries(Main PUBLIC fmt::fmt)
 target_link_libraries(Main PUBLIC Button2)
@@ -59,11 +60,16 @@ target_link_libraries(Main PUBLIC ArduinoFFT)
 target_link_libraries(Main PUBLIC etl::etl)
 target_link_libraries(Main PUBLIC sfml-graphics sfml-audio)
 
+if(MSVC)
+  target_compile_options(Main PRIVATE /W4 /external:W0)
+else()
+  target_compile_options(Main PUBLIC -Wall -Wextra -Wpedantic)
+endif()
+
 ## Main executable
 add_executable(PixelClock src/main.cpp)
 
 # Link libraries
-target_link_libraries(PixelClock PRIVATE ArduinoStub)
 target_link_libraries(PixelClock PRIVATE Main)
 
 if(WIN32)
