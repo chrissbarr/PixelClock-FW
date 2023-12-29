@@ -32,7 +32,7 @@ void GameOfLife::reset() {
         printing::print(fmt::format("GoL Last Game Score: {}\n", prevScore));
     }
 
-    GOLRules rules{};
+    GoLRules rules{};
     rules.height = _c.getHeight();
     rules.width = _c.getWidth();
     rules.wrap = _wrap;
@@ -81,6 +81,9 @@ void GameOfLife::reset() {
     auto randomScoreToRepeat = (*std::next(bestScores.begin(), randomIndex));
     printing::print(fmt::format("GoL Repeating Score: {}\n", randomScoreToRepeat));
     game = std::make_unique<GameOfLifeGame>(rules, randomScoreToRepeat.seed);
+
+    _c = canvas::Canvas(rules.width, rules.height);
+    _c.fill(flm::CRGB::Black);
 }
 
 canvas::Canvas GameOfLife::run() {
@@ -98,15 +101,16 @@ canvas::Canvas GameOfLife::run() {
 
             int width = game->getRules().width;
             int height = game->getRules().height;
-            _c = canvas::Canvas(width, height);
-            _c.fill(flm::CRGB::Black);
             for (int x = 0; x < width; x++) {
                 for (int y = 0; y < height; y++) {
-                    if (game->getData().at(game->XYToIndex(x, y)) != 0) { _c.setXY(x, y, flm::CRGB::White); }
+                    const auto val = game->getData().at(game->XYToIndex(x, y));
+                    if (val == 0) { _c.setXY(x, y, flm::CRGB::Black); }
+                    if (val != 0) {
+                        if (_c.getXY(x, y) == flm::CRGB::Black) { _c.setXY(x, y, _colourGenerator()); }
+                    }
                 }
             }
 
-            //_lifespan++;
             _lastLoopTime = millis();
         }
 
@@ -132,10 +136,16 @@ canvas::Canvas GameOfLife::run() {
         }
     }
 
+    if (_filter) {
+        canvas::Canvas temp(_c);
+        _filter->apply(temp);
+        return temp;
+    }
+
     return _c;
 }
 
-GameOfLifeGame::GameOfLifeGame(GOLRules rules, uint32_t seed) : rules(rules), seed(seed) {
+GameOfLifeGame::GameOfLifeGame(GoLRules rules, uint32_t seed) : rules(rules), seed(seed) {
     // zero the data
     data = std::vector<uint32_t>(rules.width * rules.height, 0);
 

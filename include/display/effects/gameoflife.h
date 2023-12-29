@@ -5,6 +5,7 @@
 #include "FMTWrapper.h"
 #include "display/canvas.h"
 #include "display/effects/effect.h"
+#include "display/effects/filters.h"
 #include "display/effects/utilities.h"
 
 /* Libraries */
@@ -15,7 +16,7 @@
 #include <set>
 #include <vector>
 
-struct GOLRules {
+struct GoLRules {
     int width;
     int height;
     bool wrap;
@@ -24,12 +25,12 @@ struct GOLRules {
 
 class GameOfLifeGame {
 public:
-    GameOfLifeGame(GOLRules rules, uint32_t seed);
+    GameOfLifeGame(GoLRules rules, uint32_t seed);
     void tick();
     bool getAlive() const { return alive; }
     uint32_t getLifespan() const { return lifespan; }
     std::vector<uint32_t>& getData() { return data; }
-    GOLRules& getRules() { return rules; }
+    GoLRules& getRules() { return rules; }
     std::size_t getSeed() { return seed; }
     std::size_t XYToIndex(int x, int y) const;
 
@@ -38,7 +39,7 @@ private:
     std::size_t hashState(const std::vector<uint32_t>& state) const;
 
     uint32_t seed;
-    GOLRules rules;
+    GoLRules rules;
     std::vector<uint32_t> data;
     bool alive{};
     std::minstd_rand rand;
@@ -79,18 +80,15 @@ public:
 
     void setUpdateInterval(uint32_t interval) { _updateInterval = interval; }
     void setFadeInterval(uint32_t interval) { _fadeInterval = interval; }
-    // void setSeedingMode(bool enabled) { _seeding = enabled; }
-    // std::size_t getSeededCount() const { return bestScores.size(); }
     void setFadeOnDeath(bool fade) { _fadeOnDeath = fade; }
-    const std::multiset<GoLScore>& getScores() const { return bestScores; }
-    void setScores(const std::multiset<GoLScore>& scores) { bestScores = scores; }
-    // uint32_t getIterations() const { return iterationId; }
-    // uint16_t getLifespan() const { return _lifespan; }
+    void setColourGenerator(colourGenerator::Generator colourGenerator) { _colourGenerator = colourGenerator; }
+    void setFilter(std::unique_ptr<FilterMethod> filter) { _filter = std::move(filter); }
 
 private:
     canvas::Canvas _c;
     uint32_t _lastLoopTime;
     colourGenerator::Generator _colourGenerator;
+    std::unique_ptr<FilterMethod> _filter;
     bool _finished;
     bool _wrap;
     bool _fadeOnDeath = true;

@@ -407,7 +407,10 @@ Mode_Effects::Mode_Effects(const canvas::Canvas& size, ButtonReferences buttons)
     effects.push_back(std::make_unique<RandomFill>(size, 100, colourGenerator::randomHSV));
     effects.push_back(std::make_unique<BouncingBall>(size, 100, colourGenerator::cycleHSV));
     effects.push_back(std::make_unique<GravityFill>(size, 25, 25, colourGenerator::randomHSV));
-    effects.push_back(std::make_shared<GameOfLife>(size, 250, 5, colourGenerator::cycleHSV, false));
+    effects.push_back(std::make_unique<GameOfLife>(size, 250, 5, colourGenerator::cycleHSV, false));
+    auto gol = std::make_unique<GameOfLife>(size, 250, 5, colourGenerator::white, false);
+    gol->setFilter(std::make_unique<RainbowWave>(1.0f, 30, RainbowWave::Direction::horizontal, true));
+    effects.push_back(std::move(gol));
 }
 
 void Mode_Effects::moveIntoCore() {
