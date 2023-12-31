@@ -2,7 +2,7 @@
 #include "audio/audio.h"
 #include "brightnessSensor.h"
 #include "loopTimeManager.h"
-#include "modes.h"
+#include "modes/modes.h"
 #include "pinout.h"
 #include "timekeeping.h"
 #include "utility.h"

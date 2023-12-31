@@ -44,10 +44,13 @@ src/display/effects/textscroller.cpp
 src/display/effects/utilities.cpp
 src/display/effects/volumedisplay.cpp
 src/display/effects/volumegraph.cpp
-src/loopTimeManager.cpp
-src/modes.cpp
-src/timekeeping.cpp
 src/instrumentation.cpp
+src/loopTimeManager.cpp
+src/modes/clockface.cpp
+src/modes/effects.cpp
+src/modes/modes.cpp
+src/modes/settings.cpp
+src/timekeeping.cpp
 src/utility.cpp
 )
 
