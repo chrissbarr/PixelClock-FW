@@ -56,7 +56,6 @@ public:
         return audioCharacteristics;
     }
 
-
     // Instrumentation
     std::vector<InstrumentationTrace*> getInstrumentation() override final;
 

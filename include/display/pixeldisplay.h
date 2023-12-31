@@ -28,6 +28,9 @@ public:
 
     uint32_t XYToIndex(uint8_t x, uint8_t y) const;
 
+    // Instrumentation
+    std::vector<InstrumentationTrace*> getInstrumentation() override final;
+
 private:
     CRGB* leds = nullptr;
     const uint8_t width;
@@ -37,6 +40,10 @@ private:
     const bool vertical;
     const uint32_t pixelOffset;
     uint8_t brightness{255};
+
+    // Instrumentation
+    InstrumentationTrace traceUpdateTotal{"Display Update - Overall"};
+    InstrumentationTrace traceUpdateLEDWrite{"Display Update - LED Output"};
 };
 
 #endif // pixeldisplay_h

@@ -168,6 +168,7 @@ void setup() {
     baseCanvas.fill(flm::CRGB::Black);
     modeManager =
         std::make_unique<ModeManager>(baseCanvas, ButtonReferences{buttonMode, buttonSelect, buttonLeft, buttonRight});
+    loopTimeManager.registerTraceCallback([](){ return modeManager->getInstrumentation(); });
 
     printCentred("Initialising Display", headingWidth);
 #ifdef PIXELCLOCK_DESKTOP
@@ -177,6 +178,7 @@ void setup() {
 #endif
     display->update(baseCanvas);
     delay(100);
+    loopTimeManager.registerTraceCallback([](){ return display->getInstrumentation(); });
     // displayDiagnostic(display);
 
     printCentred("Initialising Input", headingWidth);

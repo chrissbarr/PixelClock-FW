@@ -22,6 +22,9 @@ public:
 
     canvas::Canvas getCanvas() const { return c; }
 
+    // Instrumentation
+    std::vector<InstrumentationTrace*> getInstrumentation() override final { return {}; }
+
 private:
     const uint8_t width;
     const uint8_t height;

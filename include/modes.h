@@ -7,6 +7,7 @@
 #include "display/effects/effect.h"
 #include "display/effects/filters.h"
 #include "display/effects/textscroller.h"
+#include "instrumentation.h"
 #include "timekeeping.h"
 
 /* Libraries */
@@ -134,15 +135,21 @@ protected:
     void moveOutCore() override final {}
 };
 
-class ModeManager {
+class ModeManager : public Instrumented {
 public:
     ModeManager(const canvas::Canvas& size, ButtonReferences buttons);
     void cycleMode();
     canvas::Canvas run();
 
+    // Instrumentation
+    std::vector<InstrumentationTrace*> getInstrumentation() override final { return {&traceRunTotal}; }
+
 private:
     std::vector<std::unique_ptr<MainModeFunction>> modes;
     uint8_t modeIndex = 0;
+
+    // Instrumentation
+    InstrumentationTrace traceRunTotal{"Mode Run - Overall"};
 };
 
 #endif // modes_h

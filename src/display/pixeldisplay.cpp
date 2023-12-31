@@ -42,6 +42,8 @@ PixelDisplay::PixelDisplay(uint8_t width, uint8_t height, bool serpentine, bool 
 PixelDisplay::~PixelDisplay() { free(leds); }
 
 void PixelDisplay::update(const canvas::Canvas& canvas) {
+
+    traceUpdateTotal.start();
     // Serial.println("Update...");
     if (leds) {
 
@@ -65,10 +67,14 @@ void PixelDisplay::update(const canvas::Canvas& canvas) {
             *byteToWrite++ = 0;
         }
 
+        traceUpdateLEDWrite.start();
         FastLED.setBrightness(brightness);
         FastLED.setDither(1);
         FastLED.show();
+        traceUpdateLEDWrite.stop();
     }
+
+    traceUpdateTotal.stop();
 }
 
 uint32_t PixelDisplay::XYToIndex(uint8_t x, uint8_t y) const {
@@ -163,4 +169,12 @@ void displayDiagnostic(PixelDisplay& display) {
     }
     c.fill(0);
     display.update(c);
+}
+
+std::vector<InstrumentationTrace*> PixelDisplay::getInstrumentation() {
+    std::vector<InstrumentationTrace*> vec;
+    vec.reserve(2);
+    vec.push_back(&traceUpdateTotal);
+    vec.push_back(&traceUpdateLEDWrite);
+    return vec;
 }

@@ -455,8 +455,10 @@ ModeManager::ModeManager(const canvas::Canvas& size, ButtonReferences buttons) {
 }
 
 canvas::Canvas ModeManager::run() {
+    traceRunTotal.start();
     const auto c = modes[modeIndex]->run();
     if (modes[modeIndex]->finished()) { cycleMode(); }
+    traceRunTotal.stop();
     return c;
 }
 
