@@ -56,6 +56,10 @@ public:
         return audioCharacteristics;
     }
 
+
+    // Instrumentation
+    std::vector<InstrumentationTrace*> getInstrumentation() override final;
+
 private:
     float vReal[fftSamples];
     float vImag[fftSamples];
@@ -66,6 +70,11 @@ private:
     std::unique_ptr<SFMLRecorder> recorder;
 
     etl::circular_buffer<AudioCharacteristics, audioHistorySize> audioCharacteristics;
+
+    InstrumentationTrace traceCallbackTotal{"Audio Callback - Overall"};
+    InstrumentationTrace traceCallbackVolume{"Audio Callback - Vol"};
+    InstrumentationTrace traceCallbackFFT{"Audio Callback - FFT"};
+    InstrumentationTrace traceCallbackSpectrum{"Audio Callback - Spectrum"};
 };
 
 #endif

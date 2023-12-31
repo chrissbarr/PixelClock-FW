@@ -18,16 +18,16 @@ void read_data_stream(const uint8_t* data, uint32_t length) { AudioSingleton::ge
 
 void AudioESP32::a2dp_callback(const uint8_t* data, uint32_t length) {
 
-    callbackDuration.start();
-    audioDuration.start();
+    traceCallbackTotal.start();
+    traceCallbackI2S.start();
 
     int16_t* samples = (int16_t*)data;
     uint32_t sample_count = length / 2;
 
     i2sOutput->write(data, length);
 
-    audioDuration.stop();
-    volDuration.start();
+    traceCallbackI2S.stop();
+    traceCallbackVol.start();
 
     float vLeftAvg = 0;
     float vRightAvg = 0;
@@ -54,8 +54,8 @@ void AudioESP32::a2dp_callback(const uint8_t* data, uint32_t length) {
     vLeftAvg = mag2db(vLeftAvg);
     vRightAvg = mag2db(vRightAvg);
 
-    volDuration.stop();
-    fftDuration.start();
+    traceCallbackVol.stop();
+    traceCallbackFFT.start();
 
     int sourceIdx = 0;
     for (uint32_t i = 0; i < fftSamples; i++) {
@@ -75,8 +75,8 @@ void AudioESP32::a2dp_callback(const uint8_t* data, uint32_t length) {
     FFT->compute(FFTDirection::Forward);                       /* Compute FFT */
     FFT->complexToMagnitude();                                 /* Compute magnitudes */
 
-    fftDuration.stop();
-    specDuration.start();
+    traceCallbackFFT.stop();
+    traceCallbackSpectrum.start();
 
     // Fill the audioSpectrum vector with data.
     auto spectrum = etl::array<float, audioSpectrumBins>();
@@ -111,7 +111,7 @@ void AudioESP32::a2dp_callback(const uint8_t* data, uint32_t length) {
         spectrum.begin(),
         std::bind(std::multiplies<float>(), std::placeholders::_1, scaleFactor));
 
-    specDuration.stop();
+    traceCallbackSpectrum.stop();
 
     AudioCharacteristics c{};
     c.volumeLeft = vLeftAvg;
@@ -123,7 +123,7 @@ void AudioESP32::a2dp_callback(const uint8_t* data, uint32_t length) {
     audioCharacteristics->push(c);
     xSemaphoreGive(audioCharacteristicsSemaphore);
 
-    callbackDuration.stop();
+    traceCallbackTotal.stop();
 }
 
 AudioESP32::AudioESP32() {
@@ -136,6 +136,13 @@ AudioESP32::AudioESP32() {
         printing::print("PSRAM buffer allocation fail!\n");
         audioCharacteristics = new etl::circular_buffer<AudioCharacteristics, audioHistorySize>();
     }
+
+    traces.reserve(5);
+    traces.push_back(&traceCallbackTotal);
+    traces.push_back(&traceCallbackI2S);
+    traces.push_back(&traceCallbackVol);
+    traces.push_back(&traceCallbackFFT);
+    traces.push_back(&traceCallbackSpectrum);
 }
 
 AudioESP32::~AudioESP32() {
@@ -180,17 +187,6 @@ void AudioESP32::update() {
 
     if (millis() - statReportLastTime > statReportInterval) {
 
-        auto printAndReset = [](std::string name, InstrumentationTrace& t) {
-            printing::print(formatInstrumentationTrace(name, t));
-            t.reset();
-        };
-
-        printAndReset("Audio Callback - Total", callbackDuration);
-        printAndReset("Audio Callback - I2S", audioDuration);
-        printAndReset("Audio Callback - Vol", volDuration);
-        printAndReset("Audio Callback - FFT", fftDuration);
-        printAndReset("Audio Callback - Spectrum", specDuration);
-
         printing::print(fmt::format(
             "Volume: L={:.1f} R={:.1f}\n",
             audioCharacteristics->back().volumeLeft,
@@ -202,3 +198,5 @@ void AudioESP32::update() {
 
 void AudioESP32::lockMutex() { xSemaphoreTake(audioCharacteristicsSemaphore, portMAX_DELAY); }
 void AudioESP32::releaseMutex() { xSemaphoreGive(audioCharacteristicsSemaphore); }
+
+std::vector<InstrumentationTrace*> AudioESP32::getInstrumentation() { return traces; }

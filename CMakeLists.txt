@@ -47,6 +47,7 @@ src/display/effects/volumegraph.cpp
 src/loopTimeManager.cpp
 src/modes.cpp
 src/timekeeping.cpp
+src/instrumentation.cpp
 src/utility.cpp
 )
 

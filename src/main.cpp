@@ -191,6 +191,7 @@ void setup() {
 
     printCentred("Initialising Audio", headingWidth);
     AudioSingleton::get().begin();
+    loopTimeManager.registerTraceCallback([](){ return AudioSingleton::get().getInstrumentation(); });
 
     print(fmt::format("{1:<{0}} {2} ms\n", textPadding, "Runtime:", millis()));
     printSolidLine(headingWidth);

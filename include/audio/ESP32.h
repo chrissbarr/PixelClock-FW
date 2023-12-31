@@ -32,6 +32,7 @@ public:
     AudioESP32();
     ~AudioESP32();
 
+    // Audio methods
     void begin() override final;
     void update() override final;
     void a2dp_callback(const uint8_t* data, uint32_t length) override final;
@@ -40,6 +41,9 @@ public:
     etl::icircular_buffer<AudioCharacteristics>& getAudioCharacteristicsHistory() override final {
         return *audioCharacteristics;
     }
+
+    // Instrumentation
+    std::vector<InstrumentationTrace*> getInstrumentation() override final;
 
 private:
     std::unique_ptr<ArduinoFFT<float>> FFT;
@@ -51,17 +55,19 @@ private:
 
     SemaphoreHandle_t audioCharacteristicsSemaphore;
 
-    InstrumentationTrace callbackDuration;
-    InstrumentationTrace audioDuration;
-    InstrumentationTrace volDuration;
-    InstrumentationTrace fftDuration;
-    InstrumentationTrace specDuration;
-
     uint32_t statReportInterval = 5000;
     uint32_t statReportLastTime = 0;
 
     AudioCharacteristics* acBuf;
     etl::icircular_buffer<AudioCharacteristics>* audioCharacteristics;
+
+    // Instrumentation
+    InstrumentationTrace traceCallbackTotal{"Audio Callback - Overall"};
+    InstrumentationTrace traceCallbackI2S{"Audio Callback - I2S"};
+    InstrumentationTrace traceCallbackVol{"Audio Callback - Vol"};
+    InstrumentationTrace traceCallbackFFT{"Audio Callback - FFT"};
+    InstrumentationTrace traceCallbackSpectrum{"Audio Callback - Spectrum"};
+    std::vector<InstrumentationTrace*> traces;
 };
 
 #endif // audio_esp32_h

@@ -38,6 +38,9 @@ void AudioDesktop::begin() {
 
 void AudioDesktop::a2dp_callback(const uint8_t* data, uint32_t length) {
 
+    traceCallbackTotal.start();
+    traceCallbackVolume.start();
+
     int16_t* samples = (int16_t*)data;
     uint32_t sample_count = length / 2;
 
@@ -66,6 +69,9 @@ void AudioDesktop::a2dp_callback(const uint8_t* data, uint32_t length) {
     vLeftAvg = mag2db(vLeftAvg);
     vRightAvg = mag2db(vRightAvg);
 
+    traceCallbackVolume.stop();
+    traceCallbackFFT.start();
+
     int sourceIdx = 0;
     for (uint32_t i = 0; i < fftSamples; i++) {
 
@@ -83,6 +89,9 @@ void AudioDesktop::a2dp_callback(const uint8_t* data, uint32_t length) {
     FFT->windowing(FFTWindow::Hamming, FFTDirection::Forward); /* Weigh data */
     FFT->compute(FFTDirection::Forward);                       /* Compute FFT */
     FFT->complexToMagnitude();                                 /* Compute magnitudes */
+
+    traceCallbackFFT.stop();
+    traceCallbackSpectrum.start();
 
     // Fill the audioSpectrum vector with data.
     auto spectrum = etl::array<float, audioSpectrumBins>();
@@ -117,6 +126,8 @@ void AudioDesktop::a2dp_callback(const uint8_t* data, uint32_t length) {
         spectrum.begin(),
         std::bind(std::multiplies<float>(), std::placeholders::_1, scaleFactor));
 
+    traceCallbackSpectrum.stop();
+
     AudioCharacteristics c{};
     c.volumeLeft = vLeftAvg;
     c.volumeRight = vRightAvg;
@@ -124,6 +135,18 @@ void AudioDesktop::a2dp_callback(const uint8_t* data, uint32_t length) {
     c.spectrum = spectrum;
 
     audioCharacteristics.push(c);
+
+    traceCallbackTotal.stop();
+}
+
+std::vector<InstrumentationTrace*> AudioDesktop::getInstrumentation() {
+    std::vector<InstrumentationTrace*> vec;
+    vec.reserve(4);
+    vec.push_back(&traceCallbackTotal);
+    vec.push_back(&traceCallbackVolume);
+    vec.push_back(&traceCallbackFFT);
+    vec.push_back(&traceCallbackSpectrum);
+    return vec;
 }
 
 #endif

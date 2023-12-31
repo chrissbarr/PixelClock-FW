@@ -3,49 +3,71 @@
 #include "FMTWrapper.h"
 #include "utility.h"
 
+/* Arduino Core */
 #include <Arduino.h>
 
 using namespace printing;
 
 LoopTimeManager::LoopTimeManager(uint32_t desiredLoopDuration, uint32_t statReportInterval)
     : desiredLoopDuration(desiredLoopDuration),
-      statReportInterval(statReportInterval) {
-    loopTimeMin = std::numeric_limits<uint16_t>::max();
-    loopTimeMax = 0;
-}
+      statReportInterval(statReportInterval) {}
 
 void LoopTimeManager::idle() {
     // Manage loop timing
-    uint32_t loopTime = millis() - lastLoopTime;
-
-    loopTimeAvg = approxRollingAverage(loopTimeAvg, float(loopTime), 1000);
-    if (loopTime > loopTimeMax) { loopTimeMax = loopTime; }
-    if (loopTime < loopTimeMin) { loopTimeMin = loopTime; }
 
     if (millis() - lastStatReportTime > statReportInterval) {
 
-        const uint8_t fieldWidth = 15;
+        printout.start();
+
+        constexpr int nameWidth = 30;
+        constexpr int fieldWidth = 15;
 
         // print timing stats
-        print(fmt::format("{1:<{0}}", fieldWidth, "Loop Timing"));
-        print(fmt::format("{1:<{0}}", fieldWidth, "Now (ms)"));
-        print(fmt::format("{1:<{0}}", fieldWidth, "Min (ms)"));
-        print(fmt::format("{1:<{0}}", fieldWidth, "Max (ms)"));
-        print(fmt::format("{1:<{0}}", fieldWidth, "Avg (ms)"));
-        print("\n");
+        printCentred("Timing Statistics", headingWidth);
+        print(fmt::format("Time Now: {} ms\n", millis()));
 
-        print(fmt::format("{1:<{0}}", fieldWidth, ""));
-        print(fmt::format("{1:<{0}}", fieldWidth, millis()));
-        print(fmt::format("{1:<{0}}", fieldWidth, loopTimeMin));
-        print(fmt::format("{1:<{0}}", fieldWidth, loopTimeMax));
-        print(fmt::format("{1:<{0}.2f}", fieldWidth, loopTimeAvg));
-        print("\n");
+        print(fmt::format(
+            "{2:<{0}}{3:<{1}}{4:<{1}}{5:<{1}}{6:<{1}}\n",
+            nameWidth,
+            fieldWidth,
+            "",
+            "Hits",
+            "Min (us)",
+            "Max (us)",
+            "Avg (us)"));
+
+        auto printTrace = [&](const InstrumentationTrace& trace) {
+            print(fmt::format(
+                "{2:<{0}}{3:<{1}}{4:<{1}}{5:<{1}}{6:<{1}}\n",
+                nameWidth,
+                fieldWidth,
+                trace.getName(),
+                trace.getHits(),
+                trace.getMin(),
+                trace.getMax(),
+                trace.getAvg()));
+        };
+
+        printTrace(loop);
+        loop.reset();
+
+        for (auto& c : callbacks) {
+            auto traces = c();
+            for (auto trace : traces) {
+                printTrace(*trace);
+                trace->reset();
+            }
+        }
+
+        printTrace(printout);
 
 // print memory usage stats
 #ifndef PIXELCLOCK_DESKTOP
 
+        printCentred("Memory Usage", headingWidth);
+
         // print header row
-        print(fmt::format("{1:<{0}}", fieldWidth, "Memory"));
+        print(fmt::format("{1:<{0}}", nameWidth, "Memory"));
         print(fmt::format("{1:<{0}}", fieldWidth, "free (kB)"));
         print(fmt::format("{1:<{0}}", fieldWidth, "total (kB)"));
         print(fmt::format("{1:<{0}}", fieldWidth, "used (%)"));
@@ -54,7 +76,7 @@ void LoopTimeManager::idle() {
         print("\n");
 
         // print heap stats
-        print(fmt::format("{1:<{0}}", fieldWidth, "Heap"));
+        print(fmt::format("{1:<{0}}", nameWidth, "Heap"));
         float usedHeapPercentage = 100 * (float(ESP.getHeapSize() - ESP.getFreeHeap()) / ESP.getHeapSize());
         print(fmt::format("{1:<{0}}", fieldWidth, ESP.getFreeHeap() / 1024));
         print(fmt::format("{1:<{0}}", fieldWidth, ESP.getHeapSize() / 1024));
@@ -72,24 +94,20 @@ void LoopTimeManager::idle() {
         print(fmt::format("{1:<{0}}", fieldWidth, ESP.getMinFreePsram() / 1024));
         print(fmt::format("{1:<{0}}", fieldWidth, ESP.getMaxAllocPsram() / 1024));
         print("\n");
+
 #endif
 
+        printout.stop();
         lastStatReportTime = millis();
-        loopTimeMin = std::numeric_limits<uint16_t>::max();
-        loopTimeMax = 0;
     }
 
+    loop.stop();
     // ensure we yield at least once
     yield();
     while (millis() - lastLoopTime < desiredLoopDuration) {
         // idle in this loop until desiredLoopDuration has elapsed
         yield();
     }
+    loop.start();
     lastLoopTime = millis();
-}
-
-constexpr float LoopTimeManager::approxRollingAverage(float avg, float newSample, int N) const {
-    avg -= avg / N;
-    avg += newSample / N;
-    return avg;
 }

@@ -1,6 +1,9 @@
 #ifndef audio_audio_h
 #define audio_audio_h
 
+/* Project Scope */
+#include "instrumentation.h"
+
 /* Libraries */
 #include <etl/array.h>
 #include <etl/circular_buffer.h>
@@ -25,7 +28,7 @@ struct AudioCharacteristics {
     etl::array<float, audioSpectrumBins> spectrum;
 };
 
-class Audio {
+class Audio : public Instrumented {
 public:
     virtual void begin() = 0;
     virtual void update() = 0;

@@ -9,7 +9,7 @@
 #include <numeric>
 #include <string>
 
-InstrumentationTrace::InstrumentationTrace() { reset(); }
+InstrumentationTrace::InstrumentationTrace(std::string name) : name(name) { reset(); }
 
 void InstrumentationTrace::start() { started = micros(); }
 
@@ -21,6 +21,7 @@ void InstrumentationTrace::stop() {
 void InstrumentationTrace::update(uint32_t value) {
     sum += value;
     sumSamples++;
+    hits++;
     if (empty) {
         min = value;
         max = value;
@@ -29,7 +30,7 @@ void InstrumentationTrace::update(uint32_t value) {
         if (value < min) { min = value; }
         if (value > max) { max = value; }
     }
-    avg = sum / sumSamples;
+    avg = static_cast<uint32_t>(sum / sumSamples);
 }
 
 void InstrumentationTrace::reset() {
@@ -38,6 +39,7 @@ void InstrumentationTrace::reset() {
     avg = 0;
     sum = 0;
     sumSamples = 0;
+    hits = 0;
     empty = true;
 }
 
