@@ -25,6 +25,7 @@
 
 /* C++ Standard Library */
 #include <algorithm>
+#include <array>
 #include <functional>
 #include <memory>
 #include <string>
@@ -39,19 +40,7 @@ std::unique_ptr<Display> display;
 canvas::Canvas baseCanvas(matrixWidth, matrixHeight);
 
 // Buttons
-#ifdef PIXELCLOCK_DESKTOP
-Button2 buttonMode;
-Button2 buttonSelect;
-Button2 buttonLeft;
-Button2 buttonRight;
-Button2 buttonBrightness;
-#else
-Button2 buttonMode(pins::button1, INPUT_PULLUP);
-Button2 buttonSelect(pins::button2, INPUT_PULLUP);
-Button2 buttonLeft(pins::button3, INPUT_PULLUP);
-Button2 buttonRight(pins::button4, INPUT_PULLUP);
-Button2 buttonBrightness(pins::button5, INPUT_PULLUP);
-#endif
+std::array<Button2, 5> buttons;
 
 // Modes
 std::unique_ptr<ModeManager> modeManager;
@@ -167,8 +156,8 @@ void setup() {
     printCentred("Initialising System Modes", headingWidth);
     baseCanvas.fill(flm::CRGB::Black);
     modeManager =
-        std::make_unique<ModeManager>(baseCanvas, ButtonReferences{buttonMode, buttonSelect, buttonLeft, buttonRight});
-    loopTimeManager.registerTraceCallback([](){ return modeManager->getInstrumentation(); });
+        std::make_unique<ModeManager>(baseCanvas, ButtonReferences{buttons[0], buttons[1], buttons[2], buttons[3]});
+    loopTimeManager.registerTraceCallback([]() { return modeManager->getInstrumentation(); });
 
     printCentred("Initialising Display", headingWidth);
 #ifdef PIXELCLOCK_DESKTOP
@@ -178,22 +167,27 @@ void setup() {
 #endif
     display->update(baseCanvas);
     delay(100);
-    loopTimeManager.registerTraceCallback([](){ return display->getInstrumentation(); });
+    loopTimeManager.registerTraceCallback([]() { return display->getInstrumentation(); });
     // displayDiagnostic(display);
 
     printCentred("Initialising Input", headingWidth);
 #ifdef PIXELCLOCK_DESKTOP
-    buttonMode.begin(VIRTUAL_PIN);
-    buttonSelect.begin(VIRTUAL_PIN);
-    buttonLeft.begin(VIRTUAL_PIN);
-    buttonRight.begin(VIRTUAL_PIN);
-    buttonBrightness.begin(VIRTUAL_PIN);
+    for (auto& b : buttons) {
+        b.begin(VIRTUAL_PIN, INPUT, false);
+        b.setDebounceTime(0);
+    }
+#else
+    buttons[0].begin(pins::button1, INPUT_PULLUP);
+    buttons[1].begin(pins::button2, INPUT_PULLUP);
+    buttons[2].begin(pins::button3, INPUT_PULLUP);
+    buttons[3].begin(pins::button4, INPUT_PULLUP);
+    buttons[4].begin(pins::button5, INPUT_PULLUP);
 #endif
-    buttonBrightness.setTapHandler(brightnessButton_callback);
+    buttons[4].setTapHandler(brightnessButton_callback);
 
     printCentred("Initialising Audio", headingWidth);
     AudioSingleton::get().begin();
-    loopTimeManager.registerTraceCallback([](){ return AudioSingleton::get().getInstrumentation(); });
+    loopTimeManager.registerTraceCallback([]() { return AudioSingleton::get().getInstrumentation(); });
 
     print(fmt::format("{1:<{0}} {2} ms\n", textPadding, "Runtime:", millis()));
     printSolidLine(headingWidth);
@@ -203,11 +197,7 @@ void setup() {
 
 void loop() {
     // update buttons
-    buttonMode.loop();
-    buttonBrightness.loop();
-    buttonSelect.loop();
-    buttonLeft.loop();
-    buttonRight.loop();
+    for (auto& b : buttons) { b.loop(); }
 
     auto c = modeManager->run();
     auto out = canvas::blit(baseCanvas, c, 0, 0);
@@ -234,24 +224,24 @@ int main(int argc, char** argv) {
     sf::Font font;
     if (!font.loadFromFile("data/fonts/roboto/Roboto-Regular.ttf")) { print("Font not found!\n"); }
 
-    std::vector<Button> buttons;
-    buttons.reserve(10);
+    std::vector<Button> guiButtons;
+    guiButtons.reserve(10);
 
-    buttons.push_back({"Mode", {200, 100}, 40, sf::Color::Black, sf::Color::White});
-    buttons.back().setFont(font);
-    buttonMode.setButtonStateFunction([&]() { return buttons[0].isClicked(); });
+    guiButtons.push_back({"Mode", {200, 100}, 40, sf::Color::Black, sf::Color::White});
+    guiButtons.back().setFont(font);
+    buttons[0].setButtonStateFunction([&]() { return guiButtons[0].isClicked(); });
 
-    buttons.push_back({"Select", {200, 100}, 40, sf::Color::Black, sf::Color::White});
-    buttons.back().setFont(font);
-    buttonSelect.setButtonStateFunction([&]() { return buttons[1].isClicked(); });
+    guiButtons.push_back({"Select", {200, 100}, 40, sf::Color::Black, sf::Color::White});
+    guiButtons.back().setFont(font);
+    buttons[1].setButtonStateFunction([&]() { return guiButtons[1].isClicked(); });
 
-    buttons.push_back({"Left", {200, 100}, 40, sf::Color::Black, sf::Color::White});
-    buttons.back().setFont(font);
-    buttonLeft.setButtonStateFunction([&]() { return buttons[2].isClicked(); });
+    guiButtons.push_back({"Left", {200, 100}, 40, sf::Color::Black, sf::Color::White});
+    guiButtons.back().setFont(font);
+    buttons[2].setButtonStateFunction([&]() { return guiButtons[2].isClicked(); });
 
-    buttons.push_back({"Right", {200, 100}, 40, sf::Color::Black, sf::Color::White});
-    buttons.back().setFont(font);
-    buttonRight.setButtonStateFunction([&]() { return buttons[3].isClicked(); });
+    guiButtons.push_back({"Right", {200, 100}, 40, sf::Color::Black, sf::Color::White});
+    guiButtons.back().setFont(font);
+    buttons[3].setButtonStateFunction([&]() { return guiButtons[3].isClicked(); });
 
     auto window = sf::RenderWindow{{800u, 400u}, "PixelClock-FW"};
     window.setFramerateLimit(300);
@@ -261,7 +251,7 @@ int main(int argc, char** argv) {
             if (event.type == sf::Event::Closed) { window.close(); }
 
             if (event.type == sf::Event::MouseButtonPressed) {
-                for (auto& btn : buttons) {
+                for (auto& btn : guiButtons) {
                     if (btn.isMouseOver(window)) {
                         btn.click();
                         print(fmt::format("Button clicked! ({})\n", btn.getName()));
@@ -270,7 +260,7 @@ int main(int argc, char** argv) {
             }
 
             if (event.type == sf::Event::MouseButtonReleased) {
-                for (auto& btn : buttons) { btn.release(); }
+                for (auto& btn : guiButtons) { btn.release(); }
             }
         }
 
@@ -288,17 +278,17 @@ int main(int argc, char** argv) {
         sprite.setScale(targetSize.x / sprite.getLocalBounds().width, targetSize.y / sprite.getLocalBounds().height);
         window.draw(sprite);
 
-        int btnCount = buttons.size();
+        int btnCount = guiButtons.size();
         int windowWidth = window.getView().getSize().x;
         int widthPerButton = windowWidth / btnCount;
         int idx = 0;
-        for (auto& btn : buttons) {
+        for (auto& btn : guiButtons) {
             btn.setSize({float(widthPerButton), 100});
             btn.setPosition({float(idx * widthPerButton), 300});
             idx++;
         }
 
-        for (auto& btn : buttons) { btn.drawTo(window); }
+        for (auto& btn : guiButtons) { btn.drawTo(window); }
 
         window.display();
     }
