@@ -40,6 +40,7 @@ public:
 
 private:
     float speed;
+    float position{0};
     int width;
     bool maintainBrightness;
     Direction direction;
