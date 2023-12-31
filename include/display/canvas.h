@@ -17,6 +17,8 @@ public:
     Canvas() : Canvas(0, 0) {}
     Canvas(int width, int height);
 
+    using StorageType = std::vector<flm::CRGB>;
+
     int getWidth() const { return width; }
     int getHeight() const { return height; }
     int getSize() const { return length; }
@@ -24,6 +26,12 @@ public:
 
     flm::CRGB& operator[](std::size_t idx) { return data[idx]; }
     const flm::CRGB& operator[](std::size_t idx) const { return data[idx]; }
+
+    // Container Iterators
+    StorageType::iterator begin() { return data.begin(); }
+    StorageType::iterator end() { return data.end(); }
+    StorageType::const_iterator cbegin() { return data.cbegin(); }
+    StorageType::const_iterator cend() { return data.cend(); }
 
     /* Drawing Functions */
     void setXY(int x, int y, flm::CRGB colour);
@@ -40,7 +48,7 @@ private:
     int width;
     int height;
     int length;
-    std::vector<flm::CRGB> data;
+    StorageType data;
 };
 
 Canvas blit(const Canvas& background, const Canvas& foreground, int xOffset, int yOffset);

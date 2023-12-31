@@ -121,12 +121,12 @@ canvas::Canvas GameOfLife::run() {
             if (millis() - _lastLoopTime >= _fadeInterval) {
 
                 // fade all pixels
-                for (std::size_t i = 0; i < _c.getSize(); i++) { _c[i] = _c[i].fadeToBlackBy(10); }
+                for (auto& p : _c) { p.fadeToBlackBy(10); }
                 _lastLoopTime = millis();
             }
             bool empty = true;
-            for (std::size_t i = 0; i < _c.getSize(); i++) {
-                if (_c[i] != flm::CRGB(0)) {
+            for (const auto& p : _c) {
+                if (p != flm::CRGB(0)) {
                     empty = false;
                     break;
                 }

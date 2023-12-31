@@ -16,9 +16,9 @@ void HSVTestPattern::apply(canvas::Canvas& c) {
 }
 
 void SolidColour::apply(canvas::Canvas& c) {
-    for (std::size_t i = 0; i < c.getSize(); i++) {
-        if (c[i] == CRGB(0)) { continue; }
-        c[i] = maintainBrightness ? CRGB(colour).nscale8(c[i].getAverageLight()) : colour;
+    for (auto& p : c) {
+        if (p == CRGB(0)) { continue; }
+        p = maintainBrightness ? CRGB(colour).nscale8(p.getAverageLight()) : colour;
     }
 }
 
