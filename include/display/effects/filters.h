@@ -44,6 +44,7 @@ private:
     int width;
     bool maintainBrightness;
     Direction direction;
+    uint32_t lastUpdateTime{0};
 };
 
 #endif // filters_h

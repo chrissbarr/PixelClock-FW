@@ -12,8 +12,8 @@ Mode_ClockFace::Mode_ClockFace(ButtonReferences buttons) : MainModeFunction("Clo
         std::make_unique<ClockFace_Gravity>([]() { return timeCallbackFunction(TimeManagerSingleton::get().now()); }));
     faces.push_back(
         std::make_unique<ClockFace_Simple>([]() { return timeCallbackFunction(TimeManagerSingleton::get().now()); }));
-    filters.push_back(std::make_unique<RainbowWave>(1.0f, 30, RainbowWave::Direction::horizontal, false));
-    filters.push_back(std::make_unique<RainbowWave>(1.0f, 30, RainbowWave::Direction::vertical, false));
+    filters.push_back(std::make_unique<RainbowWave>(50.0f, 30, RainbowWave::Direction::horizontal, false));
+    filters.push_back(std::make_unique<RainbowWave>(50.0f, 30, RainbowWave::Direction::vertical, false));
     timePrev = timeCallbackFunction();
 }
 

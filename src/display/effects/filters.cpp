@@ -27,7 +27,11 @@ void SolidColour::apply(canvas::Canvas& c) {
 
 void RainbowWave::apply(canvas::Canvas& c) {
 
-    position += speed;
+    uint32_t now = millis();
+    uint32_t duration = now - lastUpdateTime;
+    lastUpdateTime = now;
+
+    position += (speed * (static_cast<float>(duration) / 1000));
     while (position >= 256) { position -= 256; }
     while (position < 0) { position += 256; }
 
