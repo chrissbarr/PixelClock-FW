@@ -10,6 +10,7 @@
 
 /* C++ Standard Library */
 #include <memory>
+#include <random>
 
 class GravityFill : public DisplayEffect {
 public:
@@ -35,6 +36,35 @@ private:
     bool _finished;
 
     canvas::Canvas _c;
+};
+
+class GravityFillTemplate : public DisplayEffect {
+public:
+    enum class FillMode { random, leftRightPerCol, leftRightPerRow };
+
+    GravityFillTemplate(FillMode fillMode);
+    canvas::Canvas run() override final;
+    bool finished() const override final { return _finished; }
+    void reset() override final;
+    void setTemplate(const canvas::Canvas& c) { templateCanvas = c; }
+
+private:
+    std::unique_ptr<Gravity> gravityEffect;
+
+    bool _finished;
+
+    canvas::Canvas _c;
+    canvas::Canvas templateCanvas;
+
+    enum class State { empty, filling, stable };
+    State currentState = State::empty;
+
+    FillMode fillMode{FillMode::leftRightPerCol};
+    int spawnCol{0};
+    int spawnRow{0};
+    int spawnColDir = 1;
+
+    std::minstd_rand rand;
 };
 
 #endif // gravityfill_h

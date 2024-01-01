@@ -9,11 +9,12 @@ using namespace printing;
 
 Mode_ClockFace::Mode_ClockFace(ButtonReferences buttons) : MainModeFunction("Clockface", buttons) {
     auto timeCallback = []() { return timeCallbackFunction(TimeManagerSingleton::get().now()); };
-    faces.push_back(
-        std::make_unique<ClockFace_GravityFill>(timeCallback, ClockFace_GravityFill::FillMode::leftRightPerRow));
-    faces.push_back(
-        std::make_unique<ClockFace_GravityFill>(timeCallback, ClockFace_GravityFill::FillMode::leftRightPerCol));
-    faces.push_back(std::make_unique<ClockFace_GravityFill>(timeCallback, ClockFace_GravityFill::FillMode::random));
+    faces.push_back(std::make_unique<ClockFace_GravityFill>(
+        timeCallback, std::make_unique<GravityFillTemplate>(GravityFillTemplate::FillMode::leftRightPerRow)));
+    faces.push_back(std::make_unique<ClockFace_GravityFill>(
+        timeCallback, std::make_unique<GravityFillTemplate>(GravityFillTemplate::FillMode::leftRightPerCol)));
+    faces.push_back(std::make_unique<ClockFace_GravityFill>(
+        timeCallback, std::make_unique<GravityFillTemplate>(GravityFillTemplate::FillMode::random)));
     faces.push_back(std::make_unique<ClockFace_Gravity>(timeCallback));
     faces.push_back(std::make_unique<ClockFace_Simple>(timeCallback));
     filters.push_back(std::make_unique<RainbowWave>(50.0f, 30, RainbowWave::Direction::horizontal, false));
