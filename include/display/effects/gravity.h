@@ -19,9 +19,11 @@ public:
     void setFallOutOfScreen(bool enabled) { _empty = enabled; }
     bool getFallOutOfScreen() const { return _empty; }
     void setInput(const canvas::Canvas& c) { _c = c; }
+    void setValidPixelsMask(const canvas::Canvas& c) { validPixelsMask = c; }
 
 private:
     canvas::Canvas _c;
+    canvas::Canvas validPixelsMask;
     bool _finished = false;
     uint32_t _moveInterval;
     uint32_t _lastMoveTime = 0;

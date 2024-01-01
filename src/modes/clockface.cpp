@@ -8,10 +8,14 @@
 using namespace printing;
 
 Mode_ClockFace::Mode_ClockFace(ButtonReferences buttons) : MainModeFunction("Clockface", buttons) {
+    auto timeCallback = []() { return timeCallbackFunction(TimeManagerSingleton::get().now()); };
     faces.push_back(
-        std::make_unique<ClockFace_Gravity>([]() { return timeCallbackFunction(TimeManagerSingleton::get().now()); }));
+        std::make_unique<ClockFace_GravityFill>(timeCallback, ClockFace_GravityFill::FillMode::leftRightPerRow));
     faces.push_back(
-        std::make_unique<ClockFace_Simple>([]() { return timeCallbackFunction(TimeManagerSingleton::get().now()); }));
+        std::make_unique<ClockFace_GravityFill>(timeCallback, ClockFace_GravityFill::FillMode::leftRightPerCol));
+    faces.push_back(std::make_unique<ClockFace_GravityFill>(timeCallback, ClockFace_GravityFill::FillMode::random));
+    faces.push_back(std::make_unique<ClockFace_Gravity>(timeCallback));
+    faces.push_back(std::make_unique<ClockFace_Simple>(timeCallback));
     filters.push_back(std::make_unique<RainbowWave>(50.0f, 30, RainbowWave::Direction::horizontal, false));
     filters.push_back(std::make_unique<RainbowWave>(50.0f, 30, RainbowWave::Direction::vertical, false));
     timePrev = timeCallbackFunction();
@@ -23,6 +27,7 @@ void Mode_ClockFace::moveIntoCore() {
     auto cycleClockface = [this]([[maybe_unused]] Button2& btn) {
         clockfaceIndex++;
         if (clockfaceIndex == faces.size()) { clockfaceIndex = 0; }
+        faces[clockfaceIndex]->reset();
     };
     buttons.select.setTapHandler(cycleClockface);
     buttons.mode.setTapHandler([this]([[maybe_unused]] Button2& btn) { this->_finished = true; });

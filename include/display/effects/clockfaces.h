@@ -10,6 +10,7 @@
 /* C++ Standard Library */
 #include <functional>
 #include <memory>
+#include <random>
 
 class ClockFace_Base : public DisplayEffect {
 public:
@@ -46,6 +47,30 @@ private:
     ClockFaceTimeStruct timePrev;
     enum class State { stable, fallToBottom, fallOut };
     State currentState = State::stable;
+};
+
+class ClockFace_GravityFill : public ClockFace_Base {
+public:
+    enum class FillMode { random, leftRightPerCol, leftRightPerRow };
+
+    ClockFace_GravityFill(std::function<ClockFaceTimeStruct(void)> timeCallbackFunction, FillMode fillMode);
+    canvas::Canvas run() override final;
+    bool finished() const override final { return false; }
+    void reset() override final;
+
+private:
+    canvas::Canvas _c;
+    canvas::Canvas targetTextCanvas;
+    std::unique_ptr<Gravity> gravityEffect;
+    ClockFaceTimeStruct timePrev;
+    enum class State { empty, filling, stable, emptying };
+    State currentState = State::empty;
+    std::minstd_rand rand;
+
+    FillMode fillMode{FillMode::leftRightPerCol};
+    int spawnCol{0};
+    int spawnRow{0};
+    int spawnColDir = 1;
 };
 
 #endif // clockfaces_h

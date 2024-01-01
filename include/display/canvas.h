@@ -44,6 +44,8 @@ public:
     void showCharacter(char character, flm::CRGB colour, int xOffset);
     void showCharacter(const FontGlyph& character, flm::CRGB colour, int xOffset);
 
+    bool operator==(const Canvas& c2) { return (width == c2.width && height == c2.height && data == c2.data); }
+
 private:
     int width;
     int height;
