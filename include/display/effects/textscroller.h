@@ -39,14 +39,14 @@ private:
     uint16_t timeToHoldAtEnd;
     uint8_t charSpacing;
 
-    uint32_t targetOffset;
-    uint32_t currentOffset;
+    int targetOffset;
+    int currentOffset;
     uint32_t lastUpdateTime;
 
     uint32_t stepDelay;
     uint32_t arrivedAtEndTime = 0;
 
-    uint32_t calculateOffset(int charIdx) const;
+    int calculateOffset(int charIdx) const;
 
     bool _finished = false;
 };

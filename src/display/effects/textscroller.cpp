@@ -61,7 +61,7 @@ void TextScroller::setCurrentOffset(int targetCharacterIndex) {
     _finished = false;
 }
 
-uint32_t TextScroller::calculateOffset(int targetCharIndex) const {
+int TextScroller::calculateOffset(int targetCharIndex) const {
     int end = 0;
     int charIndex = 0;
     for (const char& character : text) {
