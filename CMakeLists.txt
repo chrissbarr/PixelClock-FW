@@ -30,6 +30,7 @@ set(main_sources
 src/audio/audio.cpp
 src/audio/desktop.cpp
 src/display/canvas.cpp
+src/display/diagnostic.cpp
 src/display/effects/audiowaterfall.cpp
 src/display/effects/bouncingball.cpp
 src/display/effects/clockfaces.cpp

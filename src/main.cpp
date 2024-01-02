@@ -1,6 +1,7 @@
 /* Project Scope */
 #include "audio/audio.h"
 #include "brightnessSensor.h"
+#include "display/diagnostic.h"
 #include "loopTimeManager.h"
 #include "modes/modes.h"
 #include "pinout.h"
@@ -168,7 +169,7 @@ void setup() {
     display->update(baseCanvas);
     delay(100);
     loopTimeManager.registerTraceCallback([]() { return display->getInstrumentation(); });
-    // displayDiagnostic(display);
+    // displayDiagnostic(*display);
 
     printCentred("Initialising Input", headingWidth);
 #ifdef PIXELCLOCK_DESKTOP
