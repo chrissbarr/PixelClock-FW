@@ -17,6 +17,7 @@ canvas::Canvas AudioWaterfall::run() {
         int xIdx = _c.getWidth() - 1;
         for (auto it = hist.rbegin(); it != hist.rend(); ++it) {
             for (int yIdx = 0; yIdx < _c.getHeight(); yIdx++) {
+                if (yIdx >= it->spectrum.size()) { break; }
                 float val = it->spectrum.at(yIdx);
                 val = val / 8000;
                 flm::CRGB colour = flm::CRGB::Red;
