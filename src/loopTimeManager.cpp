@@ -87,7 +87,7 @@ void LoopTimeManager::idle() {
 
         // print psram stats
         float usedPsramPercentage = 100 * (float(ESP.getPsramSize() - ESP.getFreePsram()) / ESP.getPsramSize());
-        print(fmt::format("{1:<{0}}", fieldWidth, "PSRAM"));
+        print(fmt::format("{1:<{0}}", nameWidth, "PSRAM"));
         print(fmt::format("{1:<{0}}", fieldWidth, ESP.getFreePsram() / 1024));
         print(fmt::format("{1:<{0}}", fieldWidth, ESP.getPsramSize() / 1024));
         print(fmt::format("{1:<{0}.2f}", fieldWidth, usedPsramPercentage));
