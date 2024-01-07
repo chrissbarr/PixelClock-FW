@@ -190,6 +190,18 @@ void setup() {
     AudioSingleton::get().begin();
     loopTimeManager.registerTraceCallback([]() { return AudioSingleton::get().getInstrumentation(); });
 
+    xTaskCreatePinnedToCore(
+        [](void* pvParameter) {
+            while (1) { AudioSingleton::get().update(); }
+        },             // Function to implement the task
+        "AudioUpdate", // Name of the task
+        8192,          // Stack size in words
+        NULL,          // Task input parameter
+        10,            // Priority of the task
+        NULL,          // Task handle.
+        0              // Core where the task should run
+    );
+
     print(fmt::format("{1:<{0}} {2} ms\n", textPadding, "Runtime:", millis()));
     printSolidLine(headingWidth);
     printCentred("Initialisation Completed", headingWidth);
@@ -208,7 +220,7 @@ void loop() {
 
     brightnessSensor->update();
 
-    AudioSingleton::get().update();
+    // AudioSingleton::get().update();
 
     // processSerialCommands();
 

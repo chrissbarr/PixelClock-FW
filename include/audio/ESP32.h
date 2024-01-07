@@ -61,6 +61,10 @@ private:
     AudioCharacteristics* acBuf;
     etl::icircular_buffer<AudioCharacteristics>* audioCharacteristics;
 
+    std::size_t audioBufferSize = 8192;
+    int16_t* audioBufferRaw;
+    etl::icircular_buffer<int16_t>* audioBuffer;
+
     // Instrumentation
     InstrumentationTrace traceCallbackTotal{"Audio Callback - Overall"};
     InstrumentationTrace traceCallbackI2S{"Audio Callback - I2S"};

@@ -27,101 +27,11 @@ void AudioESP32::a2dp_callback(const uint8_t* data, uint32_t length) {
     i2sOutput->write(data, length);
 
     traceCallbackI2S.stop();
-    traceCallbackVol.start();
+    // traceCallbackVol.start();
 
-    float vLeftAvg = 0;
-    float vRightAvg = 0;
-    constexpr float fullscaleDiv = 1.0 / 32768;
+    for (uint32_t i = 0; i < sample_count; i++) { audioBuffer->push(samples[i]); }
 
-    // calculate average RMS magnitude for L/R channels
-    for (uint32_t i = 0; i < sample_count; i += 2) {
-        vLeftAvg += samples[i] * samples[i];
-        vRightAvg += samples[i + 1] * samples[i + 1];
-    }
-    int lrSamplesDiv2 = sample_count / 4;
-    vLeftAvg = std::sqrt(vLeftAvg / lrSamplesDiv2) * fullscaleDiv;
-    vRightAvg = std::sqrt(vRightAvg / lrSamplesDiv2) * fullscaleDiv;
-
-    auto mag2db = [](float mag) -> float {
-        if (mag < 1e-3) {
-            return -60.0;
-        } else {
-            return 20 * std::log10(mag);
-        }
-    };
-
-    // convert to dB
-    vLeftAvg = mag2db(vLeftAvg);
-    vRightAvg = mag2db(vRightAvg);
-
-    traceCallbackVol.stop();
-    traceCallbackFFT.start();
-
-    int sourceIdx = 0;
-    for (uint32_t i = 0; i < fftSamples; i++) {
-
-        if (sourceIdx < sample_count) {
-            // convert stereo samples to mono
-            vReal[i] = (uint32_t(samples[sourceIdx]) + samples[sourceIdx + 1]) / 2;
-        } else {
-            vReal[i] = 0;
-        }
-        vImag[i] = 0;
-        sourceIdx += 2;
-    }
-
-    FFT->dcRemoval();
-    FFT->windowing(FFTWindow::Hamming, FFTDirection::Forward); /* Weigh data */
-    FFT->compute(FFTDirection::Forward);                       /* Compute FFT */
-    FFT->complexToMagnitude();                                 /* Compute magnitudes */
-
-    traceCallbackFFT.stop();
-    traceCallbackSpectrum.start();
-
-    // Fill the audioSpectrum vector with data.
-    auto spectrum = etl::array<float, audioSpectrumBins>();
-    spectrum.fill(0);
-
-    float prevMax = 0.0;
-    if (!audioCharacteristics->empty()) { prevMax = audioCharacteristics->back().spectrumMax; }
-
-    // Bin FFT results
-    for (int i = 5; i < (fftSamples / 2) - 1; i++) {
-        float freq = i * fftFrequencyResolution;
-        int binIdx = std::floor(freq / audioSpectrumBinWidth);
-        // int binIdx = i / audioSpectrumBinSize;
-        if (binIdx < spectrum.size()) {
-            float val = vReal[i] / audioSpectrumBinSize;
-
-            // basic noise filter
-            if (val > prevMax * 0.02) { spectrum[binIdx] += val; }
-        }
-    }
-
-    float maxThisTime = *std::max_element(spectrum.begin(), spectrum.end());
-    float avgMax =
-        utility::sum_members(*audioCharacteristics, &AudioCharacteristics::spectrumMax) / audioCharacteristics->size();
-
-    float maxScale = 6000;
-    float scaleFactor = maxScale / avgMax;
-
-    std::transform(
-        spectrum.begin(),
-        spectrum.end(),
-        spectrum.begin(),
-        std::bind(std::multiplies<float>(), std::placeholders::_1, scaleFactor));
-
-    traceCallbackSpectrum.stop();
-
-    AudioCharacteristics c{};
-    c.volumeLeft = vLeftAvg;
-    c.volumeRight = vRightAvg;
-    c.spectrumMax = maxThisTime;
-    c.spectrum = spectrum;
-
-    xSemaphoreTake(audioCharacteristicsSemaphore, portMAX_DELAY);
-    audioCharacteristics->push(c);
-    xSemaphoreGive(audioCharacteristicsSemaphore);
+    // traceCallbackVol.stop();
 
     traceCallbackTotal.stop();
 }
@@ -137,6 +47,15 @@ AudioESP32::AudioESP32() {
         audioCharacteristics = new etl::circular_buffer<AudioCharacteristics, audioHistorySize>();
     }
 
+    audioBufferRaw = (int16_t*)ps_calloc(audioBufferSize + 1, sizeof(int16_t));
+    if (audioBufferRaw) {
+        printing::print("PSRAM buffer allocation success!\n");
+    } else {
+        printing::print("PSRAM buffer allocation fail!\n");
+        audioBufferRaw = (int16_t*)calloc(audioBufferSize + 1, sizeof(int16_t));
+    }
+    audioBuffer = new etl::circular_buffer_ext<int16_t>(audioBufferRaw, audioBufferSize);
+
     traces.reserve(5);
     traces.push_back(&traceCallbackTotal);
     traces.push_back(&traceCallbackI2S);
@@ -149,6 +68,9 @@ AudioESP32::~AudioESP32() {
 
     if (acBuf) { free(acBuf); }
     free(audioCharacteristics);
+
+    if (audioBufferRaw) { free(audioBufferRaw); }
+    free(audioBuffer);
 }
 
 void AudioESP32::begin() {
@@ -185,6 +107,116 @@ void AudioESP32::begin() {
 
 void AudioESP32::update() {
 
+    const int samplesToProcess = 2048;
+
+    //printing::print(fmt::format("AudioESP32::update() - buffer = {}\n", audioBuffer->size()));
+
+    while (audioBuffer->size() >= samplesToProcess) {
+
+        printing::print(fmt::format("AudioESP32::update(), buffer {} >= {}, processing buffer...\n", audioBuffer->size(), samplesToProcess));
+
+        auto& samples = *audioBuffer;
+
+        traceCallbackVol.start();
+
+        float vLeftAvg = 0;
+        float vRightAvg = 0;
+
+        // calculate average RMS magnitude for L/R channels
+        for (uint32_t i = 0; i < samplesToProcess; i += 2) {
+            vLeftAvg += samples[i] * samples[i];
+            vRightAvg += samples[i + 1] * samples[i + 1];
+        }
+
+        constexpr float fullscaleDiv = 1.0 / 32768;
+        int lrSamplesDiv2 = samplesToProcess / 4;
+        vLeftAvg = std::sqrt(vLeftAvg / lrSamplesDiv2) * fullscaleDiv;
+        vRightAvg = std::sqrt(vRightAvg / lrSamplesDiv2) * fullscaleDiv;
+
+        auto mag2db = [](float mag) -> float {
+            if (mag < 1e-3) {
+                return -60.0;
+            } else {
+                return 20 * std::log10(mag);
+            }
+        };
+
+        // convert to dB
+        vLeftAvg = mag2db(vLeftAvg);
+        vRightAvg = mag2db(vRightAvg);
+
+        traceCallbackVol.stop();
+        traceCallbackFFT.start();
+
+        int sourceIdx = 0;
+        for (uint32_t i = 0; i < fftSamples; i++) {
+
+            if (sourceIdx < samplesToProcess) {
+                // convert stereo samples to mono
+                vReal[i] = (uint32_t(samples[sourceIdx]) + samples[sourceIdx + 1]) / 2;
+            } else {
+                vReal[i] = 0;
+            }
+            vImag[i] = 0;
+            sourceIdx += 2;
+        }
+
+        FFT->dcRemoval();
+        FFT->windowing(FFTWindow::Hamming, FFTDirection::Forward); /* Weigh data */
+        FFT->compute(FFTDirection::Forward);                       /* Compute FFT */
+        FFT->complexToMagnitude();                                 /* Compute magnitudes */
+
+        traceCallbackFFT.stop();
+        traceCallbackSpectrum.start();
+
+        // Fill the audioSpectrum vector with data.
+        auto spectrum = etl::array<float, audioSpectrumBins>();
+        spectrum.fill(0);
+
+        float prevMax = 0.0;
+        if (!audioCharacteristics->empty()) { prevMax = audioCharacteristics->back().spectrumMax; }
+
+        // Bin FFT results
+        for (int i = 5; i < (fftSamples / 2) - 1; i++) {
+            float freq = i * fftFrequencyResolution;
+            int binIdx = std::floor(freq / audioSpectrumBinWidth);
+            // int binIdx = i / audioSpectrumBinSize;
+            if (binIdx < spectrum.size()) {
+                float val = vReal[i] / audioSpectrumBinSize;
+
+                // basic noise filter
+                if (val > prevMax * 0.02) { spectrum[binIdx] += val; }
+            }
+        }
+
+        float maxThisTime = *std::max_element(spectrum.begin(), spectrum.end());
+        float avgMax = utility::sum_members(*audioCharacteristics, &AudioCharacteristics::spectrumMax) /
+                       audioCharacteristics->size();
+
+        float maxScale = 6000;
+        float scaleFactor = maxScale / avgMax;
+
+        std::transform(
+            spectrum.begin(),
+            spectrum.end(),
+            spectrum.begin(),
+            std::bind(std::multiplies<float>(), std::placeholders::_1, scaleFactor));
+
+        traceCallbackSpectrum.stop();
+
+        AudioCharacteristics c{};
+        c.volumeLeft = vLeftAvg;
+        c.volumeRight = vRightAvg;
+        c.spectrumMax = maxThisTime;
+        c.spectrum = spectrum;
+
+        xSemaphoreTake(audioCharacteristicsSemaphore, portMAX_DELAY);
+        audioCharacteristics->push(c);
+        xSemaphoreGive(audioCharacteristicsSemaphore);
+
+        samples.pop(samplesToProcess);
+    }
+
     if (millis() - statReportLastTime > statReportInterval) {
 
         printing::print(fmt::format(
@@ -194,6 +226,8 @@ void AudioESP32::update() {
 
         statReportLastTime = millis();
     }
+
+    vTaskDelay(5 / portTICK_RATE_MS);
 }
 
 void AudioESP32::lockMutex() { xSemaphoreTake(audioCharacteristicsSemaphore, portMAX_DELAY); }
