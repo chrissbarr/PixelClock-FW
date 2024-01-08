@@ -20,18 +20,18 @@ void AudioESP32::a2dp_callback(const uint8_t* data, uint32_t length) {
 
     traceCallbackTotal.start();
     traceCallbackI2S.start();
-
-    int16_t* samples = (int16_t*)data;
-    uint32_t sample_count = length / 2;
-
     i2sOutput->write(data, length);
-
     traceCallbackI2S.stop();
-    // traceCallbackVol.start();
 
+    traceCallbackBuffer.start();
+    int16_t* samples = (int16_t*)data;
+    const uint32_t sample_count = length / 2;
     for (uint32_t i = 0; i < sample_count; i++) { audioBuffer->push(samples[i]); }
+    traceCallbackBuffer.stop();
 
-    // traceCallbackVol.stop();
+    if (audioProcessingTaskHandle) {
+        xTaskNotifyGive(audioProcessingTaskHandle);
+    }
 
     traceCallbackTotal.stop();
 }
@@ -56,12 +56,32 @@ AudioESP32::AudioESP32() {
     }
     audioBuffer = new etl::circular_buffer_ext<int16_t>(audioBufferRaw, audioBufferSize);
 
-    traces.reserve(5);
+    traces.reserve(6);
     traces.push_back(&traceCallbackTotal);
     traces.push_back(&traceCallbackI2S);
-    traces.push_back(&traceCallbackVol);
-    traces.push_back(&traceCallbackFFT);
-    traces.push_back(&traceCallbackSpectrum);
+    traces.push_back(&traceCallbackBuffer);
+    traces.push_back(&traceProcessVol);
+    traces.push_back(&traceProcessFFT);
+    traces.push_back(&traceProcessSpectrum);
+
+    printing::print("Creating audio processing task... ");
+    auto taskCreated = xTaskCreatePinnedToCore(
+        [](void* o) {
+            while (1) { static_cast<AudioESP32*>(o)->audioProcessingTask(); }
+        },                          // Function to implement the task
+        "AudioUpdate",              // Name of the task
+        2048,                       // Stack size in words
+        this,                       // Task input parameter
+        10,                         // Priority of the task
+        &audioProcessingTaskHandle, // Task handle.
+        0                           // Core where the task should run
+    );
+
+    if (taskCreated == pdPASS) {
+        printing::print("success!\n");
+    } else {
+        printing::print("failure!\n");
+    }
 }
 
 AudioESP32::~AudioESP32() {
@@ -105,19 +125,22 @@ void AudioESP32::begin() {
     audioCharacteristicsSemaphore = xSemaphoreCreateMutex();
 }
 
-void AudioESP32::update() {
+void AudioESP32::audioProcessingTask() {
+
+    uint32_t thread_notification = ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+    // printing::print("audio task notified...\n");
+    // printing::print(fmt::format("AudioESP32::audioProcessingTask() - buffer = {}\n", audioBuffer->size()));
 
     const int samplesToProcess = 2048;
-
-    //printing::print(fmt::format("AudioESP32::update() - buffer = {}\n", audioBuffer->size()));
-
     while (audioBuffer->size() >= samplesToProcess) {
 
-        printing::print(fmt::format("AudioESP32::update(), buffer {} >= {}, processing buffer...\n", audioBuffer->size(), samplesToProcess));
+        // printing::print(fmt::format(
+        //     "AudioESP32::audioProcessingTask(), buffer {} >= {}, processing buffer...\n", audioBuffer->size(),
+        //     samplesToProcess));
 
         auto& samples = *audioBuffer;
 
-        traceCallbackVol.start();
+        traceProcessVol.start();
 
         float vLeftAvg = 0;
         float vRightAvg = 0;
@@ -145,8 +168,8 @@ void AudioESP32::update() {
         vLeftAvg = mag2db(vLeftAvg);
         vRightAvg = mag2db(vRightAvg);
 
-        traceCallbackVol.stop();
-        traceCallbackFFT.start();
+        traceProcessVol.stop();
+        traceProcessFFT.start();
 
         int sourceIdx = 0;
         for (uint32_t i = 0; i < fftSamples; i++) {
@@ -166,8 +189,8 @@ void AudioESP32::update() {
         FFT->compute(FFTDirection::Forward);                       /* Compute FFT */
         FFT->complexToMagnitude();                                 /* Compute magnitudes */
 
-        traceCallbackFFT.stop();
-        traceCallbackSpectrum.start();
+        traceProcessFFT.stop();
+        traceProcessSpectrum.start();
 
         // Fill the audioSpectrum vector with data.
         auto spectrum = etl::array<float, audioSpectrumBins>();
@@ -202,7 +225,7 @@ void AudioESP32::update() {
             spectrum.begin(),
             std::bind(std::multiplies<float>(), std::placeholders::_1, scaleFactor));
 
-        traceCallbackSpectrum.stop();
+        traceProcessSpectrum.stop();
 
         AudioCharacteristics c{};
         c.volumeLeft = vLeftAvg;
@@ -217,6 +240,12 @@ void AudioESP32::update() {
         samples.pop(samplesToProcess);
     }
 
+    // printing::print(fmt::format(
+    //     "AudioESP32::audioProcessingTask(), stack high water mark = {}\n", uxTaskGetStackHighWaterMark(nullptr)));
+}
+
+void AudioESP32::update() {
+
     if (millis() - statReportLastTime > statReportInterval) {
 
         printing::print(fmt::format(
@@ -226,8 +255,6 @@ void AudioESP32::update() {
 
         statReportLastTime = millis();
     }
-
-    vTaskDelay(5 / portTICK_RATE_MS);
 }
 
 void AudioESP32::lockMutex() { xSemaphoreTake(audioCharacteristicsSemaphore, portMAX_DELAY); }

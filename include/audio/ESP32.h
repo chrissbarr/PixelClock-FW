@@ -45,6 +45,8 @@ public:
     // Instrumentation
     std::vector<InstrumentationTrace*> getInstrumentation() override final;
 
+    void audioProcessingTask();
+
 private:
     std::unique_ptr<ArduinoFFT<float>> FFT;
     std::unique_ptr<BluetoothA2DPSink> a2dpSink;
@@ -68,10 +70,13 @@ private:
     // Instrumentation
     InstrumentationTrace traceCallbackTotal{"Audio Callback - Overall"};
     InstrumentationTrace traceCallbackI2S{"Audio Callback - I2S"};
-    InstrumentationTrace traceCallbackVol{"Audio Callback - Vol"};
-    InstrumentationTrace traceCallbackFFT{"Audio Callback - FFT"};
-    InstrumentationTrace traceCallbackSpectrum{"Audio Callback - Spectrum"};
+    InstrumentationTrace traceCallbackBuffer{"Audio Callback - Buffer Fill"};
+    InstrumentationTrace traceProcessVol{"Audio Processing - Vol"};
+    InstrumentationTrace traceProcessFFT{"Audio Processing - FFT"};
+    InstrumentationTrace traceProcessSpectrum{"Audio Processing - Spectrum"};
     std::vector<InstrumentationTrace*> traces;
+
+    TaskHandle_t audioProcessingTaskHandle = nullptr;
 };
 
 #endif // audio_esp32_h
