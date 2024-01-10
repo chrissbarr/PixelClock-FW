@@ -48,7 +48,7 @@ public:
     }
 
     void begin() override final;
-    void update() override final {}
+    void update() override final;
     void a2dp_callback(const uint8_t* data, uint32_t length) override final;
     void lockMutex() override final {}
     void releaseMutex() override final {}
@@ -69,6 +69,8 @@ private:
     std::unique_ptr<SFMLRecorder> recorder;
 
     etl::circular_buffer<AudioCharacteristics, audioHistorySize> audioCharacteristics;
+
+    etl::circular_buffer<int16_t, 8192> audioSamplesBuffer;
 
     InstrumentationTrace traceCallbackTotal{"Audio Callback - Overall"};
     InstrumentationTrace traceCallbackVolume{"Audio Callback - Vol"};
