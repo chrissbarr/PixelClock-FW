@@ -93,7 +93,7 @@ void TimeManagerEmbedded::update() {
 
 void TimeManagerEmbedded::syncRTC() {
     if (!rtc) { return; }
-    setTime(time_t(rtc->now().unixtime()));
+    ::setTime(time_t(rtc->now().unixtime()));
 }
 
 #endif
