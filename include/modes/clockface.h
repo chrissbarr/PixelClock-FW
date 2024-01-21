@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <random>
 
 class Mode_ClockFace : public MainModeFunction {
 public:
@@ -28,6 +29,7 @@ private:
     uint32_t lastFilterChangeTime = 0;
     uint32_t filterChangePeriod = 10000;
     ClockFaceTimeStruct timePrev;
+    std::minstd_rand rand;
 };
 
 #endif // modes_clockface_h

@@ -39,11 +39,23 @@ canvas::Canvas Mode_ClockFace::runCore() {
     if (faces[clockfaceIndex]->finished()) { faces[clockfaceIndex]->reset(); }
 
     auto timeNow = timeCallbackFunction();
+
+    // Every minute, change filter
     if (timeNow.minute != timePrev.minute) {
         filterIndex++;
         if (filterIndex == filters.size()) { filterIndex = 0; }
         lastFilterChangeTime = millis();
     }
+
+    // Every hour, switch to random clockface
+    // todo - only do this after previous clockface has finished exit transition
+    if (timeNow.hour24 != timePrev.hour24) {
+        std::uniform_int_distribution<std::size_t> dist(0, faces.size() - 1);
+        clockfaceIndex = dist(rand);
+        printing::print(fmt::format("Mode_ClockFace switching to new face randomly. New index: {}\n", clockfaceIndex));
+        faces[clockfaceIndex]->reset();
+    }
+
     timePrev = timeNow;
 
     if (filterIndex < filters.size() && filters[filterIndex]) { filters[filterIndex]->apply(c); }
