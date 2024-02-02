@@ -1,15 +1,13 @@
 /* Project Scope */
-#include "display/pixeldisplay.h"
 #include "display/canvas.h"
 #include "display/effects/textscroller.h"
+#include "display/pixeldisplay.h"
 #include "pinout.h"
 
 #include "flm_pixeltypes.h"
 
 /* Libraries */
-// #define FASTLED_NAMESPACE_BEGIN namespace NSFastLED {
-// #define FASTLED_NAMESPACE_END }
-// #define FASTLED_USING_NAMESPACE using namespace NSFastLED;
+#define FASTLED_ALL_PINS_HARDWARE_SPI
 #include <FastLED.h>
 
 /* Hack to enable SK6812 RGBW strips to work with FastLED.
@@ -34,9 +32,16 @@ PixelDisplay::PixelDisplay(uint8_t width, uint8_t height, bool serpentine, bool 
       vertical(vertical),
       pixelOffset(pixelOffset) {
 
+#ifdef MATRIX_TYPE_SK6812RGBW
     uint16_t dummyLEDCount = getRGBWsize(size);
     leds = (CRGB*)calloc(dummyLEDCount, sizeof(CRGB));
-    FastLED.addLeds<WS2812, pins::matrixLED, RGB>(leds, dummyLEDCount);
+    FastLED.addLeds<WS2812, pins::matrixLEDData, RGB>(leds, dummyLEDCount);
+#endif
+
+#ifdef MATRIX_TYPE_APA102
+    leds = (CRGB*)calloc(size, sizeof(CRGB));
+    FastLED.addLeds<APA102HD, pins::matrixLEDData, pins::matrixLEDClock, BGR>(leds, size);
+#endif
 }
 
 PixelDisplay::~PixelDisplay() { free(leds); }
@@ -60,11 +65,17 @@ void PixelDisplay::update(const canvas::Canvas& canvas) {
         uint8_t* byteToWrite = (uint8_t*)leds;
 
         for (const flm::CRGB& pixel : buff) {
-            // Serial.println("Writing pixel...");
+#ifdef MATRIX_TYPE_APA102
+            *byteToWrite++ = pixel.red;
+            *byteToWrite++ = pixel.green;
+            *byteToWrite++ = pixel.blue;
+#endif
+#ifdef MATRIX_TYPE_SK6812RGBW
             *byteToWrite++ = pixel.green;
             *byteToWrite++ = pixel.red;
             *byteToWrite++ = pixel.blue;
             *byteToWrite++ = 0;
+#endif
         }
 
         traceUpdateLEDWrite.start();
