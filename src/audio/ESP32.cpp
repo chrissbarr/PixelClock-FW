@@ -114,6 +114,19 @@ void AudioESP32::begin() {
 
     printing::print("after i2s\n");
 
+    printing::print("Setup amplifier...\n");
+    amplifier = std::make_unique<TAS5822::TAS5822<TwoWire>>(Wire, 44, pins::amplifierPowerdown);
+    if (!amplifier->begin()) {
+        printing::print("Warning! Failed to initialise amplifier!\n");
+        amplifier.reset();
+    }
+    if (amplifier) {
+        amplifier->setAnalogGain(-12.0);
+        amplifier->setAudioFormat(TAS5822::DATA_FORMAT::I2S);
+        amplifier->setAudioWordLength(TAS5822::DATA_WORD_LENGTH::b16);
+        amplifier->setMuted(false);
+    }
+
     a2dpSink->set_avrc_metadata_callback([](uint8_t id, const uint8_t* text) { avrc_metadata_callback(id, text); });
     a2dpSink->set_stream_reader(read_data_stream, false);
     a2dpSink->start("MyMusic");

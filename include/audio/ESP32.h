@@ -9,6 +9,7 @@
 
 /* Libraries */
 #include "arduinoFFT.h"
+#include <TAS5822.h>
 #include <etl/array.h>
 #include <etl/circular_buffer.h>
 
@@ -66,6 +67,9 @@ private:
     std::size_t audioBufferSize = 8192;
     int16_t* audioBufferRaw;
     etl::icircular_buffer<int16_t>* audioBuffer;
+
+    // Amplifier
+    std::unique_ptr<TAS5822::TAS5822<TwoWire>> amplifier;
 
     // Instrumentation
     InstrumentationTrace traceCallbackTotal{"Audio Callback - Overall"};
