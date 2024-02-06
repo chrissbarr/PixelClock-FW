@@ -2,8 +2,8 @@ include(FetchContent)
 
 FetchContent_Declare(
   FastLED
-  GIT_REPOSITORY https://github.com/chrissbarr/FastLED.git
-  GIT_TAG        22fbd859cb44f228ac1b88047f6c44c118532089
+  GIT_REPOSITORY https://github.com/FastLED/FastLED.git
+  GIT_TAG        9307a2926e66dd2d4707315057d1de7f2bb3ed0b
   CONFIGURE_COMMAND
 )
 
