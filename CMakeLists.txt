@@ -91,3 +91,17 @@ add_custom_command(TARGET PixelClock POST_BUILD
 )
 
 install(TARGETS PixelClock)
+
+## Tests
+
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    include(CTest)
+endif()
+
+add_executable(PixelClock_Tests test/test_canvas.cpp)
+target_link_libraries(PixelClock_Tests PRIVATE Main)
+
+include(cmake/googletest.cmake)
+target_link_libraries(PixelClock_Tests PRIVATE GTest::gtest_main)
+
+add_test(NAME MainTest COMMAND PixelClock_Tests)
